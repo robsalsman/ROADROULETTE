@@ -1,0 +1,825 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Top Gear Road Roulette — game API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: game
+    description: Game save / player state
+  - name: character
+    description: Playable characters
+  - name: mission
+    description: Missions and locations
+  - name: banter
+    description: LLM-powered character banter
+  - name: leaderboard
+    description: Global high-score leaderboard
+  - name: openai
+    description: OpenAI AI chat, image, and audio operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Characters ──────────────────────────────────────────────────────────────
+  /characters:
+    get:
+      operationId: listCharacters
+      tags: [character]
+      summary: List all playable characters
+      responses:
+        "200":
+          description: List of characters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Character"
+
+  /characters/{id}:
+    get:
+      operationId: getCharacter
+      tags: [character]
+      summary: Get a single character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Character
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Missions ─────────────────────────────────────────────────────────────────
+  /missions:
+    get:
+      operationId: listMissions
+      tags: [mission]
+      summary: List all available missions
+      responses:
+        "200":
+          description: List of missions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mission"
+
+  /missions/{id}:
+    get:
+      operationId: getMission
+      tags: [mission]
+      summary: Get a single mission with available cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mission detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Game saves ────────────────────────────────────────────────────────────────
+  /saves:
+    get:
+      operationId: listSaves
+      tags: [game]
+      summary: List all game saves
+      responses:
+        "200":
+          description: List of saves
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameSave"
+    post:
+      operationId: createSave
+      tags: [game]
+      summary: Start a new game / save
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSaveInput"
+      responses:
+        "201":
+          description: Created save
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSave"
+
+  /saves/{id}:
+    get:
+      operationId: getSave
+      tags: [game]
+      summary: Get a game save
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Game save
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSave"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    patch:
+      operationId: updateSave
+      tags: [game]
+      summary: Update a game save (progress, funds, car choice)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSaveUpdate"
+      responses:
+        "200":
+          description: Updated save
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSave"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteSave
+      tags: [game]
+      summary: Delete a save
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Events (Oregon Trail episodes within a run) ───────────────────────────────
+  /saves/{saveId}/events:
+    get:
+      operationId: listSaveEvents
+      tags: [game]
+      summary: List road events for a save
+      parameters:
+        - name: saveId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoadEvent"
+    post:
+      operationId: recordSaveEvent
+      tags: [game]
+      summary: Record a road event outcome
+      parameters:
+        - name: saveId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoadEventInput"
+      responses:
+        "201":
+          description: Recorded event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadEvent"
+
+  # ── Leaderboard ──────────────────────────────────────────────────────────────
+  /leaderboard:
+    get:
+      operationId: listLeaderboard
+      tags: [leaderboard]
+      summary: Get top leaderboard entries (ordered by score desc)
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+    post:
+      operationId: createLeaderboardEntry
+      tags: [leaderboard]
+      summary: Submit a score to the global leaderboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeaderboardInput"
+      responses:
+        "201":
+          description: Created leaderboard entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ── LLM Banter ───────────────────────────────────────────────────────────────
+  /banter/generate:
+    post:
+      operationId: generateBanter
+      tags: [banter]
+      summary: Generate in-character banter from the three hosts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanterRequest"
+      responses:
+        "200":
+          description: SSE stream of banter lines
+          content:
+            text/event-stream: {}
+
+  # ── OpenAI endpoints ──────────────────────────────────────────────────────────
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiMessageInput"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    # ── Characters ──────────────────────────────────────────────────────────────
+    Character:
+      type: object
+      required: [id, slug, name, tagline, personality, stats]
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        tagline:
+          type: string
+        personality:
+          type: string
+        stats:
+          $ref: "#/components/schemas/CharacterStats"
+
+    CharacterStats:
+      type: object
+      required: [confidence, mechanical, navigation, budget]
+      properties:
+        confidence:
+          type: integer
+          description: "1-10 scale"
+        mechanical:
+          type: integer
+          description: "1-10 scale"
+        navigation:
+          type: integer
+          description: "1-10 scale"
+        budget:
+          type: integer
+          description: "starting funds in pounds"
+
+    # ── Missions ─────────────────────────────────────────────────────────────────
+    Mission:
+      type: object
+      required: [id, title, location, terrain, description, budget, difficulty]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        location:
+          type: string
+        terrain:
+          type: string
+        description:
+          type: string
+        budget:
+          type: integer
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, insane]
+
+    MissionDetail:
+      type: object
+      required: [id, title, location, terrain, description, budget, difficulty, availableCars, challenges]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        location:
+          type: string
+        terrain:
+          type: string
+        description:
+          type: string
+        budget:
+          type: integer
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, insane]
+        availableCars:
+          type: array
+          items:
+            $ref: "#/components/schemas/CarOption"
+        challenges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Challenge"
+
+    CarOption:
+      type: object
+      required: [id, name, year, price, reliability, power, offRoad, description]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        year:
+          type: integer
+        price:
+          type: integer
+        reliability:
+          type: integer
+          description: "1-10"
+        power:
+          type: integer
+          description: "1-10"
+        offRoad:
+          type: integer
+          description: "1-10"
+        description:
+          type: string
+
+    Challenge:
+      type: object
+      required: [id, title, type, description]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [race, skill, survival, beauty, drag]
+        description:
+          type: string
+
+    # ── Game Save ──────────────────────────────────────────────────────────────
+    GameSave:
+      type: object
+      required: [id, characterId, missionId, status, mode, playerName, seriesStageIndex, funds, carId, food, parts, camaraderie, distanceTravelled, score, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        characterId:
+          type: ["integer", "null"]
+        missionId:
+          type: integer
+        status:
+          type: string
+          enum: [car_selection, on_road, challenge, completed, failed]
+        mode:
+          type: string
+          enum: [arcade, series]
+        playerName:
+          type: ["string", "null"]
+        seriesStageIndex:
+          type: integer
+        funds:
+          type: integer
+        carId:
+          type: ["integer", "null"]
+        food:
+          type: integer
+        parts:
+          type: integer
+        camaraderie:
+          type: integer
+        distanceTravelled:
+          type: integer
+        score:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    GameSaveInput:
+      type: object
+      required: [missionId]
+      properties:
+        characterId:
+          type: ["integer", "null"]
+        missionId:
+          type: integer
+        mode:
+          type: string
+          enum: [arcade, series]
+        playerName:
+          type: ["string", "null"]
+        seriesStageIndex:
+          type: integer
+
+    GameSaveUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [car_selection, on_road, challenge, completed, failed]
+        missionId:
+          type: integer
+        funds:
+          type: integer
+        carId:
+          type: ["integer", "null"]
+        seriesStageIndex:
+          type: integer
+        food:
+          type: integer
+        parts:
+          type: integer
+        camaraderie:
+          type: integer
+        distanceTravelled:
+          type: integer
+        score:
+          type: integer
+
+    # ── Road Events ───────────────────────────────────────────────────────────
+    RoadEvent:
+      type: object
+      required: [id, saveId, eventType, title, description, outcome, fundsChange, createdAt]
+      properties:
+        id:
+          type: integer
+        saveId:
+          type: integer
+        eventType:
+          type: string
+          enum: [breakdown, weather, police, shortcut, fuel, mechanical, wildlife, banter]
+        title:
+          type: string
+        description:
+          type: string
+        outcome:
+          type: string
+        fundsChange:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    RoadEventInput:
+      type: object
+      required: [eventType, title, description, outcome, fundsChange]
+      properties:
+        eventType:
+          type: string
+          enum: [breakdown, weather, police, shortcut, fuel, mechanical, wildlife, banter]
+        title:
+          type: string
+        description:
+          type: string
+        outcome:
+          type: string
+        fundsChange:
+          type: integer
+
+    # ── Leaderboard ─────────────────────────────────────────────────────────────
+    LeaderboardEntry:
+      type: object
+      required: [id, playerName, characterSlug, missionTitle, score, distance, createdAt]
+      properties:
+        id:
+          type: integer
+        saveId:
+          type: ["integer", "null"]
+        playerName:
+          type: string
+        characterSlug:
+          type: string
+        missionTitle:
+          type: string
+        score:
+          type: integer
+        distance:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    LeaderboardInput:
+      type: object
+      required: [playerName, characterSlug, missionTitle, score]
+      properties:
+        saveId:
+          type: ["integer", "null"]
+        playerName:
+          type: string
+        characterSlug:
+          type: string
+        missionTitle:
+          type: string
+        score:
+          type: integer
+        distance:
+          type: integer
+
+    # ── Banter ────────────────────────────────────────────────────────────────
+    BanterRequest:
+      type: object
+      required: [context, characters]
+      properties:
+        context:
+          type: string
+          description: "Current game situation/event description"
+        characters:
+          type: array
+          items:
+            type: string
+          description: "Active character slugs e.g. ['jeremy', 'richard', 'james']"
+        tone:
+          type: string
+          enum: [excited, sarcastic, horrified, smug, panicked, competitive]
+
+    # ── OpenAI ────────────────────────────────────────────────────────────────
+    OpenaiConversation:
+      type: object
+      required: [id, title, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    OpenaiMessage:
+      type: object
+      required: [id, conversationId, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    OpenaiConversationInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+
+    OpenaiMessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    OpenaiConversationWithMessages:
+      type: object
+      required: [id, title, createdAt, messages]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+
+    OpenaiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

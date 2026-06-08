@@ -1,0 +1,22 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "corepack pnpm --parallel --filter @workspace/api-server --filter @workspace/top-gear-game run dev",
+    "dev:api": "corepack pnpm --filter @workspace/api-server run dev",
+    "dev:web": "corepack pnpm --filter @workspace/top-gear-game run dev",
+    "build": "corepack pnpm run typecheck && corepack pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "corepack pnpm run typecheck:libs && corepack pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
+  }
+}
