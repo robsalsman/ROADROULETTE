@@ -116,6 +116,7 @@ export default function UpgradeShop() {
 
   const [upgrades, setUpgrades] = useState<Upgrades>({});
   const [spent, setSpent] = useState(0);
+  const [remainingFunds, setRemainingFunds] = useState<number | null>(null);
 
   const { data: save } = useGetSave(Number(saveId), {
     query: { enabled: !!saveId, queryKey: getGetSaveQueryKey(Number(saveId)) },
@@ -131,14 +132,20 @@ export default function UpgradeShop() {
   const activeCarId = save?.carId ?? null;
 
   useEffect(() => {
+    if (!save) return;
+    setRemainingFunds(save.funds);
+  }, [save]);
+
+  useEffect(() => {
     if (!saveId || !activeCarId) return;
     setUpgrades(loadUpgrades(saveId, activeCarId));
     setSpent(loadUpgradeSpend(saveId, activeCarId));
   }, [saveId, activeCarId]);
 
-  const budget = (save?.funds ?? 0) - spent;
+  const budget = remainingFunds ?? save?.funds ?? 0;
 
-  const buyTier = (cat: UpgradeCat, tier: 1 | 2 | 3) => {
+  const buyTier = async (cat: UpgradeCat, tier: 1 | 2 | 3) => {
+    if (!save || !saveId || !activeCarId) return;
     const def = DEFS.find(d => d.cat === cat)!;
     const currentTier = upgrades[cat] ?? 0;
     const targetTierIdx = tier - 1;
@@ -151,9 +158,12 @@ export default function UpgradeShop() {
       const newUpgrades = { ...upgrades };
       delete newUpgrades[cat];
       const newSpent = spent - baseCost;
+      const nextFunds = budget + baseCost;
       setUpgrades(newUpgrades);
       setSpent(newSpent);
+      setRemainingFunds(nextFunds);
       saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
+      await updateSave.mutateAsync({ id: save.id, data: { funds: nextFunds } });
       return;
     }
     if (tier < (upgrades[cat] ?? 0)) return; // can't downgrade
@@ -161,15 +171,15 @@ export default function UpgradeShop() {
 
     const newUpgrades = { ...upgrades, [cat]: tier };
     const newSpent = spent + diffCost;
+    const nextFunds = budget - diffCost;
     setUpgrades(newUpgrades);
     setSpent(newSpent);
+    setRemainingFunds(nextFunds);
     saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
+    await updateSave.mutateAsync({ id: save.id, data: { funds: nextFunds } });
   };
 
-  const handleStart = async () => {
-    if (save && budget !== save.funds) {
-      await updateSave.mutateAsync({ id: save.id, data: { funds: budget } });
-    }
+  const handleStart = () => {
     setLocation(`/game/${saveId}`);
   };
 

@@ -28,7 +28,12 @@ export default function Saves() {
 
   const getSaveLink = (save: any) => {
     if (save.status === 'completed' || save.status === 'failed') return `/results/${save.id}`;
+    const storedRoute = localStorage.getItem(`tgrr-resume-route-${save.id}`);
+    if (storedRoute) return storedRoute;
     if (save.status === 'challenge') return `/challenge/${save.id}`;
+    if (save.mode === 'series' && (save.status === 'car_selection' || !save.carId)) {
+      return `/mission/${save.missionId}?saveId=${save.id}&series=1`;
+    }
     return `/game/${save.id}`;
   };
 
