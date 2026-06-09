@@ -1,8 +1,11 @@
 import { Router, type IRouter } from "express";
 import { GenerateBanterBody } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { hasOpenAIConfig, openai } from "@workspace/integrations-openai-ai-server";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
+const PRESENTER_MODEL = process.env.AI_PRESENTER_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+const COMPANION_FALLBACK = "Sorry, my signal's gone. Try me again in a sec.";
 
 const CHARACTER_VOICES: Record<string, string> = {
   jeremy: `You are Jeremy Clarkson from Top Gear / The Grand Tour. Bombastic, opinionated, addicted to superlatives. You love powerful cars and find small, sensible ones offensive. You often say things are "the greatest" or "the worst thing ever made by human hands". Keep your response to 1-2 sentences maximum. Sound exactly like Jeremy Clarkson.`,
@@ -220,11 +223,20 @@ router.post("/banter/companion", async (req, res): Promise<void> => {
   res.setHeader("Connection", "keep-alive");
 
   try {
+    if (!hasOpenAIConfig) {
+      throw new Error(
+        "AI_INTEGRATIONS_OPENAI_API_KEY and AI_INTEGRATIONS_OPENAI_BASE_URL must be set for presenter chat",
+      );
+    }
+
     const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 400,
+      model: PRESENTER_MODEL,
+      max_completion_tokens: 220,
       messages: [
-        { role: "system", content: COMPANION_VOICES[slug] },
+        {
+          role: "system",
+          content: `${COMPANION_VOICES[slug]} Keep each reply short, funny, and game-like: 1-3 sentences, like quick road-trip radio banter.`,
+        },
         ...history,
       ],
       stream: true,
@@ -236,8 +248,27 @@ router.post("/banter/companion", async (req, res): Promise<void> => {
         res.write(`data: ${JSON.stringify({ text: content, name })}\n\n`);
       }
     }
-  } catch {
-    res.write(`data: ${JSON.stringify({ text: "Sorry, my signal's gone. Try me again in a sec.", name })}\n\n`);
+  } catch (err) {
+    const error = err as {
+      status?: number;
+      code?: string;
+      type?: string;
+      message?: string;
+    };
+    logger.error(
+      {
+        err,
+        presenter: slug,
+        model: PRESENTER_MODEL,
+        openaiStatus: error.status,
+        openaiCode: error.code,
+        openaiType: error.type,
+        openaiMessage: error.message,
+        hasOpenAIConfig,
+      },
+      "Presenter companion AI request failed",
+    );
+    res.write(`data: ${JSON.stringify({ text: COMPANION_FALLBACK, name })}\n\n`);
   }
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
