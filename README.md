@@ -97,7 +97,65 @@ pnpm run build
 
 The API build is emitted to `artifacts/api-server/dist`. The frontend build is emitted to `artifacts/top-gear-game/dist/public`.
 
-For a normal production deployment, run the API as a Node service with `DATABASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY`, and `AI_INTEGRATIONS_OPENAI_BASE_URL` set, and serve the frontend static build from `artifacts/top-gear-game/dist/public`. Configure your host or reverse proxy so frontend `/api/*` requests reach the Express API.
+For production, run the API as the web service with `NODE_ENV=production`. In production mode the Express app preserves all `/api/*` routes, serves the built frontend from `artifacts/top-gear-game/dist/public`, and falls back to `index.html` for client-side routes.
+
+```powershell
+pnpm start
+```
+
+## Railway Deployment
+
+Use one Railway web service for this repo. The service builds the API and Vite frontend together, then the Express API serves both `/api/*` and the built React app.
+
+1. Create a Railway project from this repository.
+2. Add a Railway PostgreSQL database to the same project.
+3. In the web service, set the build command:
+
+```bash
+pnpm run build
+```
+
+4. Set the start command:
+
+```bash
+pnpm start
+```
+
+5. Set the required environment variables on the Railway web service:
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Provided by the Railway PostgreSQL service. Use Railway's reference/linked variable so it stays in sync. |
+| `AI_INTEGRATIONS_OPENAI_API_KEY` | Yes | OpenAI-compatible API key for banter/chat routes. |
+| `AI_INTEGRATIONS_OPENAI_BASE_URL` | Yes | OpenAI-compatible base URL, for example `https://api.openai.com/v1`. |
+| `NODE_ENV` | Yes | Set to `production` so Express serves the built frontend. |
+| `LOG_LEVEL` | No | Defaults to `info`. |
+
+Do not set `PORT` manually on Railway. Railway injects `PORT`, and the API server reads it automatically.
+
+### Railway PostgreSQL And Drizzle
+
+The app uses `pg` and Drizzle with the standard `DATABASE_URL` connection string, so Railway PostgreSQL works without code changes.
+
+After attaching PostgreSQL and setting service variables, push the schema before using database-backed game routes:
+
+```bash
+pnpm --filter @workspace/db run push
+```
+
+For Railway, run that command from a shell where `DATABASE_URL` points at the Railway PostgreSQL database. Options:
+
+- Run it locally with the Railway CLI environment loaded for the service.
+- Run it from a temporary Railway shell/job using the same web service environment.
+
+Use the safer `push` command for normal schema sync. `push-force` exists for destructive/manual recovery cases and should not be part of routine deployment.
+
+### Railway Hosting Strategy
+
+- Public app pages are served by Express from `artifacts/top-gear-game/dist/public`.
+- API routes remain under `/api/*`.
+- Client-side routes such as `/missions` or `/text-presenter` use the SPA fallback to `index.html`.
+- Static assets such as `/images/bolivia.png` are served from the Vite build output.
 
 ## Notes From The Replit Migration
 
