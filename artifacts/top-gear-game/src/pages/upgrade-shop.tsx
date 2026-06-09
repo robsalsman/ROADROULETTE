@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { useGetSave, getGetSaveQueryKey, useGetMission, getGetMissionQueryKey, useGetCharacter, getGetCharacterQueryKey } from "@workspace/api-client-react";
+import { useGetSave, getGetSaveQueryKey, useGetMission, getGetMissionQueryKey, useGetCharacter, getGetCharacterQueryKey, useUpdateSave } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Zap, Settings, Fuel, Shield, Circle, Megaphone, Clover } from "lucide-react";
-
-const UPGRADE_KEY = (saveId: string | number) => `tgrr-upgrades-${saveId}`;
-
-type UpgradeCat = "engine" | "suspension" | "fuel" | "bodywork" | "tyres" | "sponsor" | "charm";
-type Upgrades = Partial<Record<UpgradeCat, 1 | 2 | 3>>;
+import {
+  loadUpgradeSpend,
+  loadUpgrades,
+  saveUpgrades,
+  type UpgradeCat,
+  type Upgrades,
+} from "@/data/garage";
 
 interface UpgradeDef {
   cat: UpgradeCat;
@@ -118,6 +120,7 @@ export default function UpgradeShop() {
   const { data: save } = useGetSave(Number(saveId), {
     query: { enabled: !!saveId, queryKey: getGetSaveQueryKey(Number(saveId)) },
   });
+  const updateSave = useUpdateSave();
   const { data: character } = useGetCharacter(Number(save?.characterId), {
     query: { enabled: !!save?.characterId, queryKey: getGetCharacterQueryKey(Number(save?.characterId)) },
   });
@@ -125,13 +128,13 @@ export default function UpgradeShop() {
     query: { enabled: !!save?.missionId, queryKey: getGetMissionQueryKey(Number(save?.missionId)) },
   });
 
+  const activeCarId = save?.carId ?? null;
+
   useEffect(() => {
-    if (!saveId) return;
-    try {
-      const stored = localStorage.getItem(UPGRADE_KEY(saveId));
-      if (stored) { const p = JSON.parse(stored); setUpgrades(p.upgrades ?? {}); setSpent(p.spent ?? 0); }
-    } catch { /* ignore */ }
-  }, [saveId]);
+    if (!saveId || !activeCarId) return;
+    setUpgrades(loadUpgrades(saveId, activeCarId));
+    setSpent(loadUpgradeSpend(saveId, activeCarId));
+  }, [saveId, activeCarId]);
 
   const budget = (save?.funds ?? 0) - spent;
 
@@ -150,7 +153,7 @@ export default function UpgradeShop() {
       const newSpent = spent - baseCost;
       setUpgrades(newUpgrades);
       setSpent(newSpent);
-      localStorage.setItem(UPGRADE_KEY(saveId!), JSON.stringify({ upgrades: newUpgrades, spent: newSpent }));
+      saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
       return;
     }
     if (tier < (upgrades[cat] ?? 0)) return; // can't downgrade
@@ -160,10 +163,13 @@ export default function UpgradeShop() {
     const newSpent = spent + diffCost;
     setUpgrades(newUpgrades);
     setSpent(newSpent);
-    localStorage.setItem(UPGRADE_KEY(saveId!), JSON.stringify({ upgrades: newUpgrades, spent: newSpent }));
+    saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (save && budget !== save.funds) {
+      await updateSave.mutateAsync({ id: save.id, data: { funds: budget } });
+    }
     setLocation(`/game/${saveId}`);
   };
 

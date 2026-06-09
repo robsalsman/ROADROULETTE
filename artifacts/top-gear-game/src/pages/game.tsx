@@ -14,6 +14,7 @@ import { pickTrivia, type TriviaQuestion } from "@/data/trivia";
 import DrivingGame from "@/components/DrivingGame";
 import GroupChat from "@/components/GroupChat";
 import { vehicleArchetype, vehicleSprite } from "@/data/vehicles";
+import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy } from "lucide-react";
 
 // ── Upgrade helpers ───────────────────────────────────────────────────────────
@@ -152,13 +153,20 @@ export default function Game() {
   });
   const stagesList = [...(missionsList ?? [])].sort((a, b) => a.id - b.id);
 
+  const findActiveGarageCar = useCallback((): GarageCar | undefined => {
+    if (!saveId || !save?.carId) return undefined;
+    return loadGarage(saveId).cars.find((garageCar) => garageCar.id === save.carId);
+  }, [saveId, save?.carId]);
+
   // Initialise from save data
   useEffect(() => {
     if (!save || !mission || initialized.current) return;
     if (!isSeries && !character) return; // arcade waits for its presenter
     initialized.current = true;
-    const car = mission.availableCars?.find((c: { id: number; reliability?: number }) => c.id === save.carId);
-    setCondition(car ? (car.reliability ?? 6) * 10 : 60);
+    const baseCar = findActiveGarageCar() ?? mission.availableCars?.find((c: { id: number; reliability?: number }) => c.id === save.carId);
+    const loadedUpgrades = saveId && save.carId ? loadCarUpgrades(saveId, save.carId) : {};
+    const carStats = baseCar ? adjustedCarStats(baseCar, loadedUpgrades) : null;
+    setCondition(carStats ? (carStats.reliability ?? 6) * 10 : 60);
     setFunds(save.funds ?? 0);
     setFood(save.food ?? 3);
     setParts(save.parts ?? 2);
@@ -174,7 +182,7 @@ export default function Game() {
       priorDistRef.current = 0;
       setDistKm(save.distanceTravelled ?? 0);
     }
-    if (saveId) setUpgrades(loadUpgrades(saveId));
+    setUpgrades(loadedUpgrades);
 
     // Kick off with a first road event to set the scene
     const firstEvt = pickNextEvent(new Set());
@@ -184,10 +192,10 @@ export default function Game() {
     }
 
     setMode("hub");
-  }, [save, mission, character, isSeries, saveId]);
+  }, [save, mission, character, isSeries, saveId, findActiveGarageCar]);
 
   const stats = upgradeStats(upgrades);
-  const car = mission?.availableCars?.find((c: { id: number }) => c.id === save?.carId);
+  const car = findActiveGarageCar() ?? mission?.availableCars?.find((c: { id: number }) => c.id === save?.carId);
 
   const whoIsDriving = isSeries
     ? `${displayName}, the fourth member of the team touring with Jeremy, Richard and James,`
