@@ -390,8 +390,8 @@ export default function Game() {
   // ── Trivia (Pub Quiz): answer to advance + small reward ────────────────────
   const openTrivia = useCallback(() => {
     setTriviaResult(null);
-    setTrivia(pickTrivia(usedTriviaRef.current));
-  }, []);
+    setTrivia(pickTrivia(usedTriviaRef.current, mission?.id));
+  }, [mission?.id]);
 
   const answerTrivia = useCallback((idx: number) => {
     if (!trivia || triviaResult) return;

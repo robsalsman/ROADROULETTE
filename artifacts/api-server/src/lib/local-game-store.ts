@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { GRAND_TOUR_EPISODE_STAGES } from "../data/grand-tour-episode-stages";
 
 type Character = {
   id: number;
@@ -117,66 +118,47 @@ const characters: Character[] = [
   },
 ];
 
-const missions: Mission[] = [
-  {
-    id: 1,
-    title: "Bolivian Death Road",
-    location: "Bolivia",
-    terrain: "mountain",
-    description: "Thin air, thinner roads, and a cliff edge that appears to be personally offended by cars.",
-    budget: 1500,
-    difficulty: "hard",
-  },
-  {
-    id: 2,
-    title: "Botswana Salt Pan",
-    location: "Botswana",
-    terrain: "desert",
-    description: "Cross the pans with too little shade, too much dust, and an unreasonable faith in old machinery.",
-    budget: 1400,
-    difficulty: "medium",
-  },
-  {
-    id: 3,
-    title: "Vietnam Coastal Dash",
-    location: "Vietnam",
-    terrain: "coastal",
-    description: "A long, damp, beautiful run where the weather and the traffic both have strong opinions.",
-    budget: 1200,
-    difficulty: "medium",
-  },
-  {
-    id: 4,
-    title: "Patagonia Border Sprint",
-    location: "Patagonia",
-    terrain: "gravel",
-    description: "Wind, gravel, suspicious paperwork, and the looming sense that everything is about to become diplomatic.",
-    budget: 1700,
-    difficulty: "insane",
-  },
-];
+const missions: Mission[] = GRAND_TOUR_EPISODE_STAGES.map((episode) => ({
+  id: episode.id,
+  title: `E${episode.episodeNumber}: ${episode.title}`,
+  location: episode.locationTheme,
+  terrain: episode.terrain,
+  description: `Series ${episode.series}, episode ${episode.episodeInSeries} (${episode.releaseDate}). ${episode.challengeInspiration}`,
+  budget: 1500 + Math.min(800, episode.episodeNumber * 20),
+  difficulty: episode.difficulty,
+}));
 
-const cars: Car[] = [
-  { id: 1, missionId: 1, name: "Range Rover Classic", year: 1989, price: 900, reliability: 5, power: 6, offRoad: 9, description: "Magnificent when working. A decorative shed when not." },
-  { id: 2, missionId: 1, name: "Toyota Land Cruiser", year: 1994, price: 1150, reliability: 9, power: 5, offRoad: 8, description: "Not glamorous, because arriving is apparently considered important." },
-  { id: 3, missionId: 1, name: "Subaru Legacy Estate", year: 1998, price: 650, reliability: 7, power: 5, offRoad: 5, description: "All-wheel-drive common sense with a boot full of optimism." },
-  { id: 4, missionId: 2, name: "Mercedes 230E", year: 1985, price: 700, reliability: 8, power: 4, offRoad: 3, description: "A taxi in evening wear. Slow, but deeply unwilling to die." },
-  { id: 5, missionId: 2, name: "Opel Kadett", year: 1976, price: 500, reliability: 6, power: 3, offRoad: 4, description: "Small, simple, and worryingly endearing." },
-  { id: 6, missionId: 2, name: "Lancia Beta Coupe", year: 1981, price: 450, reliability: 2, power: 6, offRoad: 2, description: "Stylish in the way a lit match is stylish near petrol." },
-  { id: 7, missionId: 3, name: "Honda Cub", year: 1992, price: 300, reliability: 10, power: 1, offRoad: 4, description: "Barely a car, but annoyingly perfect at existing." },
-  { id: 8, missionId: 3, name: "Mitsubishi Pajero Mini", year: 1996, price: 800, reliability: 7, power: 4, offRoad: 7, description: "A tiny box of determination with actual four-wheel drive." },
-  { id: 9, missionId: 3, name: "Ford Laser", year: 1997, price: 550, reliability: 6, power: 4, offRoad: 3, description: "Transport. Not a compliment, not an insult." },
-  { id: 10, missionId: 4, name: "Porsche 928", year: 1983, price: 1200, reliability: 4, power: 9, offRoad: 1, description: "Completely wrong for gravel, therefore extremely tempting." },
-  { id: 11, missionId: 4, name: "Volvo 240 Estate", year: 1990, price: 650, reliability: 8, power: 3, offRoad: 4, description: "A brick with seats. This is praise." },
-  { id: 12, missionId: 4, name: "Jeep Cherokee", year: 1995, price: 950, reliability: 6, power: 6, offRoad: 8, description: "Built for places where roads are more of a rumour." },
-];
+function statFromName(name: string, salt: number, min = 2): number {
+  const total = [...name].reduce((sum, char) => sum + char.charCodeAt(0), salt);
+  return min + (total % (11 - min));
+}
 
-const challenges: Challenge[] = [
-  { id: 1, missionId: 1, title: "Cliff Edge Overtake", type: "skill", description: "Pass a lorry on a ledge while everyone pretends this was in the plan." },
-  { id: 2, missionId: 2, title: "Salt Pan Speed Run", type: "race", description: "Go flat out across the white nothing and hope the white nothing stays solid." },
-  { id: 3, missionId: 3, title: "Monsoon Time Trial", type: "survival", description: "Beat the rain, the traffic, and the deeply suspicious bridge." },
-  { id: 4, missionId: 4, title: "Border Dash", type: "drag", description: "A final sprint over gravel with the paperwork catching up behind you." },
-];
+function displayYear(name: string, releaseDate: string): number {
+  const match = name.match(/\b(19|20)\d{2}\b/);
+  return match ? Number(match[0]) : Number(releaseDate.slice(0, 4));
+}
+
+const cars: Car[] = GRAND_TOUR_EPISODE_STAGES.flatMap((episode) =>
+  episode.featuredVehicles.slice(0, 3).map((name, index) => ({
+    id: episode.id * 10 + index + 1,
+    missionId: episode.id,
+    name,
+    year: displayYear(name, episode.releaseDate),
+    price: 450 + index * 180 + (episode.difficulty === "insane" ? 200 : episode.difficulty === "hard" ? 120 : 0),
+    reliability: statFromName(name, 7 + index),
+    power: statFromName(name, 19 + index),
+    offRoad: episode.terrain === "desert" || episode.terrain === "jungle" || episode.terrain === "snow" ? statFromName(name, 31 + index, 3) : statFromName(name, 31 + index),
+    description: `Featured in episode ${episode.episodeNumber}, ${episode.title}. Chosen for the ${episode.locationTheme} stage.`,
+  }))
+);
+
+const challenges: Challenge[] = GRAND_TOUR_EPISODE_STAGES.map((episode) => ({
+  id: episode.id,
+  missionId: episode.id,
+  title: episode.challengeInspiration.split(".")[0],
+  type: episode.trialType,
+  description: episode.challengeInspiration,
+}));
 
 const storePath = path.resolve(process.cwd(), "..", "..", ".local", "road-roulette-game-store.json");
 

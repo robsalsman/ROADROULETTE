@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useGetMission, getGetMissionQueryKey, useGetSave, getGetSaveQueryKey, useCreateSave, useUpdateSave } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -53,11 +53,19 @@ export default function MissionDetail() {
 
   const createSave = useCreateSave();
   const updateSave = useUpdateSave();
+  const allowSeriesSkip = import.meta.env.VITE_ALLOW_SERIES_SKIP === "1";
 
   useEffect(() => {
     if (!isSeries || !querySaveId) return;
     setGarage(loadGarage(querySaveId));
   }, [isSeries, querySaveId]);
+
+  useEffect(() => {
+    if (!isSeries || !existingSave || !mission || allowSeriesSkip) return;
+    if (existingSave.missionId !== mission.id || existingSave.seriesStageIndex !== mission.id - 1) {
+      setLocation(`/mission/${existingSave.missionId}?saveId=${existingSave.id}&series=1`);
+    }
+  }, [allowSeriesSkip, existingSave, isSeries, mission, setLocation]);
 
   useEffect(() => {
     if (!isSeries || !existingSave) return;
@@ -197,9 +205,18 @@ export default function MissionDetail() {
       <div className="max-w-6xl mx-auto space-y-8">
 
         {isSeries && (
-          <div className="flex items-center gap-2 text-amber-400 text-sm font-bold uppercase tracking-widest">
-            <Trophy className="w-4 h-4" />
-            Series - Stage {(existingSave?.seriesStageIndex ?? 0) + 1}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-amber-400 text-sm font-bold uppercase tracking-widest">
+              <Trophy className="w-4 h-4" />
+              Episode {(existingSave?.seriesStageIndex ?? 0) + 1} of 46
+            </div>
+            {existingSave && (
+              <Link href={`/series-progress/${existingSave.id}`}>
+                <Button variant="outline" size="sm" className="uppercase font-bold">
+                  Campaign Progress
+                </Button>
+              </Link>
+            )}
           </div>
         )}
 

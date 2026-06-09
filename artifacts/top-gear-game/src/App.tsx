@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import CharacterSelect from "@/pages/character-select";
 import SeriesStart from "@/pages/series-start";
+import SeriesProgress from "@/pages/series-progress";
 import Missions from "@/pages/missions";
 import MissionDetail from "@/pages/mission-detail";
 import UpgradeShop from "@/pages/upgrade-shop";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/character-select" component={CharacterSelect} />
       <Route path="/series-start" component={SeriesStart} />
+      <Route path="/series-progress/:saveId" component={SeriesProgress} />
       <Route path="/missions" component={Missions} />
       <Route path="/mission/:id" component={MissionDetail} />
       <Route path="/upgrade-shop/:saveId" component={UpgradeShop} />

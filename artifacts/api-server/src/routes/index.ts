@@ -6,6 +6,7 @@ import savesRouter from "./saves";
 import banterRouter from "./banter";
 import leaderboardRouter from "./leaderboard";
 import openaiRouter from "./openai";
+import seriesRouter from "./series";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(savesRouter);
 router.use(banterRouter);
 router.use(leaderboardRouter);
 router.use(openaiRouter);
+router.use(seriesRouter);
 
 export default router;

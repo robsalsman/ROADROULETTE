@@ -1,3 +1,5 @@
+import { GRAND_TOUR_EPISODE_STAGES } from "@/data/grand-tour-episode-stages";
+
 export interface TriviaQuestion {
   id: string;
   question: string;
@@ -104,8 +106,17 @@ export const TRIVIA: TriviaQuestion[] = [
   },
 ];
 
-export function pickTrivia(used: Set<string>): TriviaQuestion {
-  const pool = TRIVIA.filter((q) => !used.has(q.id));
-  const list = pool.length > 0 ? pool : TRIVIA;
+const EPISODE_TRIVIA: TriviaQuestion[] = GRAND_TOUR_EPISODE_STAGES.map((stage) => ({
+  id: `gt-${stage.episodeNumber}`,
+  question: stage.trivia.question,
+  options: stage.trivia.options,
+  answer: stage.trivia.answer,
+}));
+
+export function pickTrivia(used: Set<string>, missionId?: number): TriviaQuestion {
+  const episodeQuestion = missionId ? EPISODE_TRIVIA.find((q) => q.id === `gt-${missionId}`) : undefined;
+  const source = episodeQuestion && !used.has(episodeQuestion.id) ? [episodeQuestion] : [...EPISODE_TRIVIA, ...TRIVIA];
+  const pool = source.filter((q) => !used.has(q.id));
+  const list = pool.length > 0 ? pool : source;
   return list[Math.floor(Math.random() * list.length)];
 }

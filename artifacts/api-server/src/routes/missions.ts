@@ -7,13 +7,14 @@ import {
   ListMissionsResponse,
   GetMissionResponse,
 } from "@workspace/api-zod";
+import { GRAND_TOUR_EPISODE_COUNT } from "../data/grand-tour-episode-stages";
 
 const router: IRouter = Router();
 
 router.get("/missions", async (_req, res): Promise<void> => {
   try {
     const missions = await db.select().from(missionsTable).orderBy(missionsTable.id);
-    res.json(ListMissionsResponse.parse(missions));
+    res.json(ListMissionsResponse.parse(missions.length >= GRAND_TOUR_EPISODE_COUNT ? missions : localGameStore.missions()));
   } catch {
     res.json(ListMissionsResponse.parse(localGameStore.missions()));
   }
@@ -29,9 +30,25 @@ router.get("/missions/:id", async (req, res): Promise<void> => {
   }
 
   try {
+    const allMissions = await db.select().from(missionsTable).orderBy(missionsTable.id);
+    if (allMissions.length < GRAND_TOUR_EPISODE_COUNT) {
+      const fallbackMission = localGameStore.missionDetail(id);
+      if (!fallbackMission) {
+        res.status(404).json({ error: "Mission not found" });
+        return;
+      }
+      res.json(GetMissionResponse.parse(fallbackMission));
+      return;
+    }
+
     const [mission] = await db.select().from(missionsTable).where(eq(missionsTable.id, id));
     if (!mission) {
-      res.status(404).json({ error: "Mission not found" });
+      const fallbackMission = localGameStore.missionDetail(id);
+      if (!fallbackMission) {
+        res.status(404).json({ error: "Mission not found" });
+        return;
+      }
+      res.json(GetMissionResponse.parse(fallbackMission));
       return;
     }
 
