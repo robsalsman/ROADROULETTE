@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, charactersTable } from "@workspace/db";
+import { localGameStore } from "../lib/local-game-store";
 import {
   GetCharacterParams,
   ListCharactersResponse,
@@ -22,8 +23,12 @@ function formatCharacter(c: typeof charactersTable.$inferSelect) {
 }
 
 router.get("/characters", async (_req, res): Promise<void> => {
-  const chars = await db.select().from(charactersTable).orderBy(charactersTable.id);
-  res.json(ListCharactersResponse.parse(chars.map(formatCharacter)));
+  try {
+    const chars = await db.select().from(charactersTable).orderBy(charactersTable.id);
+    res.json(ListCharactersResponse.parse(chars.map(formatCharacter)));
+  } catch {
+    res.json(ListCharactersResponse.parse(localGameStore.characters()));
+  }
 });
 
 router.get("/characters/:id", async (req, res): Promise<void> => {
@@ -35,13 +40,18 @@ router.get("/characters/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [char] = await db.select().from(charactersTable).where(eq(charactersTable.id, id));
+  let char: ReturnType<typeof localGameStore.character> | typeof charactersTable.$inferSelect | undefined;
+  try {
+    [char] = await db.select().from(charactersTable).where(eq(charactersTable.id, id));
+  } catch {
+    char = localGameStore.character(id);
+  }
   if (!char) {
     res.status(404).json({ error: "Character not found" });
     return;
   }
 
-  res.json(GetCharacterResponse.parse(formatCharacter(char)));
+  res.json(GetCharacterResponse.parse("stats" in char ? char : formatCharacter(char)));
 });
 
 export default router;

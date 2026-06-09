@@ -2,8 +2,10 @@ import { defineConfig } from "drizzle-kit";
 import path from "path";
 import { existsSync } from "node:fs";
 import { loadEnvFile } from "node:process";
+import { fileURLToPath } from "node:url";
 
-const rootEnvPath = path.resolve(import.meta.dirname, "..", "..", ".env");
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const rootEnvPath = path.resolve(currentDir, "..", "..", ".env");
 if (existsSync(rootEnvPath)) {
   loadEnvFile(rootEnvPath);
 }
@@ -13,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  schema: path.join(import.meta.dirname, "./src/schema/index.ts"),
+  schema: "./src/schema/index.ts",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL,

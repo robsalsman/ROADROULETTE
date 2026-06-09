@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, gameSavesTable, roadEventsTable, charactersTable, missionsTable } from "@workspace/db";
+import { localGameStore } from "../lib/local-game-store";
 import {
   CreateSaveBody,
   GetSaveParams,
@@ -39,10 +40,18 @@ function formatSave(s: typeof gameSavesTable.$inferSelect) {
   };
 }
 
+function isSerializedSave(save: unknown): save is ReturnType<typeof localGameStore.save> & { createdAt: string } {
+  return !!save && typeof (save as { createdAt?: unknown }).createdAt === "string";
+}
+
 // ── List saves ────────────────────────────────────────────────────────────────
 router.get("/saves", async (_req, res): Promise<void> => {
-  const saves = await db.select().from(gameSavesTable).orderBy(gameSavesTable.updatedAt);
-  res.json(ListSavesResponse.parse(saves.map(formatSave)));
+  try {
+    const saves = await db.select().from(gameSavesTable).orderBy(gameSavesTable.updatedAt);
+    res.json(ListSavesResponse.parse(saves.map(formatSave)));
+  } catch {
+    res.json(ListSavesResponse.parse(localGameStore.saves()));
+  }
 });
 
 // ── Create save ───────────────────────────────────────────────────────────────
@@ -53,30 +62,35 @@ router.post("/saves", async (req, res): Promise<void> => {
     return;
   }
 
-  // Look up starting budget from character (arcade). Series players have no preset character.
-  let budget = 1500;
-  if (parsed.data.characterId != null) {
-    const [char] = await db.select().from(charactersTable).where(eq(charactersTable.id, parsed.data.characterId));
-    const stats = (char?.statsJson ?? { budget: 1500 }) as { budget: number };
-    budget = stats.budget ?? 1500;
+  try {
+    // Look up starting budget from character (arcade). Series players have no preset character.
+    let budget = 1500;
+    if (parsed.data.characterId != null) {
+      const [char] = await db.select().from(charactersTable).where(eq(charactersTable.id, parsed.data.characterId));
+      const stats = (char?.statsJson ?? { budget: 1500 }) as { budget: number };
+      budget = stats.budget ?? 1500;
+    }
+
+    const [save] = await db
+      .insert(gameSavesTable)
+      .values({
+        characterId: parsed.data.characterId ?? null,
+        missionId: parsed.data.missionId,
+        status: "car_selection",
+        mode: parsed.data.mode ?? "arcade",
+        playerName: parsed.data.playerName ?? null,
+        seriesStageIndex: parsed.data.seriesStageIndex ?? 0,
+        funds: budget,
+        food: 3,
+        parts: 2,
+      })
+      .returning();
+
+    res.status(201).json(GetSaveResponse.parse(formatSave(save)));
+  } catch {
+    const save = localGameStore.createSave(parsed.data);
+    res.status(201).json(GetSaveResponse.parse(save));
   }
-
-  const [save] = await db
-    .insert(gameSavesTable)
-    .values({
-      characterId: parsed.data.characterId ?? null,
-      missionId: parsed.data.missionId,
-      status: "car_selection",
-      mode: parsed.data.mode ?? "arcade",
-      playerName: parsed.data.playerName ?? null,
-      seriesStageIndex: parsed.data.seriesStageIndex ?? 0,
-      funds: budget,
-      food: 3,
-      parts: 2,
-    })
-    .returning();
-
-  res.status(201).json(GetSaveResponse.parse(formatSave(save)));
 });
 
 // ── Get save ──────────────────────────────────────────────────────────────────
@@ -89,13 +103,18 @@ router.get("/saves/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [save] = await db.select().from(gameSavesTable).where(eq(gameSavesTable.id, id));
+  let save: ReturnType<typeof localGameStore.save> | typeof gameSavesTable.$inferSelect | undefined;
+  try {
+    [save] = await db.select().from(gameSavesTable).where(eq(gameSavesTable.id, id));
+  } catch {
+    save = localGameStore.save(id);
+  }
   if (!save) {
     res.status(404).json({ error: "Save not found" });
     return;
   }
 
-  res.json(GetSaveResponse.parse(formatSave(save)));
+  res.json(GetSaveResponse.parse(isSerializedSave(save) ? save : formatSave(save)));
 });
 
 // ── Update save ───────────────────────────────────────────────────────────────
@@ -114,18 +133,23 @@ router.patch("/saves/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [save] = await db
-    .update(gameSavesTable)
-    .set(parsed.data)
-    .where(eq(gameSavesTable.id, id))
-    .returning();
+  let save: ReturnType<typeof localGameStore.updateSave> | typeof gameSavesTable.$inferSelect | undefined;
+  try {
+    [save] = await db
+      .update(gameSavesTable)
+      .set(parsed.data)
+      .where(eq(gameSavesTable.id, id))
+      .returning();
+  } catch {
+    save = localGameStore.updateSave(id, parsed.data);
+  }
 
   if (!save) {
     res.status(404).json({ error: "Save not found" });
     return;
   }
 
-  res.json(UpdateSaveResponse.parse(formatSave(save)));
+  res.json(UpdateSaveResponse.parse(isSerializedSave(save) ? save : formatSave(save)));
 });
 
 // ── Delete save ───────────────────────────────────────────────────────────────
@@ -138,7 +162,11 @@ router.delete("/saves/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  await db.delete(gameSavesTable).where(eq(gameSavesTable.id, id));
+  try {
+    await db.delete(gameSavesTable).where(eq(gameSavesTable.id, id));
+  } catch {
+    localGameStore.deleteSave(id);
+  }
   res.sendStatus(204);
 });
 
@@ -152,20 +180,24 @@ router.get("/saves/:saveId/events", async (req, res): Promise<void> => {
     return;
   }
 
-  const events = await db
-    .select()
-    .from(roadEventsTable)
-    .where(eq(roadEventsTable.saveId, saveId))
-    .orderBy(roadEventsTable.createdAt);
+  try {
+    const events = await db
+      .select()
+      .from(roadEventsTable)
+      .where(eq(roadEventsTable.saveId, saveId))
+      .orderBy(roadEventsTable.createdAt);
 
-  res.json(
-    ListSaveEventsResponse.parse(
-      events.map((e) => ({
-        ...e,
-        createdAt: e.createdAt.toISOString(),
-      }))
-    )
-  );
+    res.json(
+      ListSaveEventsResponse.parse(
+        events.map((e) => ({
+          ...e,
+          createdAt: e.createdAt.toISOString(),
+        }))
+      )
+    );
+  } catch {
+    res.json(ListSaveEventsResponse.parse(localGameStore.events(saveId)));
+  }
 });
 
 // ── Record save event ─────────────────────────────────────────────────────────
@@ -184,15 +216,19 @@ router.post("/saves/:saveId/events", async (req, res): Promise<void> => {
     return;
   }
 
-  const [event] = await db
-    .insert(roadEventsTable)
-    .values({ saveId, ...parsed.data })
-    .returning();
+  try {
+    const [event] = await db
+      .insert(roadEventsTable)
+      .values({ saveId, ...parsed.data })
+      .returning();
 
-  res.status(201).json({
-    ...event,
-    createdAt: event.createdAt.toISOString(),
-  });
+    res.status(201).json({
+      ...event,
+      createdAt: event.createdAt.toISOString(),
+    });
+  } catch {
+    res.status(201).json(localGameStore.recordEvent(saveId, parsed.data));
+  }
 });
 
 export default router;
