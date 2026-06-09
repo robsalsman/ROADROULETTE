@@ -1,19 +1,23 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
+const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
+const rootEnv = loadEnv(process.env.NODE_ENV ?? "development", workspaceRoot, "");
+const getEnv = (name: string): string | undefined => process.env[name] ?? rootEnv[name];
+
 const rawPort =
-  process.env.WEB_PORT ?? (process.env.REPL_ID ? process.env.PORT : undefined);
+  getEnv("WEB_PORT") ?? (process.env.REPL_ID ? getEnv("PORT") : undefined);
 const port = rawPort ? Number(rawPort) : 5173;
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH ?? "/";
-const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://localhost:5000";
+const basePath = getEnv("BASE_PATH") ?? "/";
+const apiProxyTarget = getEnv("API_PROXY_TARGET") ?? "http://localhost:5000";
 
 export default defineConfig({
   base: basePath,

@@ -1,10 +1,15 @@
 import { Router, type IRouter } from "express";
 import { GenerateBanterBody } from "@workspace/api-zod";
-import { hasOpenAIConfig, openai } from "@workspace/integrations-openai-ai-server";
+import { aiProvider, hasAIConfig, openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
-const PRESENTER_MODEL = process.env.AI_PRESENTER_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+const DEFAULT_TEXT_MODEL = aiProvider === "venice" ? "venice-uncensored" : "gpt-4o-mini";
+const TEXT_MODEL =
+  process.env.AI_PRESENTER_MODEL ??
+  process.env.VENICE_MODEL ??
+  process.env.OPENAI_MODEL ??
+  DEFAULT_TEXT_MODEL;
 const COMPANION_FALLBACK = "Sorry, my signal's gone. Try me again in a sec.";
 
 const CHARACTER_VOICES: Record<string, string> = {
@@ -51,7 +56,7 @@ router.post("/banter/generate", async (req, res): Promise<void> => {
 
     try {
       const stream = await openai.chat.completions.create({
-        model: "gpt-5.4",
+        model: TEXT_MODEL,
         max_completion_tokens: 120,
         messages: [
           { role: "system", content: systemPrompt },
@@ -101,7 +106,7 @@ router.post("/banter/monologue", async (req, res): Promise<void> => {
 
   try {
     const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
+      model: TEXT_MODEL,
       max_completion_tokens: 200,
       messages: [
         { role: "system", content: systemPrompt },
@@ -160,7 +165,7 @@ router.post("/banter/chat", async (req, res): Promise<void> => {
 
     try {
       const stream = await openai.chat.completions.create({
-        model: "gpt-5.4",
+        model: TEXT_MODEL,
         max_completion_tokens: 120,
         messages: [
           { role: "system", content: systemPrompt },
@@ -223,14 +228,16 @@ router.post("/banter/companion", async (req, res): Promise<void> => {
   res.setHeader("Connection", "keep-alive");
 
   try {
-    if (!hasOpenAIConfig) {
+    if (!hasAIConfig) {
       throw new Error(
-        "AI_INTEGRATIONS_OPENAI_API_KEY and AI_INTEGRATIONS_OPENAI_BASE_URL must be set for presenter chat",
+        aiProvider === "venice"
+          ? "VENICE_API_KEY must be set for presenter chat"
+          : "AI_INTEGRATIONS_OPENAI_API_KEY and AI_INTEGRATIONS_OPENAI_BASE_URL must be set for presenter chat",
       );
     }
 
     const stream = await openai.chat.completions.create({
-      model: PRESENTER_MODEL,
+      model: TEXT_MODEL,
       max_completion_tokens: 220,
       messages: [
         {
@@ -258,13 +265,14 @@ router.post("/banter/companion", async (req, res): Promise<void> => {
     logger.error(
       {
         err,
+        provider: aiProvider,
         presenter: slug,
-        model: PRESENTER_MODEL,
+        model: TEXT_MODEL,
         openaiStatus: error.status,
         openaiCode: error.code,
         openaiType: error.type,
         openaiMessage: error.message,
-        hasOpenAIConfig,
+        hasAIConfig,
       },
       "Presenter companion AI request failed",
     );
