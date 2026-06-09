@@ -471,7 +471,7 @@ export default function Game() {
     // Brief outcome toast
     toast({
       title: choice.label,
-      description: choice.outcome.slice(0, 100) + (choice.outcome.length > 100 ? "…" : ""),
+      description: choice.outcome,
     });
 
     // Trip / stage complete via event distance?
