@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { GRAND_TOUR_EPISODE_STAGES } from "@/data/grand-tour-episode-stages";
-import { CheckCircle2, Circle, Flag, Play, Trophy } from "lucide-react";
+import { loadCampaignState, loadPlayerCharacter } from "@/data/campaign";
+import { CheckCircle2, Circle, Flag, Play, Trophy, UserRound } from "lucide-react";
 
 export default function SeriesProgress() {
   const { saveId } = useParams();
@@ -27,7 +28,13 @@ export default function SeriesProgress() {
   const currentStage = GRAND_TOUR_EPISODE_STAGES[currentIndex];
   const nextStage = GRAND_TOUR_EPISODE_STAGES[currentIndex + 1];
   const mission = missions?.find((item) => item.id === save.missionId);
-  const progressPct = Math.round((currentIndex / GRAND_TOUR_EPISODE_STAGES.length) * 100);
+  const campaignState = loadCampaignState(save.id);
+  const completedEpisodeIds = new Set(campaignState?.completedEpisodes ?? []);
+  const completedCount = save.status === "completed"
+    ? GRAND_TOUR_EPISODE_STAGES.length
+    : Math.max(completedEpisodeIds.size, currentIndex);
+  const progressPct = Math.round((completedCount / GRAND_TOUR_EPISODE_STAGES.length) * 100);
+  const player = loadPlayerCharacter(save.id, save.playerName ?? "The New Bloke");
   const continueHref =
     save.status === "car_selection" || !save.carId
       ? `/mission/${save.missionId}?saveId=${save.id}&series=1`
@@ -58,12 +65,34 @@ export default function SeriesProgress() {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-xs uppercase font-bold text-muted-foreground">
-              <span>{currentIndex} completed</span>
+              <span>{completedCount} completed</span>
               <span>{GRAND_TOUR_EPISODE_STAGES.length} episodes</span>
             </div>
             <Progress value={progressPct} />
           </div>
         </div>
+
+        {player && (
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-primary bg-primary/10 text-primary">
+                    <UserRound className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase text-muted-foreground">Campaign Driver</p>
+                    <p className="font-black uppercase">{player.name} - Level {player.level}</p>
+                    <p className="text-xs text-muted-foreground">XP {player.xp} - {player.unspentPoints} unspent upgrade points</p>
+                  </div>
+                </div>
+                <Link href="/character">
+                  <Button variant="outline" className="uppercase font-bold">Upgrade Driver</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardContent className="p-5 space-y-3">
@@ -84,7 +113,7 @@ export default function SeriesProgress() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {GRAND_TOUR_EPISODE_STAGES.map((stage, index) => {
-            const completed = index < currentIndex || save.status === "completed";
+            const completed = completedEpisodeIds.has(stage.id) || index < currentIndex || save.status === "completed";
             const active = index === currentIndex && save.status !== "completed";
             return (
               <div

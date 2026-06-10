@@ -1,11 +1,14 @@
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowLeft, UserRound, Zap } from "lucide-react";
+import { ArrowLeft, Award, Backpack, Play, Trophy, UserRound, Zap } from "lucide-react";
 import { useListSaves, getListSavesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   PLAYER_STYLES,
+  loadBadges,
+  loadCampaignState,
+  loadInventory,
   loadPlayerCharacter,
   upgradePlayerStat,
   type PlayerStat,
@@ -31,8 +34,19 @@ export default function Character() {
   const save = latestSeriesSave(saves);
   const [version, setVersion] = useState(0);
   const character = save ? loadPlayerCharacter(save.id, save.playerName ?? "The New Bloke") : null;
+  const campaignState = save ? loadCampaignState(save.id) : null;
+  const inventory = save ? loadInventory(save.id) : [];
+  const badges = save ? loadBadges(save.id) : [];
   const style = character ? PLAYER_STYLES[character.style] : null;
   const xpToNext = character ? 250 - (character.xp % 250) : 250;
+  const unlockedBadges = badges.filter((badge) => badge.unlockedAt || badge.progress >= badge.target).length;
+  const continueHref = !save
+    ? "/series-start"
+    : save.status === "car_selection" || !save.carId
+      ? `/mission/${save.missionId}?saveId=${save.id}&series=1`
+      : save.status === "completed" || save.status === "failed"
+        ? `/results/${save.id}`
+        : `/game/${save.id}`;
 
   const upgrade = (stat: PlayerStat) => {
     if (!save) return;
@@ -49,13 +63,22 @@ export default function Character() {
               <UserRound className="h-6 w-6" />
               <h1 className="text-3xl font-black uppercase">Character</h1>
             </div>
-            <p className="text-muted-foreground">Your fourth-presenter RPG sheet for the campaign.</p>
+            <p className="text-muted-foreground">Your fourth-presenter RPG sheet for the campaign. Choices, trivia, repairs, and trials now earn XP.</p>
           </div>
-          <Link href="/">
-            <Button variant="outline" className="uppercase">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {save && (
+              <Link href={continueHref}>
+                <Button className="uppercase font-bold">
+                  <Play className="mr-2 h-4 w-4" /> Continue
+                </Button>
+              </Link>
+            )}
+            <Link href="/">
+              <Button variant="outline" className="uppercase">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (
@@ -87,6 +110,23 @@ export default function Character() {
               <div className="mt-5 rounded-md border border-border bg-muted/30 p-3">
                 <p className="text-xs font-bold uppercase text-muted-foreground">Unspent points</p>
                 <p className="font-mono text-3xl font-black text-primary">{character.unspentPoints}</p>
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-2 text-center text-xs">
+                <Link href={save ? `/series-progress/${save.id}` : "/series-start"} className="rounded-md border border-border bg-muted/20 p-2 hover:border-primary">
+                  <Trophy className="mx-auto mb-1 h-4 w-4 text-amber-400" />
+                  <p className="font-mono font-black">{campaignState?.completedEpisodes.length ?? 0}</p>
+                  <p className="text-muted-foreground">episodes</p>
+                </Link>
+                <Link href="/inventory" className="rounded-md border border-border bg-muted/20 p-2 hover:border-primary">
+                  <Backpack className="mx-auto mb-1 h-4 w-4 text-green-400" />
+                  <p className="font-mono font-black">{inventory.reduce((total, item) => total + item.qty, 0)}</p>
+                  <p className="text-muted-foreground">items</p>
+                </Link>
+                <Link href="/badges" className="rounded-md border border-border bg-muted/20 p-2 hover:border-primary">
+                  <Award className="mx-auto mb-1 h-4 w-4 text-blue-400" />
+                  <p className="font-mono font-black">{unlockedBadges}</p>
+                  <p className="text-muted-foreground">badges</p>
+                </Link>
               </div>
             </div>
 

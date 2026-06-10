@@ -1,8 +1,9 @@
 import { Link } from "wouter";
-import { ArrowLeft, CheckCircle2, Circle, MapPinned, Play, Trophy } from "lucide-react";
+import { ArrowLeft, Award, Backpack, CheckCircle2, Circle, Clock, MapPinned, Play, Trophy } from "lucide-react";
 import { useListSaves, getListSavesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { GRAND_TOUR_EPISODE_STAGES } from "@/data/grand-tour-episode-stages";
+import { loadBadges, loadCampaignState, loadInventory } from "@/data/campaign";
 import { cn } from "@/lib/utils";
 
 const COORDS: Record<number, [number, number]> = {
@@ -32,8 +33,17 @@ function continueHref(save: any | undefined) {
 export default function WorldMap() {
   const { data: saves, isLoading } = useListSaves({ query: { queryKey: getListSavesQueryKey() } });
   const save = latestSeriesSave(saves);
+  const campaignState = loadCampaignState(save?.id);
+  const badges = loadBadges(save?.id);
+  const inventory = loadInventory(save?.id);
   const currentIndex = save ? Math.max(0, Math.min(save.seriesStageIndex ?? 0, GRAND_TOUR_EPISODE_STAGES.length - 1)) : 0;
   const completeCampaign = save?.status === "completed";
+  const completedEpisodeIds = new Set(campaignState?.completedEpisodes ?? []);
+  const completedCount = completeCampaign
+    ? GRAND_TOUR_EPISODE_STAGES.length
+    : Math.max(completedEpisodeIds.size, currentIndex);
+  const unlockedBadges = badges.filter((badge) => badge.unlockedAt || badge.progress >= badge.target).length;
+  const inventoryCount = inventory.reduce((total, item) => total + item.qty, 0);
 
   return (
     <div className="flex-1 p-6 md:p-12">
@@ -76,7 +86,7 @@ export default function WorldMap() {
             </svg>
             {GRAND_TOUR_EPISODE_STAGES.map((stage, index) => {
               const [left, top] = COORDS[stage.id] ?? [50, 50];
-              const completed = completeCampaign || index < currentIndex;
+              const completed = completeCampaign || completedEpisodeIds.has(stage.id) || index < currentIndex;
               const active = !completeCampaign && index === currentIndex;
               return (
                 <Link key={stage.id} href={save ? `/series-progress/${save.id}` : "/series-start"}>
@@ -117,9 +127,55 @@ export default function WorldMap() {
               )}
             </div>
 
+            {save && (
+              <div className="grid grid-cols-2 gap-3">
+                <Link href={`/series-progress/${save.id}`}>
+                  <div className="rounded-md border border-border bg-card p-3 hover:border-primary">
+                    <Trophy className="mb-2 h-4 w-4 text-amber-400" />
+                    <p className="text-xs font-black uppercase text-muted-foreground">Episodes</p>
+                    <p className="font-mono text-xl font-black">{completedCount}/{GRAND_TOUR_EPISODE_STAGES.length}</p>
+                  </div>
+                </Link>
+                <Link href="/character">
+                  <div className="rounded-md border border-border bg-card p-3 hover:border-primary">
+                    <Clock className="mb-2 h-4 w-4 text-primary" />
+                    <p className="text-xs font-black uppercase text-muted-foreground">Journey</p>
+                    <p className="font-mono text-xl font-black">D{campaignState?.currentDay ?? 1}</p>
+                  </div>
+                </Link>
+                <Link href="/inventory">
+                  <div className="rounded-md border border-border bg-card p-3 hover:border-primary">
+                    <Backpack className="mb-2 h-4 w-4 text-green-400" />
+                    <p className="text-xs font-black uppercase text-muted-foreground">Inventory</p>
+                    <p className="font-mono text-xl font-black">{inventoryCount}</p>
+                  </div>
+                </Link>
+                <Link href="/badges">
+                  <div className="rounded-md border border-border bg-card p-3 hover:border-primary">
+                    <Award className="mb-2 h-4 w-4 text-blue-400" />
+                    <p className="text-xs font-black uppercase text-muted-foreground">Badges</p>
+                    <p className="font-mono text-xl font-black">{unlockedBadges}/{badges.length}</p>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {campaignState && campaignState.discoveredLocations.length > 0 && (
+              <div className="rounded-md border border-border bg-card p-4">
+                <p className="mb-2 text-xs font-black uppercase text-muted-foreground">Discovered Places</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {campaignState.discoveredLocations.slice(-8).map((location) => (
+                    <span key={location} className="rounded border border-border bg-muted/30 px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                      {location}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="max-h-[520px] space-y-2 overflow-auto pr-1">
               {GRAND_TOUR_EPISODE_STAGES.map((stage, index) => {
-                const completed = completeCampaign || index < currentIndex;
+                const completed = completeCampaign || completedEpisodeIds.has(stage.id) || index < currentIndex;
                 const active = !completeCampaign && index === currentIndex;
                 return (
                   <div key={stage.id} className={cn("rounded-md border bg-card p-3", active ? "border-primary" : "border-border")}>

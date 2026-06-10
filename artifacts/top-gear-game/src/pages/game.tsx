@@ -13,6 +13,7 @@ import { pickNextEvent, type RoadEventTemplate, type EventChoice } from "@/data/
 import { pickTrivia, type TriviaQuestion } from "@/data/trivia";
 import { buildForwardPrompt, buildNavigationPrompt } from "@/data/questTurns";
 import {
+  addPlayerXp,
   advanceCampaignTime,
   consumeInventoryItem,
   ensureCampaignState,
@@ -113,6 +114,7 @@ interface OutcomeSummary {
   foodDelta?: number;
   partsDelta?: number;
   timeHours?: number;
+  xpDelta?: number;
 }
 
 type AdventureDrive = {
@@ -389,6 +391,7 @@ export default function Game() {
       const next = idx >= 0 ? stagesList[idx + 1] : undefined;
       const cumulative = priorDistRef.current + TRIP_KM;
       recordCompletedEpisode(save.id, save.missionId);
+      addPlayerXp(save.id, 100, save.playerName ?? displayName);
 
       if (next) {
         try {
@@ -431,7 +434,7 @@ export default function Game() {
       });
     } catch { /* silent */ }
     setTimeout(() => setLocation(`/results/${save.id}`), 1500);
-  }, [save, isSeries, stagesList, updateSave, food, parts, setLocation]);
+  }, [save, isSeries, stagesList, updateSave, food, parts, setLocation, displayName]);
 
   // ── Shared advance resolver (challenge / press on / trivia) ────────────────
   const resolveAdvance = useCallback(async (opts: {
@@ -445,6 +448,7 @@ export default function Game() {
     after?: "event" | "advance" | "navigation";
     timeHours?: number;
     outcome?: Omit<OutcomeSummary, "id">;
+    xp?: number;
   }) => {
     if (!save || busyRef.current) return;
     busyRef.current = true;
@@ -462,7 +466,9 @@ export default function Game() {
     setFuel(newFuel);
     setCamaraderie(newCam);
     setDriveResult(opts.result ?? null);
-    if (opts.outcome) setLastOutcome({ id: `outcome-${Date.now()}`, ...opts.outcome });
+    const xpEarned = isSeries ? Math.max(5, Math.round(opts.xp ?? (opts.kmEarned / 5 + Math.max(0, earnings) / 25))) : 0;
+    if (isSeries && xpEarned > 0) addPlayerXp(save.id, xpEarned, save.playerName ?? displayName);
+    if (opts.outcome) setLastOutcome({ id: `outcome-${Date.now()}`, xpDelta: xpEarned || undefined, ...opts.outcome });
     setMode("hub");
     advanceClock(opts.timeHours ?? 2);
     if (opts.chat) setChatReact({ id: `adv-${Date.now()}`, context: opts.chat.context, tone: opts.chat.tone });
@@ -526,7 +532,7 @@ export default function Game() {
     setTab(surfacedEvent ? "chat" : "journey");
     if (opts.result) setTimeout(() => setDriveResult(null), 6000);
     finishBusy();
-  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage, isSeries, advanceClock, finishBusy]);
+  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage, isSeries, advanceClock, finishBusy, displayName]);
 
   // ── Driving challenge complete ─────────────────────────────────────────────
   const handleDriveComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
@@ -557,6 +563,7 @@ export default function Game() {
         result: { earnings, condDelta: condDelta + choice.damageEffect, distKm: kmEarned },
         after: isSeries ? "advance" : "event",
         timeHours: timeForChoice(choice),
+        xp: 40 + Math.round(kmEarned / 3),
         outcome: {
           title: "Driving challenge resolved",
           detail: choice.outcome,
@@ -583,6 +590,7 @@ export default function Game() {
       result: { earnings, condDelta, distKm: kmEarned },
       after: isSeries ? "navigation" : "event",
       timeHours: 2,
+      xp: 35 + Math.round(kmEarned / 3),
       outcome: {
         title: "Driving challenge complete",
         detail: condDelta < 0 ? "You banked the money, but the car paid for it." : "You banked the money and kept the car mostly in one piece.",
@@ -610,6 +618,7 @@ export default function Game() {
       result: { earnings, condDelta, distKm: kmEarned },
       after: isSeries ? "navigation" : "event",
       timeHours: 2,
+      xp: 45 + Math.round(kmEarned / 3),
       outcome: {
         title: "Slalom run complete",
         detail: "The downhill trial is over. The clock, the gates, and the bodywork have all had their say.",
@@ -636,6 +645,7 @@ export default function Game() {
       condDelta: -8,
       after: isSeries ? "navigation" : "event",
       timeHours: 3,
+      xp: 16,
       outcome: {
         title: "Pressed on",
         detail: "No stop, no ceremony. Just distance, fuel burn, and some fresh mechanical suspicion.",
@@ -677,6 +687,7 @@ export default function Game() {
         camaraderieDelta: correct ? 2 : 0,
         after: isSeries ? (triviaSource === "event" ? "advance" : "navigation") : "event",
         timeHours: correct ? 1 : 2,
+        xp: correct ? 30 : 10,
         outcome: {
           title: correct ? "Pub quiz won" : "Pub quiz survived",
           detail: correct
@@ -753,6 +764,8 @@ export default function Game() {
       context: `${displayName || "The driver"} chose "${choice.label}". ${choice.outcome}`,
       tone: choice.risk === "mad" ? "alarmed" : choice.risk === "risky" ? "excited" : "approving",
     });
+    const xpEarned = isSeries ? 12 + Math.round(choice.distanceEffect / 8) + (choice.risk === "mad" ? 8 : choice.risk === "risky" ? 4 : 0) : 0;
+    if (isSeries && xpEarned > 0) addPlayerXp(save.id, xpEarned, save.playerName ?? displayName);
     setLastOutcome({
       id: `nav-outcome-${Date.now()}`,
       title: "Route chosen",
@@ -764,6 +777,7 @@ export default function Game() {
       fuelDelta: newFuel - fuel,
       foodDelta: newFood - food,
       timeHours: hours,
+      xpDelta: xpEarned || undefined,
     });
 
     if (newDist >= TRIP_KM) {
@@ -932,6 +946,8 @@ export default function Game() {
     setResolving(false);
     setPendingEvent(null);
     if (isSeries) setTurnPhase("advance");
+    const xpEarned = isSeries ? 14 + Math.round(choice.distanceEffect / 8) + (choice.risk === "mad" ? 10 : choice.risk === "risky" ? 5 : 0) : 0;
+    if (isSeries && xpEarned > 0) addPlayerXp(save.id, xpEarned, save.playerName ?? displayName);
     setLastOutcome({
       id: `event-outcome-${Date.now()}`,
       title: pendingEvent.title,
@@ -944,6 +960,7 @@ export default function Game() {
       foodDelta: newFood - food,
       partsDelta: newParts - parts,
       timeHours: hours,
+      xpDelta: xpEarned || undefined,
     });
 
     setChatReact({
@@ -999,7 +1016,9 @@ export default function Game() {
       foodDelta: offer.action === "food" ? newFood - food : undefined,
       partsDelta: offer.action === "parts" ? newParts - parts : undefined,
       timeHours: isSeries ? 1 : undefined,
+      xpDelta: isSeries ? 12 : undefined,
     });
+    if (isSeries) addPlayerXp(save.id, 12, save.playerName ?? displayName);
     toast({ title: offer.label, description: "Sorted. Back on the road." });
   };
 
@@ -1017,7 +1036,9 @@ export default function Game() {
       tone: "good",
       conditionDelta: 30,
       partsDelta: -1,
+      xpDelta: isSeries ? 8 : undefined,
     });
+    if (isSeries && save) addPlayerXp(save.id, 8, save.playerName ?? displayName);
     toast({ title: "🔧 Roadside repair", description: "Used a spare part. Car condition +30%." });
   };
 
@@ -1209,6 +1230,7 @@ export default function Game() {
                   {lastOutcome.fuelDelta != null && lastOutcome.fuelDelta !== 0 && <span>fuel {lastOutcome.fuelDelta > 0 ? "+" : ""}{lastOutcome.fuelDelta}%</span>}
                   {lastOutcome.foodDelta != null && lastOutcome.foodDelta !== 0 && <span>food {lastOutcome.foodDelta > 0 ? "+" : ""}{lastOutcome.foodDelta}</span>}
                   {lastOutcome.partsDelta != null && lastOutcome.partsDelta !== 0 && <span>parts {lastOutcome.partsDelta > 0 ? "+" : ""}{lastOutcome.partsDelta}</span>}
+                  {lastOutcome.xpDelta != null && lastOutcome.xpDelta !== 0 && <span>xp +{lastOutcome.xpDelta}</span>}
                 </div>
               </div>
             )}
