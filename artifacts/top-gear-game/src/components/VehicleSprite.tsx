@@ -1,4 +1,4 @@
-import { vehicleArchetype, vehicleSprite } from "@/data/vehicles";
+import { vehicleSideSprite } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
 
 type VehicleLike = {
@@ -16,7 +16,7 @@ interface VehicleSpriteProps {
 
 export function getVehicleSprite(vehicle?: VehicleLike | null): string | undefined {
   if (!vehicle?.name) return undefined;
-  return vehicleSprite(vehicleArchetype(vehicle.name, vehicle.power ?? 5, vehicle.offRoad ?? 5));
+  return vehicleSideSprite(vehicle.name, vehicle.power ?? 5, vehicle.offRoad ?? 5);
 }
 
 export default function VehicleSprite({

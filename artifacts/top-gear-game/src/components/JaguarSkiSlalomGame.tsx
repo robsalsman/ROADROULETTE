@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { vehicleTopDownSprite } from "@/data/vehicles";
 
 const W = 420;
 const H = 720;
@@ -7,6 +8,7 @@ const CAR_W = 58;
 const CAR_H = 82;
 const CAR_Y = H * 0.32;
 const RUN_SECONDS = 45;
+const SLALOM_VEHICLE_SPRITE = vehicleTopDownSprite("Jaguar XJ-S", 6, 3);
 
 type Phase = "ready" | "playing" | "finished";
 
@@ -37,6 +39,7 @@ export default function JaguarSkiSlalomGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastTs = useRef<number | null>(null);
+  const carImg = useRef<HTMLImageElement | null>(null);
   const keys = useRef({ left: false, right: false });
   const pointerX = useRef<number | null>(null);
   const carX = useRef(W / 2);
@@ -55,6 +58,14 @@ export default function JaguarSkiSlalomGame() {
   const [damage, setDamage] = useState(0);
   const [timeLeft, setTimeLeft] = useState(RUN_SECONDS);
   const [distance, setDistance] = useState(0);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = SLALOM_VEHICLE_SPRITE;
+    img.onload = () => { carImg.current = img; };
+    img.onerror = () => { carImg.current = null; };
+    return () => { img.onload = null; img.onerror = null; };
+  }, []);
 
   const resetRun = useCallback(() => {
     carX.current = W / 2;
@@ -106,6 +117,12 @@ export default function JaguarSkiSlalomGame() {
     ctx.beginPath();
     ctx.ellipse(0, CAR_H * 0.48, CAR_W * 0.5, 10, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    if (carImg.current && carImg.current.complete && carImg.current.naturalWidth > 0) {
+      ctx.drawImage(carImg.current, -CAR_W * 0.6, -CAR_H * 0.56, CAR_W * 1.2, CAR_H * 1.25);
+      ctx.restore();
+      return;
+    }
 
     ctx.fillStyle = "#111827";
     ctx.beginPath();
