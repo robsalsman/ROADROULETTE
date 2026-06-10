@@ -1,10 +1,11 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Backpack, Car, Gamepad2, Globe2, Medal, MessageCircle, Save, Trophy, UserRound, Wrench } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-start md:justify-center p-6 py-10 relative overflow-x-hidden">
       {/* Background Effect */}
       <div className="absolute inset-0 z-0 bg-[url('/images/bolivia.png')] bg-cover bg-center opacity-20 pointer-events-none mix-blend-overlay"></div>
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none"></div>
@@ -32,37 +33,64 @@ export default function Home() {
         >
           <Link href="/character-select" className="w-full">
             <Button size="lg" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-arcade-mode">
-              Arcade Mode
+              <Gamepad2 className="mr-2 h-5 w-5" /> Arcade Mode
             </Button>
           </Link>
           <Link href="/series-start" className="w-full">
             <Button size="lg" className="w-full text-lg uppercase tracking-wide h-14 bg-amber-500 text-black hover:bg-amber-400" data-testid="button-series-mode">
-              Series Mode
+              <Trophy className="mr-2 h-5 w-5" /> Series Mode
             </Button>
           </Link>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/world-map" className="w-full">
+              <Button size="lg" variant="secondary" className="w-full uppercase tracking-wide h-12" data-testid="button-world-map">
+                <Globe2 className="mr-2 h-4 w-4" /> Map
+              </Button>
+            </Link>
+            <Link href="/trivia" className="w-full">
+              <Button size="lg" variant="secondary" className="w-full uppercase tracking-wide h-12" data-testid="button-trivia">
+                <Medal className="mr-2 h-4 w-4" /> Trivia
+              </Button>
+            </Link>
+            <Link href="/garage" className="w-full">
+              <Button size="lg" variant="secondary" className="w-full uppercase tracking-wide h-12" data-testid="button-garage">
+                <Car className="mr-2 h-4 w-4" /> Garage
+              </Button>
+            </Link>
+            <Link href="/inventory" className="w-full">
+              <Button size="lg" variant="secondary" className="w-full uppercase tracking-wide h-12" data-testid="button-inventory">
+                <Backpack className="mr-2 h-4 w-4" /> Inventory
+              </Button>
+            </Link>
+            <Link href="/character" className="w-full">
+              <Button size="lg" variant="outline" className="w-full uppercase tracking-wide h-12" data-testid="button-character">
+                <UserRound className="mr-2 h-4 w-4" /> Driver
+              </Button>
+            </Link>
+            <Link href="/badges" className="w-full">
+              <Button size="lg" variant="outline" className="w-full uppercase tracking-wide h-12" data-testid="button-badges">
+                <Medal className="mr-2 h-4 w-4" /> Badges
+              </Button>
+            </Link>
+          </div>
           <Link href="/mini-games" className="w-full">
             <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-mini-games">
-              Mini Games
-            </Button>
-          </Link>
-          <Link href="/garage" className="w-full">
-            <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-garage">
-              Garage
+              <Wrench className="mr-2 h-5 w-5" /> Mini Games
             </Button>
           </Link>
           <Link href="/saves" className="w-full">
             <Button size="lg" variant="outline" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-continue-game">
-              Continue
+              <Save className="mr-2 h-5 w-5" /> Continue
             </Button>
           </Link>
           <Link href="/leaderboard" className="w-full">
             <Button size="lg" variant="outline" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-leaderboard">
-              Leaderboard
+              <Trophy className="mr-2 h-5 w-5" /> Leaderboard
             </Button>
           </Link>
           <Link href="/text-presenter" className="w-full">
             <Button size="lg" variant="outline" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-text-presenter">
-              Text a Presenter
+              <MessageCircle className="mr-2 h-5 w-5" /> Text a Presenter
             </Button>
           </Link>
         </motion.div>

@@ -16,6 +16,11 @@ import Game from "@/pages/game";
 import Challenge from "@/pages/challenge";
 import MiniGames from "@/pages/mini-games";
 import Garage from "@/pages/garage";
+import WorldMap from "@/pages/world-map";
+import Inventory from "@/pages/inventory";
+import Character from "@/pages/character";
+import Badges from "@/pages/badges";
+import TriviaMode from "@/pages/trivia-mode";
 import Results from "@/pages/results";
 import Saves from "@/pages/saves";
 import Leaderboard from "@/pages/leaderboard";
@@ -38,6 +43,11 @@ function Router() {
       <Route path="/mini-games" component={MiniGames} />
       <Route path="/mini-games/jaguar-ski-slalom" component={MiniGames} />
       <Route path="/garage" component={Garage} />
+      <Route path="/world-map" component={WorldMap} />
+      <Route path="/inventory" component={Inventory} />
+      <Route path="/character" component={Character} />
+      <Route path="/badges" component={Badges} />
+      <Route path="/trivia" component={TriviaMode} />
       <Route path="/results/:saveId" component={Results} />
       <Route path="/saves" component={Saves} />
       <Route path="/leaderboard" component={Leaderboard} />

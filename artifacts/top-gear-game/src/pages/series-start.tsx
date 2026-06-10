@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Trophy, ChevronLeft, Flag } from "lucide-react";
+import { initializeCampaignSave, PLAYER_STYLES, type PlayerStyle } from "@/data/campaign";
 
 export default function SeriesStart() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
+  const [style, setStyle] = useState<PlayerStyle>("balanced");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +37,7 @@ export default function SeriesStart() {
           seriesStageIndex: 0,
         },
       });
+      initializeCampaignSave(save.id, clean.slice(0, 40), style);
       setLocation(`/mission/${first.id}?saveId=${save.id}&series=1`);
     } catch {
       setError("Couldn't start the series. Try again.");
@@ -63,7 +66,7 @@ export default function SeriesStart() {
           <h1 className="text-4xl font-bold uppercase tracking-tighter">The Grand Series</h1>
           <p className="text-muted-foreground">
             You're the fourth member of the team. Drive every stage with Clarkson, Hammond and May.
-            Buy a fresh car each leg — but your money, supplies, upgrades and camaraderie carry over.
+            Buy a fresh car each leg, but your money, supplies, upgrades and camaraderie carry over.
           </p>
         </div>
 
@@ -82,6 +85,27 @@ export default function SeriesStart() {
             {error && <p className="text-xs text-red-400">{error}</p>}
           </div>
 
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Driver style</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {Object.entries(PLAYER_STYLES).map(([key, option]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStyle(key as PlayerStyle)}
+                  className={`rounded-md border p-3 text-left transition-colors ${
+                    style === key
+                      ? "border-amber-400 bg-amber-500/15 text-amber-100"
+                      : "border-border bg-muted/30 hover:border-muted-foreground"
+                  }`}
+                >
+                  <span className="block text-sm font-black uppercase">{option.label}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{option.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Button
             onClick={handleStart}
             disabled={starting}
@@ -89,7 +113,7 @@ export default function SeriesStart() {
             data-testid="button-start-series"
             className="w-full uppercase font-bold tracking-widest bg-amber-500 text-black hover:bg-amber-400"
           >
-            {starting ? "Loading the convoy…" : "Begin the Series →"}
+            {starting ? "Loading the convoy..." : "Begin the Series ->"}
           </Button>
         </div>
 
