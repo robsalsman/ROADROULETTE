@@ -45,6 +45,11 @@ export default function Home() {
               Mini Games
             </Button>
           </Link>
+          <Link href="/garage" className="w-full">
+            <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-garage">
+              Garage
+            </Button>
+          </Link>
           <Link href="/saves" className="w-full">
             <Button size="lg" variant="outline" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-continue-game">
               Continue

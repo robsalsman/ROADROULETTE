@@ -343,7 +343,7 @@ export function vehicleTopDownSvg(name: string, power = 5, offRoad = 5): string 
 export function vehicleSideSprite(name: string, power = 5, offRoad = 5): string {
   const curated = curatedVehicleSideSprite(name);
   if (curated) return curated;
-  return svgUrl(vehicleSideSvg(name, power, offRoad));
+  return vehicleSprite(vehicleArchetype(name, power, offRoad));
 }
 
 export function vehicleTopDownSprite(name: string, power = 5, offRoad = 5): string {

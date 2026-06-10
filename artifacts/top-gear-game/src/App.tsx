@@ -15,6 +15,7 @@ import UpgradeShop from "@/pages/upgrade-shop";
 import Game from "@/pages/game";
 import Challenge from "@/pages/challenge";
 import MiniGames from "@/pages/mini-games";
+import Garage from "@/pages/garage";
 import Results from "@/pages/results";
 import Saves from "@/pages/saves";
 import Leaderboard from "@/pages/leaderboard";
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/challenge/:saveId" component={Challenge} />
       <Route path="/mini-games" component={MiniGames} />
       <Route path="/mini-games/jaguar-ski-slalom" component={MiniGames} />
+      <Route path="/garage" component={Garage} />
       <Route path="/results/:saveId" component={Results} />
       <Route path="/saves" component={Saves} />
       <Route path="/leaderboard" component={Leaderboard} />

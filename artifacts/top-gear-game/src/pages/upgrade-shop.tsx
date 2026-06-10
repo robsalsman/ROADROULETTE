@@ -14,7 +14,7 @@ import {
   type Upgrades,
 } from "@/data/garage";
 
-interface UpgradeDef {
+export interface UpgradeDef {
   cat: UpgradeCat;
   label: string;
   icon: React.ReactNode;
@@ -22,7 +22,7 @@ interface UpgradeDef {
   tiers: { name: string; cost: number; desc: string }[];
 }
 
-const DEFS: UpgradeDef[] = [
+export const DEFS: UpgradeDef[] = [
   {
     cat: "engine",
     label: "Engine",
@@ -102,7 +102,7 @@ const DEFS: UpgradeDef[] = [
   },
 ];
 
-const EFFECTS: Record<UpgradeCat, string[]> = {
+export const EFFECTS: Record<UpgradeCat, string[]> = {
   engine:    ["Distance per second +15%", "Distance per second +30%", "Distance per second +50%"],
   suspension:["Lane switch speed +2", "Lane switch speed +4", "Lane switch speed +6"],
   fuel:      ["Fuel drain −15%", "Fuel drain −30%", "Fuel drain −50%"],

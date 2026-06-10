@@ -5,6 +5,7 @@ type VehicleLike = {
   name?: string | null;
   power?: number | null;
   offRoad?: number | null;
+  paintColor?: string | null;
 };
 
 interface VehicleSpriteProps {
@@ -12,6 +13,7 @@ interface VehicleSpriteProps {
   className?: string;
   imageClassName?: string;
   label?: string;
+  paintColor?: string | null;
 }
 
 export function getVehicleSprite(vehicle?: VehicleLike | null): string | undefined {
@@ -24,14 +26,16 @@ export default function VehicleSprite({
   className,
   imageClassName,
   label,
+  paintColor,
 }: VehicleSpriteProps) {
   const src = getVehicleSprite(vehicle);
   const name = label ?? vehicle?.name ?? "Vehicle";
+  const tint = paintColor ?? vehicle?.paintColor ?? null;
 
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-md border border-border bg-muted/30 overflow-hidden",
+        "relative flex items-center justify-center rounded-md border border-border bg-muted/30 overflow-hidden",
         className,
       )}
       aria-label={name}
@@ -45,6 +49,23 @@ export default function VehicleSprite({
         />
       ) : (
         <div className="text-xs font-black uppercase text-muted-foreground">Car</div>
+      )}
+      {src && tint && (
+        <div
+          className="pointer-events-none absolute inset-2 opacity-35 mix-blend-color"
+          style={{
+            backgroundColor: tint,
+            WebkitMaskImage: `url("${src}")`,
+            WebkitMaskPosition: "center",
+            WebkitMaskRepeat: "no-repeat",
+            WebkitMaskSize: "contain",
+            maskImage: `url("${src}")`,
+            maskPosition: "center",
+            maskRepeat: "no-repeat",
+            maskSize: "contain",
+          }}
+          aria-hidden="true"
+        />
       )}
     </div>
   );

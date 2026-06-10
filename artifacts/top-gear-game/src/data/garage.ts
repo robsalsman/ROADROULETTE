@@ -13,6 +13,7 @@ export interface GarageCar {
   offRoad: number;
   description: string;
   purchasedAt: number;
+  paintColor?: string;
 }
 
 export interface GarageState {
