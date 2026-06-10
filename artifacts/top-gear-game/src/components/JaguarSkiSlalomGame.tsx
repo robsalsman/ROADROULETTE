@@ -5,6 +5,7 @@ const W = 420;
 const H = 720;
 const CAR_W = 58;
 const CAR_H = 82;
+const CAR_Y = H * 0.32;
 const RUN_SECONDS = 45;
 
 type Phase = "ready" | "playing" | "finished";
@@ -36,7 +37,6 @@ export default function JaguarSkiSlalomGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastTs = useRef<number | null>(null);
-  const carImg = useRef<HTMLImageElement | null>(null);
   const keys = useRef({ left: false, right: false });
   const pointerX = useRef<number | null>(null);
   const carX = useRef(W / 2);
@@ -55,14 +55,6 @@ export default function JaguarSkiSlalomGame() {
   const [damage, setDamage] = useState(0);
   const [timeLeft, setTimeLeft] = useState(RUN_SECONDS);
   const [distance, setDistance] = useState(0);
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = "/images/vehicles/sportscar.png";
-    img.onload = () => { carImg.current = img; };
-    img.onerror = () => { carImg.current = null; };
-    return () => { img.onload = null; img.onerror = null; };
-  }, []);
 
   const resetRun = useCallback(() => {
     carX.current = W / 2;
@@ -104,27 +96,61 @@ export default function JaguarSkiSlalomGame() {
   };
 
   const drawCar = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
+    const lean = Math.max(-0.22, Math.min(0.22, (pointerX.current !== null ? pointerX.current - carX.current : 0) / 260));
+
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(Math.sin(elapsed.current * 7) * 0.025);
+    ctx.rotate(lean + Math.sin(elapsed.current * 7) * 0.018);
+
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
-    ctx.ellipse(0, CAR_H * 0.44, CAR_W * 0.45, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, CAR_H * 0.48, CAR_W * 0.5, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    if (carImg.current && carImg.current.complete && carImg.current.naturalWidth > 0) {
-      ctx.drawImage(carImg.current, -CAR_W / 2, -CAR_H * 0.42, CAR_W, CAR_H * 0.72);
-    } else {
-      ctx.fillStyle = "#f87171";
-      ctx.strokeStyle = "#111827";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(-CAR_W / 2, -CAR_H / 2, CAR_W, CAR_H, 10);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#c7d2fe";
-      ctx.fillRect(-CAR_W * 0.32, -CAR_H * 0.25, CAR_W * 0.64, CAR_H * 0.24);
-    }
+    ctx.fillStyle = "#111827";
+    ctx.beginPath();
+    ctx.roundRect(-CAR_W * 0.56, -CAR_H * 0.28, 10, CAR_H * 0.28, 4);
+    ctx.roundRect(CAR_W * 0.39, -CAR_H * 0.28, 10, CAR_H * 0.28, 4);
+    ctx.roundRect(-CAR_W * 0.56, CAR_H * 0.2, 10, CAR_H * 0.28, 4);
+    ctx.roundRect(CAR_W * 0.39, CAR_H * 0.2, 10, CAR_H * 0.28, 4);
+    ctx.fill();
+
+    ctx.fillStyle = "#f87171";
+    ctx.strokeStyle = "#1f2937";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, CAR_H * 0.52);
+    ctx.bezierCurveTo(CAR_W * 0.4, CAR_H * 0.34, CAR_W * 0.43, -CAR_H * 0.2, CAR_W * 0.24, -CAR_H * 0.44);
+    ctx.lineTo(-CAR_W * 0.24, -CAR_H * 0.44);
+    ctx.bezierCurveTo(-CAR_W * 0.43, -CAR_H * 0.2, -CAR_W * 0.4, CAR_H * 0.34, 0, CAR_H * 0.52);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#bfdbfe";
+    ctx.strokeStyle = "rgba(30,41,59,0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-CAR_W * 0.23, -CAR_H * 0.16);
+    ctx.lineTo(CAR_W * 0.23, -CAR_H * 0.16);
+    ctx.lineTo(CAR_W * 0.16, CAR_H * 0.12);
+    ctx.lineTo(-CAR_W * 0.16, CAR_H * 0.12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#fecaca";
+    ctx.beginPath();
+    ctx.roundRect(-CAR_W * 0.2, CAR_H * 0.27, CAR_W * 0.4, 8, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -CAR_H * 0.4);
+    ctx.lineTo(0, CAR_H * 0.44);
+    ctx.stroke();
+
     ctx.restore();
   };
 
@@ -140,20 +166,20 @@ export default function JaguarSkiSlalomGame() {
 
     ctx.fillStyle = "#f8fafc";
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(W, 0);
-    ctx.lineTo(W * 0.78, H);
-    ctx.lineTo(W * 0.22, H);
+    ctx.moveTo(W * 0.24, 0);
+    ctx.lineTo(W * 0.76, 0);
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
     ctx.closePath();
     ctx.fill();
 
     ctx.strokeStyle = "rgba(148,163,184,0.35)";
     ctx.lineWidth = 2;
     for (let i = 0; i < 9; i++) {
-      const y = ((elapsed.current * 90 + i * 90) % H);
+      const y = (((i * 90 - elapsed.current * 90) % H) + H) % H;
       ctx.beginPath();
-      ctx.moveTo(W * 0.24, y);
-      ctx.lineTo(W * 0.76, y + 16);
+      ctx.moveTo(W * 0.2, y);
+      ctx.lineTo(W * 0.8, y + 16);
       ctx.stroke();
     }
 
@@ -208,7 +234,7 @@ export default function JaguarSkiSlalomGame() {
       ctx.fill();
     }
 
-    drawCar(ctx, carX.current, H - 120);
+    drawCar(ctx, carX.current, CAR_Y);
   }, []);
 
   const loop = useCallback((ts: number) => {
@@ -242,7 +268,7 @@ export default function JaguarSkiSlalomGame() {
       if (gateTimer.current <= 0) {
         gates.current.push({
           id: nextGateId.current++,
-          y: -40,
+          y: H + 40,
           centerX: 105 + Math.random() * 210,
           gap: Math.max(112, 168 - elapsed.current * 1.3),
           scored: false,
@@ -254,7 +280,7 @@ export default function JaguarSkiSlalomGame() {
       if (hazardTimer.current <= 0) {
         hazards.current.push({
           x: 70 + Math.random() * (W - 140),
-          y: -30,
+          y: H + 30,
           r: 16 + Math.random() * 8,
           hit: false,
         });
@@ -263,8 +289,8 @@ export default function JaguarSkiSlalomGame() {
 
       const move = speed.current * dt;
       for (const gate of gates.current) {
-        gate.y += move;
-        if (!gate.scored && gate.y > H - 120) {
+        gate.y -= move;
+        if (!gate.scored && gate.y < CAR_Y) {
           gate.scored = true;
           const insideGate = carX.current > gate.centerX - gate.gap / 2 && carX.current < gate.centerX + gate.gap / 2;
           if (insideGate) {
@@ -272,17 +298,17 @@ export default function JaguarSkiSlalomGame() {
           } else {
             setGatesMissed((prev) => prev + 1);
             setDamage((prev) => Math.min(100, prev + 8));
-            addSparks(carX.current, H - 92);
+            addSparks(carX.current, CAR_Y + 28);
           }
         }
       }
-      gates.current = gates.current.filter((gate) => gate.y < H + 60);
+      gates.current = gates.current.filter((gate) => gate.y > -60);
 
       for (const hazard of hazards.current) {
-        hazard.y += move;
+        hazard.y -= move;
         if (!hazard.hit) {
           const dx = Math.abs(hazard.x - carX.current);
-          const dy = Math.abs(hazard.y - (H - 120));
+          const dy = Math.abs(hazard.y - CAR_Y);
           if (dx < hazard.r + CAR_W * 0.36 && dy < hazard.r + CAR_H * 0.18) {
             hazard.hit = true;
             setDamage((prev) => Math.min(100, prev + 18));
@@ -290,7 +316,7 @@ export default function JaguarSkiSlalomGame() {
           }
         }
       }
-      hazards.current = hazards.current.filter((hazard) => hazard.y < H + 60 && !hazard.hit);
+      hazards.current = hazards.current.filter((hazard) => hazard.y > -60 && !hazard.hit);
 
       for (const spark of sparks.current) {
         spark.x += spark.vx * dt;
