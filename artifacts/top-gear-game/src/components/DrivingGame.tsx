@@ -527,7 +527,7 @@ function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, wheelRot: 
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
     const spriteH = h * 1.5;
     const spriteW = w * 1.18;
-    ctx.drawImage(sprite, (w - spriteW) / 2, h - spriteH + h * 0.18, spriteW, spriteH);
+    ctx.drawImage(sprite, (w - spriteW) / 2, h - spriteH + h * 0.48, spriteW, spriteH);
     ctx.restore();
     return;
   }
