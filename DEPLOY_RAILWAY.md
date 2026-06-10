@@ -4,9 +4,9 @@
 
 Road Roulette is configured as a standalone project, separate from unrelated repositories and deployments.
 
-- GitHub repository: `https://github.com/robsa/road-roulette`
+- GitHub repository: `https://github.com/robsalsman/ROADROULETTE`
 - Local project path: `C:\Users\robsa\Documents\Road Roulette`
-- Git remote: `https://github.com/robsa/road-roulette.git`
+- Git remote: `https://github.com/robsalsman/ROADROULETTE.git`
 - Confirmed no unrelated deployment strings, domains, secrets, remotes, assets, workflows, database connections, or deployment configuration were found in this repository during the deployment audit.
 
 ## Railway Service Shape
@@ -58,7 +58,7 @@ Notes:
 
 ## PostgreSQL Setup
 
-1. In Railway, create a new project from `https://github.com/robsa/road-roulette`.
+1. In Railway, create a new project from `https://github.com/robsalsman/ROADROULETTE`.
 2. Add a PostgreSQL database to the same Railway project.
 3. Attach/reference the PostgreSQL `DATABASE_URL` in the Road Roulette web service.
 4. Set the required environment variables listed above.
@@ -127,6 +127,6 @@ rg -n -i "<external project names, domains, or env prefixes>" .
 
 Expected result:
 
-- Remote points only to `https://github.com/robsa/road-roulette.git`.
+- Remote points only to `https://github.com/robsalsman/ROADROULETTE.git`.
 - Search returns no unrelated project references.
 - No unrelated domains, secrets, deployment files, workflows, database connections, or assets are present.
