@@ -6,11 +6,19 @@ import {
   useGetMission, getGetMissionQueryKey,
   useListMissions, getListMissionsQueryKey,
 } from "@workspace/api-client-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { pickNextEvent, type RoadEventTemplate, type EventChoice } from "@/data/roadEvents";
 import { pickTrivia, type TriviaQuestion } from "@/data/trivia";
+import { buildForwardPrompt, buildNavigationPrompt } from "@/data/questTurns";
+import {
+  advanceCampaignTime,
+  ensureCampaignState,
+  grantInventoryItem,
+  recordCampaignTrivia,
+  recordDrivingChallenge,
+} from "@/data/campaign";
 import DrivingGame from "@/components/DrivingGame";
 import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
@@ -53,6 +61,7 @@ const TRIP_KM = 500;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type GameMode = "loading" | "hub" | "driving" | "gameover";
+type TurnPhase = "navigation" | "road-event" | "advance";
 
 interface MechanicOffer {
   label: string;
@@ -107,6 +116,8 @@ export default function Game() {
   const [mode, setMode] = useState<GameMode>("loading");
   const [tab, setTab] = useState<"chat" | "journey">("chat");
   const [pendingEvent, setPendingEvent] = useState<RoadEventTemplate | null>(null);
+  const [turnPhase, setTurnPhase] = useState<TurnPhase>("navigation");
+  const [turnNumber, setTurnNumber] = useState(0);
   const [resolving, setResolving] = useState(false);
   // Single shared lock so the three advance paths + road-event resolution can
   // never run concurrently with stale-closure values.
@@ -118,6 +129,8 @@ export default function Game() {
   const [upgrades, setUpgrades] = useState<Upgrades>({});
   const [shownEventIds, setShownEventIds] = useState<Set<string>>(new Set());
   const [chatReact, setChatReact] = useState<{ id: string; context: string; tone?: string } | null>(null);
+  const [pendingAfterMechanic, setPendingAfterMechanic] = useState(false);
+  const [triviaSource, setTriviaSource] = useState<"event" | "forward" | "manual">("manual");
 
   // Resources
   const [condition, setCondition] = useState(70);
@@ -127,6 +140,8 @@ export default function Game() {
   const [funds, setFunds] = useState(0);
   const [distKm, setDistKm] = useState(0);
   const [camaraderie, setCamaraderie] = useState(0);
+  const [journeyHours, setJourneyHours] = useState(0);
+  const [currentDay, setCurrentDay] = useState(1);
 
   // Optional advance: trivia ("Pub Quiz") state
   const [trivia, setTrivia] = useState<TriviaQuestion | null>(null);
@@ -188,6 +203,11 @@ export default function Game() {
     setParts(save.parts ?? 2);
     setCamaraderie(save.camaraderie ?? 0);
     if (isSeries) {
+      const campaignState = ensureCampaignState(save.id);
+      setJourneyHours(campaignState.journeyHours);
+      setCurrentDay(campaignState.currentDay);
+    }
+    if (isSeries) {
       // Baseline is derived from the stage index so a mid-stage reload restores
       // the correct in-stage distance instead of resetting it to 0 (which would
       // otherwise re-bake partial progress into the cumulative total).
@@ -200,12 +220,19 @@ export default function Game() {
     }
     setUpgrades(loadedUpgrades);
 
-    // Kick off with a first road event to set the scene
-    const firstEvt = pickNextEvent(new Set());
-    if (firstEvt) {
-      setShownEventIds(new Set([firstEvt.id]));
-      setPendingEvent(firstEvt);
+    if (isSeries) {
+      setTurnPhase("navigation");
+      setPendingEvent(null);
       setTab("chat");
+    } else {
+      // Arcade keeps the simple free-play flow: a road event opens the scene.
+      const firstEvt = pickNextEvent(new Set());
+      if (firstEvt) {
+        setShownEventIds(new Set([firstEvt.id]));
+        setPendingEvent(firstEvt);
+        setTurnPhase("road-event");
+        setTab("chat");
+      }
     }
 
     setMode("hub");
@@ -220,6 +247,26 @@ export default function Game() {
   const gameContext = mission
     ? `${whoIsDriving} is on a road trip across ${mission.location} — ${mission.title}. Distance covered: ${Math.round(distKm)} km of ${TRIP_KM} km. Car condition: ${Math.round(condition)}%. Fuel: ${Math.round(fuel)}%. Funds: £${funds}.`
     : "";
+
+  const missionPromptInfo = mission
+    ? { id: mission.id, title: mission.title, location: mission.location }
+    : null;
+  const missionTerrain = ((mission as { terrain?: string } | undefined)?.terrain ?? mission?.location ?? "road").toString();
+  const navigationPrompt = useMemo(
+    () => missionPromptInfo ? buildNavigationPrompt(missionPromptInfo, missionTerrain, turnNumber) : null,
+    [missionPromptInfo, missionTerrain, turnNumber],
+  );
+  const forwardPrompt = useMemo(
+    () => missionPromptInfo ? buildForwardPrompt(missionPromptInfo, turnNumber) : null,
+    [missionPromptInfo, turnNumber],
+  );
+  const activeAdventurePrompt = isSeries
+    ? turnPhase === "navigation"
+      ? navigationPrompt
+      : turnPhase === "advance"
+        ? forwardPrompt
+        : pendingEvent
+    : pendingEvent;
 
   // ── Persist progress to server ─────────────────────────────────────────────
   const persistProgress = useCallback(async (
@@ -242,6 +289,25 @@ export default function Game() {
       });
     } catch { /* silent */ }
   }, [save, updateSave, food, parts, camaraderie]);
+
+  const advanceClock = useCallback((hours: number) => {
+    if (!isSeries || !save) return;
+    const next = advanceCampaignTime(save.id, hours, mission?.location ?? mission?.title);
+    setJourneyHours(next.journeyHours);
+    setCurrentDay(next.currentDay);
+  }, [isSeries, save, mission?.location, mission?.title]);
+
+  const finishBusy = useCallback(() => {
+    busyRef.current = false;
+    setBusy(false);
+  }, []);
+
+  const timeForChoice = useCallback((choice: EventChoice) => {
+    if (choice.timeEffectHours != null) return choice.timeEffectHours;
+    if (choice.risk === "safe") return choice.distanceEffect > 55 ? 4 : 3;
+    if (choice.risk === "risky") return 2;
+    return 1;
+  }, []);
 
   // ── Camaraderie bump (chat + bold choices) ─────────────────────────────────
   const bumpCamaraderie = useCallback((n: number) => {
@@ -316,6 +382,8 @@ export default function Game() {
     camaraderieDelta?: number;
     result?: DriveResult | null;
     chat?: { context: string; tone?: string };
+    after?: "event" | "advance" | "navigation";
+    timeHours?: number;
   }) => {
     if (!save || busyRef.current) return;
     busyRef.current = true;
@@ -334,6 +402,7 @@ export default function Game() {
     setCamaraderie(newCam);
     setDriveResult(opts.result ?? null);
     setMode("hub");
+    advanceClock(opts.timeHours ?? 2);
     if (opts.chat) setChatReact({ id: `adv-${Date.now()}`, context: opts.chat.context, tone: opts.chat.tone });
 
     await persistProgress(newFunds, newDist, { camaraderie: newCam });
@@ -344,6 +413,7 @@ export default function Game() {
       setMode("gameover");
       await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
       setTimeout(() => setLocation(`/results/${save.id}`), 2500);
+      finishBusy();
       return;
     }
     if (newFuel <= 0) {
@@ -351,16 +421,37 @@ export default function Game() {
       setMode("gameover");
       await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
       setTimeout(() => setLocation(`/results/${save.id}`), 2500);
+      finishBusy();
       return;
     }
 
     // Stage / trip complete?
     if (newDist >= TRIP_KM) {
       await finishStage(newFunds, newDist, newCam);
+      finishBusy();
       return;
     }
 
-    // Surface a road event after advancing (if one is available)
+    const after = opts.after ?? "event";
+    if (isSeries && after === "advance") {
+      setPendingEvent(null);
+      setTurnPhase("advance");
+      setTab("chat");
+      if (opts.result) setTimeout(() => setDriveResult(null), 6000);
+      finishBusy();
+      return;
+    }
+    if (isSeries && after === "navigation") {
+      setPendingEvent(null);
+      setTurnPhase("navigation");
+      setTurnNumber((value) => value + 1);
+      setTab("chat");
+      if (opts.result) setTimeout(() => setDriveResult(null), 6000);
+      finishBusy();
+      return;
+    }
+
+    // Arcade/free-play still surfaces a road event after advancing.
     let surfacedEvent = false;
     if (!pendingEvent) {
       const evt = pickNextEvent(shownEventIds);
@@ -372,15 +463,15 @@ export default function Game() {
     }
     setTab(surfacedEvent ? "chat" : "journey");
     if (opts.result) setTimeout(() => setDriveResult(null), 6000);
-    busyRef.current = false;
-    setBusy(false);
-  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage]);
+    finishBusy();
+  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage, isSeries, advanceClock, finishBusy]);
 
   // ── Driving challenge complete ─────────────────────────────────────────────
   const handleDriveComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
     if (adventureDrive && save) {
       const { event, choice } = adventureDrive;
       setAdventureDrive(null);
+      if (isSeries) recordDrivingChallenge(save.id);
       void recordEvent.mutateAsync({
         saveId: save.id,
         data: {
@@ -398,6 +489,8 @@ export default function Game() {
         fuelCost: Math.round(10 + Math.random() * 8),
         camaraderieDelta: choice.risk === "mad" ? 4 : 2,
         result: { earnings, condDelta: condDelta + choice.damageEffect, distKm: kmEarned },
+        after: isSeries ? "advance" : "event",
+        timeHours: timeForChoice(choice),
         chat: {
           context: `${displayName || "The driver"} chose "${choice.label}", which turned into a full playable road challenge. ${choice.outcome}`,
           tone: choice.risk === "mad" ? "alarmed" : "excited",
@@ -405,6 +498,7 @@ export default function Game() {
       });
       return;
     }
+    if (isSeries && save) recordDrivingChallenge(save.id);
     void resolveAdvance({
       earnings,
       condDelta,
@@ -412,12 +506,14 @@ export default function Game() {
       fuelCost: Math.round(8 + Math.random() * 6),
       camaraderieDelta: 2,
       result: { earnings, condDelta, distKm: kmEarned },
+      after: isSeries ? "navigation" : "event",
+      timeHours: 2,
       chat: {
         context: `${displayName || "The driver"} just finished a driving challenge, banking £${earnings} and covering ${kmEarned}km${condDelta < 0 ? ", taking some damage on the way" : " without a scratch"}.`,
         tone: condDelta < 0 ? "mocking" : "impressed",
       },
     });
-  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName]);
+  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice]);
 
   // ── Press On: free advance that costs fuel + wear ──────────────────────────
   const handlePressOn = useCallback(() => {
@@ -426,22 +522,26 @@ export default function Game() {
       kmEarned: km,
       fuelCost: 14,
       condDelta: -8,
+      after: isSeries ? "navigation" : "event",
+      timeHours: 3,
       chat: {
         context: `${displayName || "The driver"} just pressed on and ground out ${km}km of road without stopping for anything.`,
         tone: "weary",
       },
     });
-  }, [resolveAdvance, displayName]);
+  }, [resolveAdvance, displayName, isSeries]);
 
   // ── Trivia (Pub Quiz): answer to advance + small reward ────────────────────
   const openTrivia = useCallback(() => {
     setTriviaResult(null);
+    setTriviaSource(isSeries ? "forward" : "manual");
     setTrivia(pickTrivia(usedTriviaRef.current, mission?.id));
-  }, [mission?.id]);
+  }, [mission?.id, isSeries]);
 
   const answerTrivia = useCallback((idx: number) => {
     if (!trivia || triviaResult) return;
     usedTriviaRef.current.add(trivia.id);
+    if (isSeries && save) recordCampaignTrivia(save.id, trivia.id);
     const correct = idx === trivia.answer;
     setTriviaResult(correct ? "correct" : "wrong");
     const km = correct ? 60 : 25;
@@ -454,6 +554,8 @@ export default function Game() {
         kmEarned: km,
         fuelCost: 5,
         camaraderieDelta: correct ? 2 : 0,
+        after: isSeries ? (triviaSource === "event" ? "advance" : "navigation") : "event",
+        timeHours: correct ? 1 : 2,
         chat: {
           context: correct
             ? `${displayName || "The driver"} just nailed a car-trivia question over the radio for a bit of cash and bragging rights.`
@@ -461,8 +563,110 @@ export default function Game() {
           tone: correct ? "impressed" : "mocking",
         },
       });
+      setTriviaSource("manual");
     }, 1100);
-  }, [trivia, triviaResult, resolveAdvance, displayName]);
+  }, [trivia, triviaResult, resolveAdvance, displayName, isSeries, save, triviaSource]);
+
+  const handleNavigationChoice = useCallback(async (choice: EventChoice) => {
+    if (!save || !mission || resolving) return;
+    setResolving(true);
+
+    const hours = timeForChoice(choice);
+    const newFunds = Math.max(0, funds + choice.fundsEffect);
+    const newDist = Math.min(TRIP_KM, distKm + choice.distanceEffect);
+    const newCond = Math.max(0, Math.min(100, condition + choice.damageEffect));
+    const fuelUse = Math.max(5, Math.round(choice.distanceEffect / 9));
+    const newFuel = Math.max(0, fuel + (choice.fuelEffect ?? -fuelUse));
+    const foodUse = hours >= 3 ? 1 : 0;
+    const newFood = Math.max(0, food + (choice.foodEffect ?? -foodUse));
+    const camGain = choice.risk === "mad" ? 3 : choice.risk === "risky" ? 2 : 1;
+    const newCam = Math.min(100, camaraderie + camGain);
+
+    setFunds(newFunds);
+    setDistKm(newDist);
+    setCondition(newCond);
+    setFuel(newFuel);
+    setFood(newFood);
+    setCamaraderie(newCam);
+    advanceClock(hours);
+
+    try {
+      await Promise.all([
+        recordEvent.mutateAsync({
+          saveId: save.id,
+          data: {
+            eventType: "shortcut",
+            title: "Route chosen",
+            description: choice.outcome,
+            outcome: choice.label,
+            fundsChange: choice.fundsEffect,
+          },
+        }),
+        updateSave.mutateAsync({
+          id: save.id,
+          data: {
+            funds: newFunds,
+            distanceTravelled: priorDistRef.current + Math.round(newDist),
+            status: "on_road",
+            food: newFood,
+            parts,
+            camaraderie: newCam,
+          },
+        }),
+      ]);
+    } catch { /* silent */ }
+
+    setChatReact({
+      id: `nav-${Date.now()}`,
+      context: `${displayName || "The driver"} chose "${choice.label}". ${choice.outcome}`,
+      tone: choice.risk === "mad" ? "alarmed" : choice.risk === "risky" ? "excited" : "approving",
+    });
+
+    if (newDist >= TRIP_KM) {
+      setResolving(false);
+      await finishStage(newFunds, newDist, newCam);
+      return;
+    }
+
+    if (newCond <= 0 || newFuel <= 0) {
+      setResolving(false);
+      setMode("gameover");
+      await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
+      setTimeout(() => setLocation(`/results/${save.id}`), 2500);
+      return;
+    }
+
+    const evt = pickNextEvent(shownEventIds);
+    if (evt) {
+      setShownEventIds((prev) => new Set([...prev, evt.id]));
+      setPendingEvent(evt);
+      setTurnPhase("road-event");
+    } else {
+      setPendingEvent(null);
+      setTurnPhase("advance");
+    }
+    setTab("chat");
+    setResolving(false);
+  }, [save, mission, resolving, timeForChoice, funds, distKm, condition, fuel, food, camaraderie, advanceClock, recordEvent, updateSave, parts, displayName, finishStage, setLocation, shownEventIds]);
+
+  const handleForwardChoice = useCallback((choice: EventChoice) => {
+    if (choice.id.startsWith("drive-")) {
+      setChatReact({
+        id: `forward-drive-${Date.now()}`,
+        context: `${displayName || "The driver"} chose to turn the next stretch into a driving challenge.`,
+        tone: "excited",
+      });
+      setMode("driving");
+      return;
+    }
+    if (choice.id.startsWith("quiz-")) {
+      setTriviaSource("forward");
+      setTriviaResult(null);
+      setTrivia(pickTrivia(usedTriviaRef.current, mission?.id));
+      return;
+    }
+    handlePressOn();
+  }, [displayName, mission?.id, handlePressOn]);
 
   // ── Road event choice ─────────────────────────────────────────────────────
   const handleChoice = useCallback(async (choice: EventChoice) => {
@@ -487,6 +691,7 @@ export default function Game() {
     if (nextStep === "mechanic") {
       setPendingEvent(null);
       setResolving(false);
+      setPendingAfterMechanic(true);
       setShowMechanic(true);
       setChatReact({
         id: `evt-mech-${Date.now()}`,
@@ -499,6 +704,7 @@ export default function Game() {
     if (nextStep === "trivia") {
       setPendingEvent(null);
       setResolving(false);
+      setTriviaSource("event");
       setTriviaResult(null);
       setTrivia(pickTrivia(usedTriviaRef.current, mission?.id));
       setChatReact({
@@ -515,9 +721,22 @@ export default function Game() {
     const newDist = Math.min(TRIP_KM, distKm + (choice.distanceEffect ?? 0));
     setDistKm(newDist);
 
-    if (choice.damageEffect) {
-      setCondition(prev => Math.max(0, Math.min(100, prev + choice.damageEffect)));
-    }
+    const newCond = Math.max(0, Math.min(100, condition + choice.damageEffect));
+    const hours = timeForChoice(choice);
+    const fuelUse = Math.max(3, Math.round(Math.max(10, choice.distanceEffect) / 14));
+    const newFuel = Math.max(0, fuel + (choice.fuelEffect ?? -fuelUse));
+    const newFood = Math.max(0, food + (choice.foodEffect ?? (hours >= 3 ? -1 : 0)));
+    const newParts = Math.max(0, parts + (choice.partsEffect ?? 0));
+
+    setCondition(newCond);
+    setFuel(newFuel);
+    setFood(newFood);
+    setParts(newParts);
+    advanceClock(hours);
+    if (isSeries && choice.itemRewardId) grantInventoryItem(save.id, choice.itemRewardId);
+    if (isSeries && pendingEvent.id === "abandoned_supplies") grantInventoryItem(save.id, "lucky-hose");
+    if (isSeries && pendingEvent.id === "local_festival") grantInventoryItem(save.id, "market-snacks");
+    if (isSeries && pendingEvent.id === "village_garage") grantInventoryItem(save.id, "local-map");
 
     // Bold choices grow camaraderie with the lads.
     const camGain = choice.risk === "mad" ? 3 : choice.risk === "risky" ? 2 : 0;
@@ -541,12 +760,22 @@ export default function Game() {
             fundsChange: choice.fundsEffect,
           },
         }),
-        updateSave.mutateAsync({ id: save.id, data: { funds: newFunds, distanceTravelled: priorDistRef.current + Math.round(newDist), camaraderie: newCam } }),
+        updateSave.mutateAsync({
+          id: save.id,
+          data: {
+            funds: newFunds,
+            distanceTravelled: priorDistRef.current + Math.round(newDist),
+            food: newFood,
+            parts: newParts,
+            camaraderie: newCam,
+          },
+        }),
       ]);
     } catch { /* silent */ }
 
     setResolving(false);
     setPendingEvent(null);
+    if (isSeries) setTurnPhase("advance");
 
     setChatReact({
       id: `evt-${Date.now()}`,
@@ -564,7 +793,12 @@ export default function Game() {
     if (newDist >= TRIP_KM) {
       await finishStage(newFunds, newDist, newCam);
     }
-  }, [save, pendingEvent, funds, distKm, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id]);
+    if (newCond <= 0 || newFuel <= 0) {
+      setMode("gameover");
+      await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
+      setTimeout(() => setLocation(`/results/${save.id}`), 2500);
+    }
+  }, [save, pendingEvent, funds, distKm, condition, fuel, food, parts, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id, timeForChoice, advanceClock, isSeries, setLocation]);
 
   // ── Mechanic purchase ──────────────────────────────────────────────────────
   const handleMechanicPurchase = async (offer: MechanicOffer) => {
@@ -578,6 +812,13 @@ export default function Game() {
     if (offer.action === "food") { newFood = Math.min(10, food + offer.amount); setFood(newFood); }
     if (offer.action === "parts") { newParts = Math.min(10, parts + offer.amount); setParts(newParts); }
     await updateSave.mutateAsync({ id: save.id, data: { funds: newFunds, food: newFood, parts: newParts } });
+    if (isSeries) advanceClock(1);
+    if (pendingAfterMechanic && isSeries) {
+      setPendingAfterMechanic(false);
+      setShowMechanic(false);
+      setTurnPhase("advance");
+      setTab("chat");
+    }
     toast({ title: offer.label, description: "Sorted. Back on the road." });
   };
 
@@ -648,6 +889,7 @@ export default function Game() {
             <p className="font-black text-[11px] uppercase truncate">
               {displayName}
               {isSeries && <span className="ml-1 text-amber-400">· Stage {(save.seriesStageIndex ?? 0) + 1}</span>}
+              {isSeries && <span className="ml-1 text-primary">D{currentDay} H{journeyHours % 12}</span>}
             </p>
             <p className="text-[9px] text-muted-foreground flex items-center gap-0.5 truncate">
               <MapPin className="w-2.5 h-2.5 shrink-0" />{mission.location}
@@ -683,7 +925,7 @@ export default function Game() {
             }`}
           >
             🗺 Journey
-            {(pendingEvent || driveResult) && tab !== "journey" && (
+            {(activeAdventurePrompt || driveResult) && tab !== "journey" && (
               <span className="absolute top-2 ml-1 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             )}
           </button>
@@ -701,10 +943,20 @@ export default function Game() {
             gameContext={gameContext}
             stats={{ condition, fuel, progressPct }}
             reactTo={chatReact}
-            adventureEvent={pendingEvent}
+            adventureEvent={activeAdventurePrompt}
             resolvingAdventure={resolving}
             saveId={save.id}
-            onAdventureChoice={handleChoice}
+            onAdventureChoice={(choice) => {
+              if (isSeries && turnPhase === "navigation") {
+                void handleNavigationChoice(choice);
+                return;
+              }
+              if (isSeries && turnPhase === "advance") {
+                handleForwardChoice(choice);
+                return;
+              }
+              void handleChoice(choice);
+            }}
             onPlayerMessage={() => bumpCamaraderie(1)}
           />
         </div>
@@ -785,6 +1037,17 @@ export default function Game() {
 
             {/* ── Action buttons ───────────────────────────────────────── */}
             <div className="space-y-2">
+              {isSeries ? (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    {turnPhase === "navigation" ? "Route planning" : turnPhase === "road-event" ? "Road event" : "Next push"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    The trio have put the next move in the group chat. Pick one of their proposals to continue the journey.
+                  </p>
+                </div>
+              ) : (
+                <>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Advance the Journey — pick one</p>
 
               {/* Main driving challenge button (optional) */}
@@ -857,6 +1120,8 @@ export default function Game() {
                   <div className="text-[10px] font-normal opacity-70">Budget: £{funds}</div>
                 </div>
               </button>
+                </>
+              )}
             </div>
 
             {/* ── Car stats ───────────────────────────────────────────── */}
@@ -998,7 +1263,14 @@ export default function Game() {
                   </button>
                 ))}
                 <button
-                  onClick={() => setShowMechanic(false)}
+                  onClick={() => {
+                    setShowMechanic(false);
+                    if (pendingAfterMechanic && isSeries) {
+                      setPendingAfterMechanic(false);
+                      setTurnPhase("advance");
+                      setTab("chat");
+                    }
+                  }}
                   className="w-full text-center py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Drive away without stopping

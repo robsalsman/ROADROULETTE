@@ -9,6 +9,11 @@ export type EventChoice = {
   fundsEffect: number;
   distanceEffect: number;
   damageEffect: number;
+  timeEffectHours?: number;
+  fuelEffect?: number;
+  foodEffect?: number;
+  partsEffect?: number;
+  itemRewardId?: string;
   next?: "resolve" | "driving" | "mechanic" | "trivia" | "side-chat";
   proposer?: "jeremy" | "richard" | "james";
   thread?: string[];

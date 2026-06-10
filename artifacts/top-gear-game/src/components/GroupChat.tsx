@@ -368,8 +368,8 @@ export default function GroupChat({
       );
     };
 
-    const kickoff = setTimeout(fireChatter, 90000);
-    const interval = setInterval(fireChatter, 90000);
+    const kickoff = setTimeout(fireChatter, 240000);
+    const interval = setInterval(fireChatter, 240000);
     return () => {
       clearTimeout(kickoff);
       clearInterval(interval);

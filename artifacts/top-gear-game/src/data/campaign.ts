@@ -119,6 +119,37 @@ export const STARTER_ITEMS: InventoryItem[] = [
   },
 ];
 
+export const CAMPAIGN_ITEMS: InventoryItem[] = [
+  ...STARTER_ITEMS,
+  {
+    id: "local-map",
+    name: "Local Hand-Drawn Map",
+    category: "special",
+    qty: 1,
+    rarity: "uncommon",
+    description: "A napkin covered in roads, warnings, and one drawing of a goat.",
+    effect: "May unlock safer shortcut choices.",
+  },
+  {
+    id: "market-snacks",
+    name: "Market Snacks",
+    category: "supply",
+    qty: 1,
+    rarity: "common",
+    description: "Wrapped in newspaper and probably delicious.",
+    effect: "Can offset a long-day food penalty.",
+  },
+  {
+    id: "lucky-hose",
+    name: "Lucky Spare Hose",
+    category: "tool",
+    qty: 1,
+    rarity: "rare",
+    description: "Wrong for every car, useful for all of them.",
+    effect: "May reduce a breakdown penalty.",
+  },
+];
+
 export const BADGE_DEFS: Badge[] = [
   { id: "first-stage", name: "Leaving The Tent", category: "campaign", description: "Complete your first campaign episode.", progress: 0, target: 1 },
   { id: "trivia-five", name: "Pub Bore", category: "trivia", description: "Answer 5 trivia questions correctly.", progress: 0, target: 5 },
@@ -221,6 +252,18 @@ export function ensureStarterInventory(saveId: string | number): InventoryItem[]
   return STARTER_ITEMS;
 }
 
+export function grantInventoryItem(saveId: string | number, itemId: string, qty = 1): InventoryItem[] {
+  const template = CAMPAIGN_ITEMS.find((item) => item.id === itemId);
+  if (!template) return loadInventory(saveId);
+  const existing = ensureStarterInventory(saveId);
+  const found = existing.find((item) => item.id === itemId);
+  const next = found
+    ? existing.map((item) => item.id === itemId ? { ...item, qty: item.qty + qty } : item)
+    : [...existing, { ...template, qty }];
+  saveInventory(saveId, next);
+  return next;
+}
+
 export function loadBadges(saveId: string | number | null | undefined): Badge[] {
   if (saveId == null) return BADGE_DEFS;
   const saved = readJson<{ badges: Badge[] }>(badgesKey(saveId), { badges: BADGE_DEFS }).badges;
@@ -265,6 +308,33 @@ export function ensureCampaignState(saveId: string | number): CampaignState {
     discoveredLocations: [GRAND_TOUR_EPISODE_STAGES[0]?.locationTheme ?? "Opening stage"],
     updatedAt: new Date().toISOString(),
   };
+  saveCampaignState(next);
+  return next;
+}
+
+export function advanceCampaignTime(saveId: string | number, hours: number, location?: string): CampaignState {
+  const state = ensureCampaignState(saveId);
+  const journeyHours = Math.max(0, state.journeyHours + Math.max(0, Math.round(hours)));
+  const currentDay = Math.floor(journeyHours / 12) + 1;
+  const discoveredLocations = location && !state.discoveredLocations.includes(location)
+    ? [...state.discoveredLocations, location]
+    : state.discoveredLocations;
+  const next = { ...state, journeyHours, currentDay, discoveredLocations };
+  saveCampaignState(next);
+  return next;
+}
+
+export function recordCampaignTrivia(saveId: string | number, triviaId: string): CampaignState {
+  const state = ensureCampaignState(saveId);
+  if (state.triviaAnswered.includes(triviaId)) return state;
+  const next = { ...state, triviaAnswered: [...state.triviaAnswered, triviaId] };
+  saveCampaignState(next);
+  return next;
+}
+
+export function recordDrivingChallenge(saveId: string | number): CampaignState {
+  const state = ensureCampaignState(saveId);
+  const next = { ...state, drivingChallengesCompleted: state.drivingChallengesCompleted + 1 };
   saveCampaignState(next);
   return next;
 }
