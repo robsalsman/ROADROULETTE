@@ -1401,6 +1401,196 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
       },
     ],
   },
+  {
+    id: "local_wedding_convoy",
+    type: "encounter",
+    title: "Wedding Convoy",
+    situation:
+      "A wedding convoy has taken over the road. Horns, ribbons, dancing, and one elderly relative directing traffic with absolute authority. Getting through this will require tact or volume.",
+    choices: [
+      {
+        id: "join_convoy",
+        label: "Join the convoy politely",
+        flavor: "Blend in. Smile. Do not mention the exhaust.",
+        risk: "safe",
+        outcome:
+          "You crawl along with the convoy, are fed three snacks, and eventually get waved onto a useful side road by someone who likes the car.",
+        fundsEffect: -20,
+        distanceEffect: 45,
+        damageEffect: 2,
+        foodEffect: 2,
+        timeEffectHours: 3,
+        itemRewardId: "local-favour",
+      },
+      {
+        id: "ask_elder_shortcut",
+        label: "Ask the traffic elder for a shortcut",
+        flavor: "Respect the person with the whistle.",
+        risk: "risky",
+        outcome:
+          "The elder gives immaculate directions through lanes that barely exist. It is tight, tense, and surprisingly effective.",
+        fundsEffect: 0,
+        distanceEffect: 75,
+        damageEffect: -8,
+        timeEffectHours: 2,
+        itemRewardId: "local-map",
+      },
+      {
+        id: "overtake_band",
+        label: "Overtake the brass band",
+        flavor: "A deeply unpopular manoeuvre.",
+        risk: "mad",
+        outcome:
+          "You make it past the band and immediately regret the attention. The road opens up, but the rear quarter panel has met a ceremonial flagpole.",
+        fundsEffect: 0,
+        distanceEffect: 90,
+        damageEffect: -22,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "roadside_parts_stall",
+    type: "good",
+    title: "Parts Stall",
+    situation:
+      "A roadside stall is selling belts, bulbs, cables, oil, suspicious snacks, and something labelled as universal British car medicine.",
+    choices: [
+      {
+        id: "buy_useful_parts",
+        label: "Buy the sensible repair bits",
+        flavor: "Dull purchases save dramatic afternoons.",
+        risk: "safe",
+        outcome:
+          "The parts fit in the boot and at least some of them look legitimate. Future you may be grateful.",
+        fundsEffect: -70,
+        distanceEffect: 35,
+        damageEffect: 0,
+        partsEffect: 3,
+        timeEffectHours: 1,
+      },
+      {
+        id: "buy_mystery_tonic",
+        label: "Buy the universal car tonic",
+        flavor: "It smells like paint thinner and hope.",
+        risk: "risky",
+        outcome:
+          "The engine runs smoother for about nine miles, then returns to its usual personality. Still, the seller throws in a useful spare.",
+        fundsEffect: -35,
+        distanceEffect: 55,
+        damageEffect: 5,
+        partsEffect: 1,
+        timeEffectHours: 1,
+      },
+      {
+        id: "barter_with_story",
+        label: "Barter with an outrageous story",
+        flavor: "Showmanship as currency.",
+        risk: "mad",
+        outcome:
+          "The story becomes a performance. A small crowd gathers, laughs, and someone gives you a shortcut tip plus a spare hose.",
+        fundsEffect: 10,
+        distanceEffect: 70,
+        damageEffect: 0,
+        partsEffect: 1,
+        timeEffectHours: 2,
+        itemRewardId: "local-favour",
+      },
+    ],
+  },
+  {
+    id: "closed_mountain_tunnel",
+    type: "navigation",
+    title: "Closed Tunnel",
+    situation:
+      "The tunnel ahead is closed by a barrier, a hand-painted sign, and a bored worker eating lunch. The old road over the top is technically open, according to someone nearby who finds this funny.",
+    choices: [
+      {
+        id: "wait_for_tunnel",
+        label: "Wait for the tunnel to reopen",
+        flavor: "The official answer. Therefore slow.",
+        risk: "safe",
+        outcome:
+          "The tunnel reopens eventually. Nothing breaks, but the schedule takes a noticeable bruise.",
+        fundsEffect: 0,
+        distanceEffect: 35,
+        damageEffect: 0,
+        timeEffectHours: 5,
+      },
+      {
+        id: "take_old_pass",
+        label: "Take the old pass",
+        flavor: "Narrow road, big views, questionable brakes.",
+        risk: "risky",
+        outcome:
+          "The old pass is beautiful and alarming. The brakes smell hot, but the route saves real distance.",
+        fundsEffect: 0,
+        distanceEffect: 80,
+        damageEffect: -14,
+        fuelEffect: -12,
+        timeEffectHours: 3,
+      },
+      {
+        id: "convince_worker",
+        label: "Convince the worker this is important television",
+        flavor: "The clipboard may be theatrical, but confidence helps.",
+        risk: "mad",
+        outcome:
+          "Somehow the barrier rises for exactly one minute. You are through before anyone asks a sensible question.",
+        fundsEffect: -40,
+        distanceEffect: 95,
+        damageEffect: 0,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "sleepy_border_town",
+    type: "encounter",
+    title: "Sleepy Border Town",
+    situation:
+      "The route reaches a border town where every useful office appears to be shut for lunch, prayer, tea, repairs, or all of the above.",
+    choices: [
+      {
+        id: "proper_wait",
+        label: "Wait and do the paperwork properly",
+        flavor: "Slow, legal, and almost spiritually draining.",
+        risk: "safe",
+        outcome:
+          "The papers are stamped in the correct order. It takes ages, but nobody can complain about the documents later.",
+        fundsEffect: -30,
+        distanceEffect: 25,
+        damageEffect: 0,
+        timeEffectHours: 5,
+        itemRewardId: "border-stamp",
+      },
+      {
+        id: "trade_local_favour",
+        label: "Spend a local favour",
+        flavor: "A friend of a friend knows the side door.",
+        risk: "safe",
+        outcome:
+          "The favour works. A side office opens, the stamp lands, and the convoy slips out before the queue understands what happened.",
+        fundsEffect: -10,
+        distanceEffect: 70,
+        damageEffect: 0,
+        timeEffectHours: 2,
+        consumedItemId: "local-favour",
+      },
+      {
+        id: "follow_fuel_truck",
+        label: "Follow the fuel truck through",
+        flavor: "Administrative slipstreaming.",
+        risk: "mad",
+        outcome:
+          "You tuck in behind the fuel truck and emerge on the far side with no clear memory of being processed. This may become a problem later.",
+        fundsEffect: 0,
+        distanceEffect: 90,
+        damageEffect: -6,
+        timeEffectHours: 1,
+      },
+    ],
+  },
 ];
 
 export function pickNextEvent(shownIds: Set<string>): RoadEventTemplate | null {

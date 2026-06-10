@@ -26,9 +26,11 @@ import {
   type InventoryItem,
 } from "@/data/campaign";
 import DrivingGame from "@/components/DrivingGame";
+import JaguarSkiSlalomGame from "@/components/JaguarSkiSlalomGame";
 import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
 import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
+import { vehicleTopDownSprite } from "@/data/vehicles";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy, Backpack, Clock } from "lucide-react";
 
 // ── Upgrade helpers ───────────────────────────────────────────────────────────
@@ -66,7 +68,7 @@ function upgradeStats(u: Upgrades) {
 const TRIP_KM = 500;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type GameMode = "loading" | "hub" | "driving" | "gameover";
+type GameMode = "loading" | "hub" | "driving" | "slalom" | "gameover";
 type TurnPhase = "navigation" | "road-event" | "advance";
 
 interface MechanicOffer {
@@ -98,6 +100,20 @@ const RISK_BADGE: Record<string, string> = {
 
 // ── Challenge result (shown briefly in hub after driving) ─────────────────────
 interface DriveResult { earnings: number; condDelta: number; distKm: number; }
+
+interface OutcomeSummary {
+  id: string;
+  title: string;
+  detail: string;
+  tone: "good" | "bad" | "neutral";
+  fundsDelta?: number;
+  distanceDelta?: number;
+  conditionDelta?: number;
+  fuelDelta?: number;
+  foodDelta?: number;
+  partsDelta?: number;
+  timeHours?: number;
+}
 
 type AdventureDrive = {
   event: RoadEventTemplate;
@@ -137,6 +153,7 @@ export default function Game() {
   const [chatReact, setChatReact] = useState<{ id: string; context: string; tone?: string } | null>(null);
   const [pendingAfterMechanic, setPendingAfterMechanic] = useState(false);
   const [triviaSource, setTriviaSource] = useState<"event" | "forward" | "manual">("manual");
+  const [lastOutcome, setLastOutcome] = useState<OutcomeSummary | null>(null);
 
   // Resources
   const [condition, setCondition] = useState(70);
@@ -250,6 +267,13 @@ export default function Game() {
 
   const stats = upgradeStats(upgrades);
   const car = findActiveGarageCar() ?? mission?.availableCars?.find((c: { id: number }) => c.id === save?.carId);
+  const carTopDownSprite = car
+    ? vehicleTopDownSprite(
+        (car as { name?: string }).name ?? "Road car",
+        (car as { power?: number }).power ?? 5,
+        (car as { offRoad?: number }).offRoad ?? 5,
+      )
+    : undefined;
 
   const whoIsDriving = isSeries
     ? `${displayName}, the fourth member of the team touring with Jeremy, Richard and James,`
@@ -267,8 +291,8 @@ export default function Game() {
     [missionPromptInfo, missionTerrain, turnNumber],
   );
   const forwardPrompt = useMemo(
-    () => missionPromptInfo ? buildForwardPrompt(missionPromptInfo, turnNumber) : null,
-    [missionPromptInfo, turnNumber],
+    () => missionPromptInfo ? buildForwardPrompt(missionPromptInfo, turnNumber, missionTerrain) : null,
+    [missionPromptInfo, turnNumber, missionTerrain],
   );
   const activeAdventurePrompt = isSeries
     ? turnPhase === "navigation"
@@ -420,6 +444,7 @@ export default function Game() {
     chat?: { context: string; tone?: string };
     after?: "event" | "advance" | "navigation";
     timeHours?: number;
+    outcome?: Omit<OutcomeSummary, "id">;
   }) => {
     if (!save || busyRef.current) return;
     busyRef.current = true;
@@ -437,6 +462,7 @@ export default function Game() {
     setFuel(newFuel);
     setCamaraderie(newCam);
     setDriveResult(opts.result ?? null);
+    if (opts.outcome) setLastOutcome({ id: `outcome-${Date.now()}`, ...opts.outcome });
     setMode("hub");
     advanceClock(opts.timeHours ?? 2);
     if (opts.chat) setChatReact({ id: `adv-${Date.now()}`, context: opts.chat.context, tone: opts.chat.tone });
@@ -531,6 +557,15 @@ export default function Game() {
         result: { earnings, condDelta: condDelta + choice.damageEffect, distKm: kmEarned },
         after: isSeries ? "advance" : "event",
         timeHours: timeForChoice(choice),
+        outcome: {
+          title: "Driving challenge resolved",
+          detail: choice.outcome,
+          tone: condDelta + choice.damageEffect < -15 ? "bad" : "good",
+          fundsDelta: earnings + choice.fundsEffect,
+          distanceDelta: kmEarned + Math.max(0, Math.round(choice.distanceEffect / 2)),
+          conditionDelta: condDelta + choice.damageEffect,
+          timeHours: timeForChoice(choice),
+        },
         chat: {
           context: `${displayName || "The driver"} chose "${choice.label}", which turned into a full playable road challenge. ${choice.outcome}`,
           tone: choice.risk === "mad" ? "alarmed" : "excited",
@@ -548,12 +583,49 @@ export default function Game() {
       result: { earnings, condDelta, distKm: kmEarned },
       after: isSeries ? "navigation" : "event",
       timeHours: 2,
+      outcome: {
+        title: "Driving challenge complete",
+        detail: condDelta < 0 ? "You banked the money, but the car paid for it." : "You banked the money and kept the car mostly in one piece.",
+        tone: condDelta < 0 ? "neutral" : "good",
+        fundsDelta: earnings,
+        distanceDelta: kmEarned,
+        conditionDelta: condDelta,
+        timeHours: 2,
+      },
       chat: {
         context: `${displayName || "The driver"} just finished a driving challenge, banking £${earnings} and covering ${kmEarned}km${condDelta < 0 ? ", taking some damage on the way" : " without a scratch"}.`,
         tone: condDelta < 0 ? "mocking" : "impressed",
       },
     });
   }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice, applyInventoryEffects]);
+
+  const handleSlalomComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
+    if (isSeries && save) recordDrivingChallenge(save.id);
+    void resolveAdvance({
+      earnings,
+      condDelta,
+      kmEarned,
+      fuelCost: 8,
+      camaraderieDelta: 3,
+      result: { earnings, condDelta, distKm: kmEarned },
+      after: isSeries ? "navigation" : "event",
+      timeHours: 2,
+      outcome: {
+        title: "Slalom run complete",
+        detail: "The downhill trial is over. The clock, the gates, and the bodywork have all had their say.",
+        tone: condDelta < -15 ? "bad" : "good",
+        fundsDelta: earnings,
+        distanceDelta: kmEarned,
+        conditionDelta: condDelta,
+        fuelDelta: -8,
+        timeHours: 2,
+      },
+      chat: {
+        context: `${displayName || "The driver"} just finished a downhill slalom trial, banking GBP ${earnings} and covering ${kmEarned}km.`,
+        tone: condDelta < -15 ? "mocking" : "impressed",
+      },
+    });
+  }, [displayName, isSeries, resolveAdvance, save]);
 
   // ── Press On: free advance that costs fuel + wear ──────────────────────────
   const handlePressOn = useCallback(() => {
@@ -564,6 +636,15 @@ export default function Game() {
       condDelta: -8,
       after: isSeries ? "navigation" : "event",
       timeHours: 3,
+      outcome: {
+        title: "Pressed on",
+        detail: "No stop, no ceremony. Just distance, fuel burn, and some fresh mechanical suspicion.",
+        tone: "neutral",
+        distanceDelta: km,
+        conditionDelta: -8,
+        fuelDelta: -14,
+        timeHours: 3,
+      },
       chat: {
         context: `${displayName || "The driver"} just pressed on and ground out ${km}km of road without stopping for anything.`,
         tone: "weary",
@@ -596,6 +677,17 @@ export default function Game() {
         camaraderieDelta: correct ? 2 : 0,
         after: isSeries ? (triviaSource === "event" ? "advance" : "navigation") : "event",
         timeHours: correct ? 1 : 2,
+        outcome: {
+          title: correct ? "Pub quiz won" : "Pub quiz survived",
+          detail: correct
+            ? "Correct answer. Cash, pride, and forward motion."
+            : "Wrong answer. The journey continues, but nobody is letting it go.",
+          tone: correct ? "good" : "neutral",
+          fundsDelta: earnings,
+          distanceDelta: km,
+          fuelDelta: -5,
+          timeHours: correct ? 1 : 2,
+        },
         chat: {
           context: correct
             ? `${displayName || "The driver"} just nailed a car-trivia question over the radio for a bit of cash and bragging rights.`
@@ -661,6 +753,18 @@ export default function Game() {
       context: `${displayName || "The driver"} chose "${choice.label}". ${choice.outcome}`,
       tone: choice.risk === "mad" ? "alarmed" : choice.risk === "risky" ? "excited" : "approving",
     });
+    setLastOutcome({
+      id: `nav-outcome-${Date.now()}`,
+      title: "Route chosen",
+      detail: choice.outcome,
+      tone: newCond < condition || newFuel < fuel ? "neutral" : "good",
+      fundsDelta: choice.fundsEffect,
+      distanceDelta: choice.distanceEffect,
+      conditionDelta: choice.damageEffect,
+      fuelDelta: newFuel - fuel,
+      foodDelta: newFood - food,
+      timeHours: hours,
+    });
 
     if (newDist >= TRIP_KM) {
       setResolving(false);
@@ -697,6 +801,15 @@ export default function Game() {
         tone: "excited",
       });
       setMode("driving");
+      return;
+    }
+    if (choice.id.startsWith("slalom-")) {
+      setChatReact({
+        id: `forward-slalom-${Date.now()}`,
+        context: `${displayName || "The driver"} chose to turn the next stretch into a downhill slalom trial.`,
+        tone: "excited",
+      });
+      setMode("slalom");
       return;
     }
     if (choice.id.startsWith("quiz-")) {
@@ -819,6 +932,19 @@ export default function Game() {
     setResolving(false);
     setPendingEvent(null);
     if (isSeries) setTurnPhase("advance");
+    setLastOutcome({
+      id: `event-outcome-${Date.now()}`,
+      title: pendingEvent.title,
+      detail: inventoryNotes.length > 0 ? `${choice.outcome} ${inventoryNotes.join(" | ")}` : choice.outcome,
+      tone: newCond < condition || newFuel < fuel ? "neutral" : "good",
+      fundsDelta: choice.fundsEffect,
+      distanceDelta: choice.distanceEffect,
+      conditionDelta: choice.damageEffect,
+      fuelDelta: newFuel - fuel,
+      foodDelta: newFood - food,
+      partsDelta: newParts - parts,
+      timeHours: hours,
+    });
 
     setChatReact({
       id: `evt-${Date.now()}`,
@@ -862,6 +988,18 @@ export default function Game() {
       setTurnPhase("advance");
       setTab("chat");
     }
+    setLastOutcome({
+      id: `mechanic-outcome-${Date.now()}`,
+      title: offer.label,
+      detail: "A local stop eats time and money, but the car is better prepared for the next bad idea.",
+      tone: "good",
+      fundsDelta: -offer.cost,
+      conditionDelta: offer.action === "repair" ? offer.amount : undefined,
+      fuelDelta: offer.action === "fuel" ? 100 - fuel : undefined,
+      foodDelta: offer.action === "food" ? newFood - food : undefined,
+      partsDelta: offer.action === "parts" ? newParts - parts : undefined,
+      timeHours: isSeries ? 1 : undefined,
+    });
     toast({ title: offer.label, description: "Sorted. Back on the road." });
   };
 
@@ -872,6 +1010,14 @@ export default function Game() {
     setParts(newParts);
     setCondition(c => Math.min(100, c + 30));
     if (save) updateSave.mutate({ id: save.id, data: { parts: newParts } });
+    setLastOutcome({
+      id: `repair-outcome-${Date.now()}`,
+      title: "Roadside repair",
+      detail: "A spare part has been sacrificed to keep the journey moving.",
+      tone: "good",
+      conditionDelta: 30,
+      partsDelta: -1,
+    });
     toast({ title: "🔧 Roadside repair", description: "Used a spare part. Car condition +30%." });
   };
 
@@ -919,6 +1065,17 @@ export default function Game() {
   }
 
   // ── Hub mode ───────────────────────────────────────────────────────────────
+  if (mode === "slalom") {
+    return (
+      <JaguarSkiSlalomGame
+        embedded
+        vehicleSprite={carTopDownSprite}
+        onComplete={handleSlalomComplete}
+        onExit={() => setMode("hub")}
+      />
+    );
+  }
+
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
 
@@ -1027,6 +1184,34 @@ export default function Game() {
               </div>
               <p className="text-[10px] text-muted-foreground">{mission.title}</p>
             </div>
+
+            {lastOutcome && (
+              <div className={`rounded-xl border p-3 ${
+                lastOutcome.tone === "bad"
+                  ? "border-red-500/40 bg-red-500/10"
+                  : lastOutcome.tone === "good"
+                    ? "border-green-500/40 bg-green-500/10"
+                    : "border-amber-500/40 bg-amber-500/10"
+              }`}>
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">Latest turn</p>
+                    <h3 className="text-sm font-black uppercase leading-tight">{lastOutcome.title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{lastOutcome.detail}</p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-1 text-[10px] font-mono text-muted-foreground">
+                  {lastOutcome.timeHours != null && <span>time {lastOutcome.timeHours}h</span>}
+                  {lastOutcome.distanceDelta != null && <span>road {lastOutcome.distanceDelta > 0 ? "+" : ""}{lastOutcome.distanceDelta}km</span>}
+                  {lastOutcome.fundsDelta != null && lastOutcome.fundsDelta !== 0 && <span>cash {lastOutcome.fundsDelta > 0 ? "+" : ""}GBP {lastOutcome.fundsDelta}</span>}
+                  {lastOutcome.conditionDelta != null && lastOutcome.conditionDelta !== 0 && <span>car {lastOutcome.conditionDelta > 0 ? "+" : ""}{lastOutcome.conditionDelta}%</span>}
+                  {lastOutcome.fuelDelta != null && lastOutcome.fuelDelta !== 0 && <span>fuel {lastOutcome.fuelDelta > 0 ? "+" : ""}{lastOutcome.fuelDelta}%</span>}
+                  {lastOutcome.foodDelta != null && lastOutcome.foodDelta !== 0 && <span>food {lastOutcome.foodDelta > 0 ? "+" : ""}{lastOutcome.foodDelta}</span>}
+                  {lastOutcome.partsDelta != null && lastOutcome.partsDelta !== 0 && <span>parts {lastOutcome.partsDelta > 0 ? "+" : ""}{lastOutcome.partsDelta}</span>}
+                </div>
+              </div>
+            )}
 
             {isSeries && (
               <div className="grid grid-cols-1 gap-2">

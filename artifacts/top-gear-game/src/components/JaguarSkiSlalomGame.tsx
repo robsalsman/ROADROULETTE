@@ -12,6 +12,13 @@ const SLALOM_VEHICLE_SPRITE = vehicleTopDownSprite("Jaguar XJ-S", 6, 3);
 
 type Phase = "ready" | "playing" | "finished";
 
+interface JaguarSkiSlalomGameProps {
+  vehicleSprite?: string;
+  embedded?: boolean;
+  onComplete?: (earnings: number, conditionDelta: number, distanceKm: number) => void;
+  onExit?: () => void;
+}
+
 interface Gate {
   id: number;
   y: number;
@@ -35,7 +42,12 @@ interface Spark {
   life: number;
 }
 
-export default function JaguarSkiSlalomGame() {
+export default function JaguarSkiSlalomGame({
+  vehicleSprite,
+  embedded = false,
+  onComplete,
+  onExit,
+}: JaguarSkiSlalomGameProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastTs = useRef<number | null>(null);
@@ -61,11 +73,11 @@ export default function JaguarSkiSlalomGame() {
 
   useEffect(() => {
     const img = new Image();
-    img.src = SLALOM_VEHICLE_SPRITE;
+    img.src = vehicleSprite ?? SLALOM_VEHICLE_SPRITE;
     img.onload = () => { carImg.current = img; };
     img.onerror = () => { carImg.current = null; };
     return () => { img.onload = null; img.onerror = null; };
-  }, []);
+  }, [vehicleSprite]);
 
   const resetRun = useCallback(() => {
     carX.current = W / 2;
@@ -376,10 +388,18 @@ export default function JaguarSkiSlalomGame() {
 
   const score = Math.max(0, gatesHit * 100 - gatesMissed * 45 - damage * 2 + distance);
   const grade = damage > 75 ? "Buried in a snowbank" : gatesHit >= 18 ? "Elegant, for a Jaguar" : gatesHit >= 10 ? "Mostly downhill" : "A gentlemanly disaster";
+  const earnings = Math.max(0, Math.floor(score / 35));
+  const conditionDelta = -Math.min(30, Math.ceil(damage / 4 + gatesMissed * 2));
+  const distanceKm = Math.max(20, Math.min(95, Math.round(distance / 8 + gatesHit * 2)));
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-black text-white">
+    <div className={`flex flex-col bg-black text-white ${embedded ? "h-[100dvh]" : "min-h-[100dvh]"}`}>
       <div className="shrink-0 flex items-center justify-between gap-3 border-b border-zinc-800 py-3 pl-44 pr-4 sm:px-4">
+        {onExit && (
+          <Button onClick={onExit} variant="outline" size="sm" className="absolute left-3 top-3 uppercase font-black">
+            Exit
+          </Button>
+        )}
         <div>
           <p className="text-xs font-black uppercase tracking-widest text-primary">Road Trial</p>
           <h1 className="text-lg font-black uppercase leading-tight">Jaguar Ski Slalom</h1>
@@ -437,6 +457,15 @@ export default function JaguarSkiSlalomGame() {
                 <div className="rounded-md border border-zinc-700 bg-zinc-900/80 p-3"><strong>{damage}%</strong><br />damage</div>
                 <div className="rounded-md border border-zinc-700 bg-zinc-900/80 p-3"><strong>{score}</strong><br />score</div>
               </div>
+              {onComplete && (
+                <Button
+                  onClick={() => onComplete(earnings, conditionDelta, distanceKm)}
+                  size="lg"
+                  className="font-black uppercase tracking-widest"
+                >
+                  Bank GBP {earnings}
+                </Button>
+              )}
               <Button onClick={startRun} size="lg" className="font-black uppercase tracking-widest">
                 Run Again
               </Button>

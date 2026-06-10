@@ -96,6 +96,12 @@ const GENERIC_OPTIONS = [
 
 const STORAGE_KEY = (id: string | number) => `tgrr-groupchat-${id}`;
 
+function choicePromptFor(event: RoadEventTemplate) {
+  if (event.type === "navigation") return "Choose the route";
+  if (event.type === "forward") return "Choose the next push";
+  return "Handle the road event";
+}
+
 const WELCOME: ChatMessage = {
   id: "welcome",
   character: "james",
@@ -443,7 +449,7 @@ export default function GroupChat({
             className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2"
           >
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary">Choose the next move</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary">{choicePromptFor(adventureEvent)}</p>
               <h3 className="text-sm font-black uppercase leading-tight">{adventureEvent.title}</h3>
             </div>
             <div className="grid grid-cols-1 gap-2">

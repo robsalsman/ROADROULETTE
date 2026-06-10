@@ -104,15 +104,26 @@ export function buildNavigationPrompt(mission: MissionLike, terrain?: string | n
   };
 }
 
-export function buildForwardPrompt(mission: MissionLike, turn = 0): RoadEventTemplate {
-  return {
-    id: `forward-${mission.id}-${turn}`,
-    type: "forward",
-    title: "Choose The Next Push",
-    situation:
-      "The immediate problem has been dealt with. The road ahead is open for the moment, so the group needs to decide how to spend the next stretch.",
-    choices: [
-      choice(
+function shouldOfferSlalom(terrain?: string | null, turn = 0) {
+  const key = (terrain ?? "").toLowerCase();
+  return key.includes("snow") || key.includes("mountain") || key.includes("arctic") || turn % 4 === 2;
+}
+
+export function buildForwardPrompt(mission: MissionLike, turn = 0, terrain?: string | null): RoadEventTemplate {
+  const actionChoice = shouldOfferSlalom(terrain, turn)
+    ? choice(
+        `slalom-${turn}`,
+        "richard",
+        "Thread a downhill slalom",
+        "A timed run through gates, rocks, and poor life choices.",
+        "risky",
+        "The group agrees this should become a proper downhill handling trial.",
+        0,
+        0,
+        0,
+        2,
+      )
+    : choice(
         `drive-${turn}`,
         "jeremy",
         "Turn it into a driving challenge",
@@ -123,7 +134,16 @@ export function buildForwardPrompt(mission: MissionLike, turn = 0): RoadEventTem
         0,
         0,
         1,
-      ),
+      );
+
+  return {
+    id: `forward-${mission.id}-${turn}`,
+    type: "forward",
+    title: "Choose The Next Push",
+    situation:
+      "The immediate problem has been dealt with. The road ahead is open for the moment, so the group needs to decide how to spend the next stretch.",
+    choices: [
+      actionChoice,
       choice(
         `quiz-${turn}`,
         "james",
