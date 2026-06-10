@@ -149,7 +149,6 @@ export default function GroupChat({
 }: GroupChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessages(saveId));
   const [sending, setSending] = useState(false);
-  const [options, setOptions] = useState<string[]>(() => pickOptions());
   const [input, setInput] = useState("");
   const [loadedSaveId, setLoadedSaveId] = useState(saveId);
   const [introducedEventId, setIntroducedEventId] = useState<string | null>(null);
@@ -159,7 +158,6 @@ export default function GroupChat({
   const ctxRef = useRef(gameContext ?? "");
   const playerCharRef = useRef(playerCharacter);
   const playerNameRef = useRef(playerName);
-  const statsRef = useRef<ChatStats | undefined>(stats);
   const busyRef = useRef(false);
   const onPlayerMessageRef = useRef(onPlayerMessage);
   useEffect(() => { onPlayerMessageRef.current = onPlayerMessage; }, [onPlayerMessage]);
@@ -170,7 +168,6 @@ export default function GroupChat({
   useEffect(() => { ctxRef.current = gameContext ?? ""; }, [gameContext]);
   useEffect(() => { playerCharRef.current = playerCharacter; }, [playerCharacter]);
   useEffect(() => { playerNameRef.current = playerName; }, [playerName]);
-  useEffect(() => { statsRef.current = stats; }, [stats]);
 
   // When the active save changes in place (without a full remount), synchronously
   // reset chat state so one mission's history can never be written under another
@@ -178,7 +175,6 @@ export default function GroupChat({
   if (saveId !== loadedSaveId) {
     setLoadedSaveId(saveId);
     setMessages(loadMessages(saveId));
-    setOptions(pickOptions(statsRef.current));
     setInput("");
     setSending(false);
     setIntroducedEventId(null);
@@ -314,7 +310,7 @@ export default function GroupChat({
     if (!pending || busyRef.current) return;
     pendingReactRef.current = null;
     lastReactId.current = pending.id;
-    const responders = respondersFor(playerCharRef.current);
+    const responders = respondersFor(playerCharRef.current).slice(0, 1);
     void streamBanter(
       "/api/banter/generate",
       {
@@ -344,7 +340,6 @@ export default function GroupChat({
           isPlayer: true,
         },
       ]);
-      setOptions(pickOptions(statsRef.current));
       onPlayerMessageRef.current?.();
       void streamBanter(
         "/api/banter/chat",
@@ -358,7 +353,7 @@ export default function GroupChat({
   // Proactive, character-initiated chatter on a timer.
   useEffect(() => {
     const fireChatter = () => {
-      if (busyRef.current || document.hidden) return;
+      if (busyRef.current || document.hidden || adventureEvent) return;
       const responders = respondersFor(playerCharRef.current);
       if (responders.length === 0) return;
       // 1 speaker most of the time, occasionally 2 for a back-and-forth.
@@ -373,13 +368,13 @@ export default function GroupChat({
       );
     };
 
-    const kickoff = setTimeout(fireChatter, 3500);
-    const interval = setInterval(fireChatter, 20000);
+    const kickoff = setTimeout(fireChatter, 90000);
+    const interval = setInterval(fireChatter, 90000);
     return () => {
       clearTimeout(kickoff);
       clearInterval(interval);
     };
-  }, [streamBanter]);
+  }, [streamBanter, adventureEvent]);
 
   // React to a specific decision/event/drive from the game. Queue it and drain
   // immediately if free, otherwise the streamer drains it when it finishes.
@@ -490,23 +485,11 @@ export default function GroupChat({
         <div ref={bottomRef} />
       </div>
 
-      {/* Reply: tap a suggestion or type anything */}
+      {/* Optional free text. Main gameplay choices live in the adventure card above. */}
       <div className="shrink-0 border-t border-border px-3 py-3 space-y-2">
         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-          {sending ? "Sending…" : `Reply as ${playerName}`}
+          {adventureEvent ? "Choose a move above to continue" : sending ? "Sending..." : "Optional group message"}
         </p>
-        <div className="grid grid-cols-1 gap-1.5">
-          {options.map((opt, i) => (
-            <button
-              key={`${opt}-${i}`}
-              onClick={() => sendPlayerMessage(opt)}
-              disabled={sending}
-              className="w-full text-left px-3 py-2 rounded-xl border border-border bg-card text-xs leading-snug hover:border-primary/60 hover:bg-primary/5 active:scale-[0.99] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -520,13 +503,13 @@ export default function GroupChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Or type your own message…"
-            disabled={sending}
+            disabled={sending || !!adventureEvent}
             data-testid="input-groupchat"
             className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-border bg-background text-xs leading-snug outline-none focus:border-primary/60 disabled:opacity-40"
           />
           <button
             type="submit"
-            disabled={sending || !input.trim()}
+            disabled={sending || !!adventureEvent || !input.trim()}
             data-testid="button-groupchat-send"
             className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl border border-primary/40 bg-primary/20 text-primary hover:bg-primary/30 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
