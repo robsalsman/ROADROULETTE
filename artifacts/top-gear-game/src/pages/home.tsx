@@ -40,6 +40,11 @@ export default function Home() {
               Series Mode
             </Button>
           </Link>
+          <Link href="/mini-games" className="w-full">
+            <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-mini-games">
+              Mini Games
+            </Button>
+          </Link>
           <Link href="/saves" className="w-full">
             <Button size="lg" variant="outline" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-continue-game">
               Continue
@@ -61,7 +66,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="max-w-sm mx-auto grid grid-cols-2 gap-3 text-[11px] leading-snug text-muted-foreground"
+          className="max-w-sm mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] leading-snug text-muted-foreground"
         >
           <div className="rounded-lg border border-border bg-card/50 p-3">
             <p className="font-bold uppercase text-foreground text-xs mb-1">Arcade</p>
@@ -70,6 +75,10 @@ export default function Home() {
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
             <p className="font-bold uppercase text-amber-400 text-xs mb-1">Series</p>
             Join the lads as the fourth member. Drive every stage, money &amp; kit carry over.
+          </div>
+          <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+            <p className="font-bold uppercase text-primary text-xs mb-1">Mini Games</p>
+            Jump straight into Road Trials like ski slalom, river runs, and repair chaos.
           </div>
         </motion.div>
       </div>
