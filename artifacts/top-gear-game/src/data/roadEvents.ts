@@ -9,6 +9,9 @@ export type EventChoice = {
   fundsEffect: number;
   distanceEffect: number;
   damageEffect: number;
+  next?: "resolve" | "driving" | "mechanic" | "trivia" | "side-chat";
+  proposer?: "jeremy" | "richard" | "james";
+  thread?: string[];
 };
 
 export type RoadEventTemplate = {

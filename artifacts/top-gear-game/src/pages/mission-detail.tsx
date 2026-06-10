@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge, Settings2, Mountain, PoundSterling, Trophy, Warehouse, Wrench, BadgePoundSterling } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import VehicleSprite from "@/components/VehicleSprite";
 import {
   adjustedCarStats,
   loadGarage,
@@ -266,6 +267,11 @@ export default function MissionDetail() {
                       </div>
                     </CardHeader>
                     <CardContent className="flex-1 space-y-4">
+                      <VehicleSprite
+                        vehicle={car}
+                        className="h-28 w-full"
+                        label={`${car.year} ${car.name}`}
+                      />
                       <p className="text-sm text-muted-foreground min-h-[3rem]">{car.description}</p>
                       <div className="space-y-4 bg-muted/30 p-4 rounded-md">
                         {[
@@ -329,6 +335,11 @@ export default function MissionDetail() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-6">
+                    <VehicleSprite
+                      vehicle={car}
+                      className="h-28 w-full"
+                      label={`${car.year} ${car.name}`}
+                    />
                     <p className="text-sm text-muted-foreground min-h-[3rem]">{car.description}</p>
 
                     <div className="space-y-4 bg-muted/30 p-4 rounded-md">

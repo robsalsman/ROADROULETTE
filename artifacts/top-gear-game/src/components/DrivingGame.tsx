@@ -452,11 +452,17 @@ export default function DrivingGame({
 
       {/* Canvas + tap-to-jump */}
       <div
-        className="flex-1 relative overflow-hidden cursor-pointer"
+        className="flex-1 relative overflow-hidden cursor-pointer flex items-center justify-center bg-black"
         onPointerDown={(e) => { e.preventDefault(); jump(); }}
         style={{ touchAction: "none" }}
       >
-        <canvas ref={canvasRef} width={CW} height={CH} className="w-full h-full block" />
+        <canvas
+          ref={canvasRef}
+          width={CW}
+          height={CH}
+          className="block w-full max-h-full object-contain"
+          style={{ aspectRatio: `${CW} / ${CH}` }}
+        />
 
         {/* Start overlay */}
         {showStart && (

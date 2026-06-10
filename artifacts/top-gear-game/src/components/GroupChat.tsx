@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { EventChoice, RoadEventTemplate } from "@/data/roadEvents";
 
 interface ChatMessage {
   id: string;
@@ -23,7 +24,10 @@ interface GroupChatProps {
   gameContext?: string;
   stats?: ChatStats;
   reactTo?: { id: string; context: string; tone?: string } | null;
+  adventureEvent?: RoadEventTemplate | null;
+  resolvingAdventure?: boolean;
   saveId?: string | number;
+  onAdventureChoice?: (choice: EventChoice) => void;
   onPlayerMessage?: () => void;
 }
 
@@ -37,6 +41,24 @@ const CHAR_COLORS: Record<string, string> = {
   jeremy: "border-orange-500/60 bg-orange-500/10",
   richard: "border-blue-500/60 bg-blue-500/10",
   james: "border-green-500/60 bg-green-500/10",
+};
+
+const RISK_COLORS: Record<EventChoice["risk"], string> = {
+  safe: "border-blue-500/50 hover:border-blue-400 hover:bg-blue-500/10",
+  risky: "border-amber-500/50 hover:border-amber-400 hover:bg-amber-500/10",
+  mad: "border-red-500/50 hover:border-red-400 hover:bg-red-500/10",
+};
+
+const RISK_BADGE: Record<EventChoice["risk"], string> = {
+  safe: "bg-blue-500/20 text-blue-300",
+  risky: "bg-amber-500/20 text-amber-300",
+  mad: "bg-red-500/20 text-red-300",
+};
+
+const PRESENTER_NAMES: Record<string, string> = {
+  jeremy: "Jeremy",
+  richard: "Hammond",
+  james: "James",
 };
 
 const ALL_CHARS = ["jeremy", "richard", "james"];
@@ -119,7 +141,10 @@ export default function GroupChat({
   gameContext,
   stats,
   reactTo,
+  adventureEvent,
+  resolvingAdventure = false,
   saveId,
+  onAdventureChoice,
   onPlayerMessage,
 }: GroupChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessages(saveId));
@@ -127,6 +152,7 @@ export default function GroupChat({
   const [options, setOptions] = useState<string[]>(() => pickOptions());
   const [input, setInput] = useState("");
   const [loadedSaveId, setLoadedSaveId] = useState(saveId);
+  const [introducedEventId, setIntroducedEventId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Latest values held in refs so the proactive timer stays stable.
@@ -155,6 +181,7 @@ export default function GroupChat({
     setOptions(pickOptions(statsRef.current));
     setInput("");
     setSending(false);
+    setIntroducedEventId(null);
     lastReactId.current = null;
     pendingReactRef.current = null;
     busyRef.current = false;
@@ -176,6 +203,34 @@ export default function GroupChat({
 
   const respondersFor = (player: string) =>
     ALL_CHARS.filter((c) => c !== player);
+
+  useEffect(() => {
+    if (!adventureEvent || introducedEventId === adventureEvent.id) return;
+    setIntroducedEventId(adventureEvent.id);
+    const speakers = adventureEvent.choices.map((choice, index) => (
+      choice.proposer ?? (["jeremy", "richard", "james"][index] as "jeremy" | "richard" | "james")
+    ));
+    const intro: ChatMessage[] = [
+      {
+        id: `event-${adventureEvent.id}`,
+        character: "player",
+        name: "Road",
+        text: adventureEvent.situation,
+        isPlayer: false,
+      },
+      ...adventureEvent.choices.map((choice, index) => {
+        const character = speakers[index] ?? "james";
+        return {
+          id: `event-${adventureEvent.id}-${choice.id}`,
+          character,
+          name: PRESENTER_NAMES[character] ?? character,
+          text: choice.flavor,
+          isPlayer: false,
+        };
+      }),
+    ];
+    setMessages((prev) => [...prev.slice(-50), ...intro]);
+  }, [adventureEvent, introducedEventId]);
 
   // Shared SSE streamer for both /banter/chat and /banter/generate.
   const streamBanter = useCallback(
@@ -382,6 +437,56 @@ export default function GroupChat({
             </motion.div>
           ))}
         </AnimatePresence>
+        {adventureEvent && (
+          <motion.div
+            key={`choices-${adventureEvent.id}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2"
+          >
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary">Choose the next move</p>
+              <h3 className="text-sm font-black uppercase leading-tight">{adventureEvent.title}</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {adventureEvent.choices.map((choice, index) => {
+                const presenter = choice.proposer ?? (["jeremy", "richard", "james"][index] as "jeremy" | "richard" | "james");
+                return (
+                  <button
+                    key={choice.id}
+                    disabled={resolvingAdventure || sending}
+                    onClick={() => onAdventureChoice?.(choice)}
+                    className={`w-full text-left px-3 py-2 rounded-lg border bg-card/70 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed ${RISK_COLORS[choice.risk]}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {AVATARS[presenter] && (
+                        <img
+                          src={AVATARS[presenter]}
+                          alt={PRESENTER_NAMES[presenter]}
+                          className="w-7 h-7 rounded-full border border-border object-cover shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-bold leading-snug">{choice.label}</p>
+                          <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${RISK_BADGE[choice.risk]}`}>
+                            {choice.risk}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-[10px] mt-0.5">
+                          {PRESENTER_NAMES[presenter]} proposes this.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {resolvingAdventure && (
+              <p className="text-center text-xs text-muted-foreground animate-pulse">The road is answering...</p>
+            )}
+          </motion.div>
+        )}
         <div ref={bottomRef} />
       </div>
 

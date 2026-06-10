@@ -4,7 +4,9 @@ import { useGetSave, getGetSaveQueryKey, useGetMission, getGetMissionQueryKey, u
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Zap, Settings, Fuel, Shield, Circle, Megaphone, Clover } from "lucide-react";
+import VehicleSprite from "@/components/VehicleSprite";
 import {
+  loadGarage,
   loadUpgradeSpend,
   loadUpgrades,
   saveUpgrades,
@@ -198,6 +200,10 @@ export default function UpgradeShop() {
     ? (character.slug === "richard" ? "/images/hammond.png" : `/images/${character.slug}.png`)
     : null;
   const upgradeCount = Object.keys(upgrades).length;
+  const activeCar = activeCarId
+    ? loadGarage(saveId!).cars.find((garageCar) => garageCar.id === activeCarId)
+      ?? mission.availableCars?.find((missionCar: { id: number }) => missionCar.id === activeCarId)
+    : null;
 
   return (
     <div className="flex-1 flex flex-col bg-background">
@@ -217,6 +223,11 @@ export default function UpgradeShop() {
 
       {/* Car info strip */}
       <div className="bg-card/50 border-b border-border px-6 py-3 flex items-center gap-4">
+        <VehicleSprite
+          vehicle={activeCar}
+          className="h-16 w-24 shrink-0"
+          label={activeCar ? `${activeCar.year} ${activeCar.name}` : "Selected vehicle"}
+        />
         {avatarSrc ? (
           <img
             src={avatarSrc}

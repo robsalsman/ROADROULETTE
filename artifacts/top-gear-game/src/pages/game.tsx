@@ -13,7 +13,7 @@ import { pickNextEvent, type RoadEventTemplate, type EventChoice } from "@/data/
 import { pickTrivia, type TriviaQuestion } from "@/data/trivia";
 import DrivingGame from "@/components/DrivingGame";
 import GroupChat from "@/components/GroupChat";
-import { vehicleArchetype, vehicleSprite } from "@/data/vehicles";
+import { getVehicleSprite } from "@/components/VehicleSprite";
 import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy } from "lucide-react";
 
@@ -84,6 +84,21 @@ const RISK_BADGE: Record<string, string> = {
 // ── Challenge result (shown briefly in hub after driving) ─────────────────────
 interface DriveResult { earnings: number; condDelta: number; distKm: number; }
 
+type AdventureDrive = {
+  event: RoadEventTemplate;
+  choice: EventChoice;
+};
+
+function nextStepForChoice(event: RoadEventTemplate, choice: EventChoice): NonNullable<EventChoice["next"]> {
+  if (choice.next) return choice.next;
+  const id = `${event.id}:${choice.id}`;
+  if (/race_accept|race_wager|shortcut_flat_out|floor_it|cross_fast|maintain_speed|drive_faster|wildlife_edge/.test(id)) return "driving";
+  if (/garage_service|village_garage/.test(id)) return "mechanic";
+  if (/claim_press|stop_polite|museum_full_tour|view_photos/.test(id)) return "trivia";
+  if (/take_shortcut|take_navigator|tea_farmer|tractor_tow|festival_join|garage_chat/.test(id)) return "side-chat";
+  return "resolve";
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Game() {
   const { saveId } = useParams();
@@ -99,6 +114,7 @@ export default function Game() {
   const busyRef = useRef(false);
   const [showMechanic, setShowMechanic] = useState(false);
   const [driveResult, setDriveResult] = useState<DriveResult | null>(null);
+  const [adventureDrive, setAdventureDrive] = useState<AdventureDrive | null>(null);
   const [upgrades, setUpgrades] = useState<Upgrades>({});
   const [shownEventIds, setShownEventIds] = useState<Set<string>>(new Set());
   const [chatReact, setChatReact] = useState<{ id: string; context: string; tone?: string } | null>(null);
@@ -189,6 +205,7 @@ export default function Game() {
     if (firstEvt) {
       setShownEventIds(new Set([firstEvt.id]));
       setPendingEvent(firstEvt);
+      setTab("chat");
     }
 
     setMode("hub");
@@ -344,14 +361,16 @@ export default function Game() {
     }
 
     // Surface a road event after advancing (if one is available)
+    let surfacedEvent = false;
     if (!pendingEvent) {
       const evt = pickNextEvent(shownEventIds);
       if (evt) {
         setShownEventIds(prev => new Set([...prev, evt.id]));
         setPendingEvent(evt);
+        surfacedEvent = true;
       }
     }
-    setTab("journey");
+    setTab(surfacedEvent ? "chat" : "journey");
     if (opts.result) setTimeout(() => setDriveResult(null), 6000);
     busyRef.current = false;
     setBusy(false);
@@ -359,6 +378,33 @@ export default function Game() {
 
   // ── Driving challenge complete ─────────────────────────────────────────────
   const handleDriveComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
+    if (adventureDrive && save) {
+      const { event, choice } = adventureDrive;
+      setAdventureDrive(null);
+      void recordEvent.mutateAsync({
+        saveId: save.id,
+        data: {
+          eventType: event.type === "navigation" ? "shortcut" : event.type === "encounter" ? "banter" : "mechanical",
+          title: event.title,
+          description: `${choice.outcome} The playable challenge added Â£${earnings} and ${kmEarned}km.`,
+          outcome: choice.label,
+          fundsChange: choice.fundsEffect + earnings,
+        },
+      }).catch(() => {});
+      void resolveAdvance({
+        earnings: earnings + choice.fundsEffect,
+        condDelta: condDelta + choice.damageEffect,
+        kmEarned: kmEarned + Math.max(0, Math.round(choice.distanceEffect / 2)),
+        fuelCost: Math.round(10 + Math.random() * 8),
+        camaraderieDelta: choice.risk === "mad" ? 4 : 2,
+        result: { earnings, condDelta: condDelta + choice.damageEffect, distKm: kmEarned },
+        chat: {
+          context: `${displayName || "The driver"} chose "${choice.label}", which turned into a full playable road challenge. ${choice.outcome}`,
+          tone: choice.risk === "mad" ? "alarmed" : "excited",
+        },
+      });
+      return;
+    }
     void resolveAdvance({
       earnings,
       condDelta,
@@ -371,7 +417,7 @@ export default function Game() {
         tone: condDelta < 0 ? "mocking" : "impressed",
       },
     });
-  }, [resolveAdvance, displayName]);
+  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName]);
 
   // ── Press On: free advance that costs fuel + wear ──────────────────────────
   const handlePressOn = useCallback(() => {
@@ -423,6 +469,46 @@ export default function Game() {
     if (!save || !pendingEvent) return;
     setResolving(true);
 
+    const nextStep = nextStepForChoice(pendingEvent, choice);
+    if (nextStep === "driving") {
+      const event = pendingEvent;
+      setPendingEvent(null);
+      setResolving(false);
+      setAdventureDrive({ event, choice });
+      setChatReact({
+        id: `evt-drive-${Date.now()}`,
+        context: `${displayName || "The driver"} accepted "${choice.label}". The idea has immediately become a proper driving challenge.`,
+        tone: choice.risk === "mad" ? "alarmed" : "excited",
+      });
+      setMode("driving");
+      return;
+    }
+
+    if (nextStep === "mechanic") {
+      setPendingEvent(null);
+      setResolving(false);
+      setShowMechanic(true);
+      setChatReact({
+        id: `evt-mech-${Date.now()}`,
+        context: `${displayName || "The driver"} chose "${choice.label}", so the team has peeled into a local garage encounter before continuing.`,
+        tone: "cautious",
+      });
+      return;
+    }
+
+    if (nextStep === "trivia") {
+      setPendingEvent(null);
+      setResolving(false);
+      setTriviaResult(null);
+      setTrivia(pickTrivia(usedTriviaRef.current, mission?.id));
+      setChatReact({
+        id: `evt-quiz-${Date.now()}`,
+        context: `${displayName || "The driver"} chose "${choice.label}", which has turned into a quick pub-quiz style argument over the radio.`,
+        tone: "competitive",
+      });
+      return;
+    }
+
     const newFunds = Math.max(0, funds + choice.fundsEffect);
     setFunds(newFunds);
 
@@ -465,7 +551,7 @@ export default function Game() {
     setChatReact({
       id: `evt-${Date.now()}`,
       context: `${displayName || "The driver"} just faced the road event "${pendingEvent.title}" and chose to "${choice.label}" — ${choice.outcome} (funds changed by £${choice.fundsEffect}).`,
-      tone: choice.risk === "mad" ? "alarmed" : choice.risk === "risky" ? "skeptical" : "approving",
+      tone: nextStep === "side-chat" ? "secretive" : choice.risk === "mad" ? "alarmed" : choice.risk === "risky" ? "skeptical" : "approving",
     });
 
     // Brief outcome toast
@@ -478,7 +564,7 @@ export default function Game() {
     if (newDist >= TRIP_KM) {
       await finishStage(newFunds, newDist, newCam);
     }
-  }, [save, pendingEvent, funds, distKm, camaraderie, recordEvent, updateSave, setLocation, displayName, finishStage]);
+  }, [save, pendingEvent, funds, distKm, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id]);
 
   // ── Mechanic purchase ──────────────────────────────────────────────────────
   const handleMechanicPurchase = async (offer: MechanicOffer) => {
@@ -536,10 +622,7 @@ export default function Game() {
           collectRadiusBonus={stats.collectRadiusBonus}
           scoreMultiplier={stats.scoreMultiplier}
           scoreBonus={stats.scoreBonus}
-          vehicleSprite={(() => {
-            const c = car as { name?: string; power?: number; offRoad?: number } | undefined;
-            return c?.name ? vehicleSprite(vehicleArchetype(c.name, c.power, c.offRoad)) : undefined;
-          })()}
+          vehicleSprite={getVehicleSprite(car)}
           onComplete={handleDriveComplete}
           onExit={() => setMode("hub")}
         />
@@ -618,7 +701,10 @@ export default function Game() {
             gameContext={gameContext}
             stats={{ condition, fuel, progressPct }}
             reactTo={chatReact}
+            adventureEvent={pendingEvent}
+            resolvingAdventure={resolving}
             saveId={save.id}
+            onAdventureChoice={handleChoice}
             onPlayerMessage={() => bumpCamaraderie(1)}
           />
         </div>
@@ -688,28 +774,10 @@ export default function Game() {
                     <h3 className="font-black text-sm uppercase mt-0.5">{pendingEvent.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pendingEvent.situation}</p>
                   </div>
-                  <div className="p-2 space-y-1.5">
-                    {resolving ? (
-                      <div className="text-center py-2 text-xs text-muted-foreground animate-pulse">Dealing with it...</div>
-                    ) : (
-                      pendingEvent.choices.map((choice, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleChoice(choice)}
-                          className={`w-full text-left px-3 py-2 rounded-lg border bg-card/50 text-xs transition-all ${RISK_COLORS[choice.risk]}`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <div>
-                              <p className="font-bold">{choice.label}</p>
-                              <p className="text-muted-foreground italic text-[10px] mt-0.5">{choice.flavor}</p>
-                            </div>
-                            <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${RISK_BADGE[choice.risk]}`}>
-                              {choice.risk}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
+                  <div className="p-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The next moves are being argued over in the group chat. Pick an option there to keep the quest moving.
+                    </p>
                   </div>
                 </motion.div>
               )}

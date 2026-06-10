@@ -22,13 +22,13 @@ export function vehicleArchetype(
   if (/estate|wagon/.test(n)) return "estate";
   if (/delica|\bape\b|multipla|\bvan\b|combi|bus|minibus/.test(n)) return "van";
   if (
-    /defender|land rover|range rover|land cruiser|cruiser|\bjeep\b|cherokee|uaz|vitara|jimny|pajero|patrol|niva|trooper|series|quattro|4x4|wrangler|discovery/.test(
+    /buggy|defender|land rover|range rover|land cruiser|cruiser|\bjeep\b|cherokee|uaz|vitara|jimny|pajero|patrol|niva|trooper|series|quattro|4x4|wrangler|discovery/.test(
       n,
     )
   )
     return "offroader";
   if (
-    /rx-?7|impreza|wrx|skyline|silvia|ae86|gti|\bevo\b|turbo|coupe|\bgt\b|\bgti\b|s13|celica|supra|mx-?5|sti|205 gti/.test(
+    /laferrari|ferrari|mclaren|porsche|aston|lamborghini|lotus|maserati|jaguar|corvette|viper|rx-?7|impreza|wrx|skyline|silvia|ae86|gti|\bevo\b|turbo|coupe|\bgt\b|\bgti\b|s13|celica|supra|mx-?5|sti|205 gti/.test(
       n,
     )
   )
