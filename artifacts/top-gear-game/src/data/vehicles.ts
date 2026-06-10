@@ -69,6 +69,17 @@ const FALLBACK_COLORS = [
   ["#64748b", "#f8fafc"],
 ] as const;
 
+const CURATED_SIDE_SPRITES: Array<[RegExp, string]> = [
+  [/\bmclaren p1\b/i, "/images/vehicles/curated/mclaren-p1-side.png"],
+  [/\bporsche 918\b/i, "/images/vehicles/curated/porsche-918-spyder-side.png"],
+  [/\blaferrari\b/i, "/images/vehicles/curated/laferrari-side.png"],
+  [/\bjaguar xj-?s\b/i, "/images/vehicles/curated/jaguar-xjs-side.png"],
+];
+
+export function curatedVehicleSideSprite(name: string): string | undefined {
+  return CURATED_SIDE_SPRITES.find(([pattern]) => pattern.test(name))?.[1];
+}
+
 function hashName(name: string): number {
   let hash = 2166136261;
   for (let i = 0; i < name.length; i++) {
@@ -330,6 +341,8 @@ export function vehicleTopDownSvg(name: string, power = 5, offRoad = 5): string 
 }
 
 export function vehicleSideSprite(name: string, power = 5, offRoad = 5): string {
+  const curated = curatedVehicleSideSprite(name);
+  if (curated) return curated;
   return svgUrl(vehicleSideSvg(name, power, offRoad));
 }
 
