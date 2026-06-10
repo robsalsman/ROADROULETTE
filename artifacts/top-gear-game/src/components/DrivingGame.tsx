@@ -15,7 +15,6 @@ const START_SPEED = 320;    // px/s
 const MAX_SPEED = 720;
 
 type ObKind = "rock" | "log" | "barrel" | "cone" | "animal";
-const OB_EMOJI: Record<ObKind, string> = { rock: "🪨", log: "🪵", barrel: "🛢️", cone: "🚧", animal: "🐐" };
 
 interface Ob { x: number; w: number; h: number; kind: ObKind; }
 interface Coin { x: number; y: number; taken: boolean; }
@@ -390,15 +389,11 @@ export default function DrivingGame({
 
     // Obstacles
     for (const o of obstacles.current) {
-      const oy = GROUND_Y - o.h;
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
       ctx.ellipse(o.x + o.w / 2, GROUND_Y + 4, o.w / 2, 6, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.font = `${Math.round(o.h * 0.9)}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "alphabetic";
-      ctx.fillText(OB_EMOJI[o.kind], o.x + o.w / 2, GROUND_Y - 2);
+      drawObstacle(ctx, o, GROUND_Y);
     }
 
     // Particles
@@ -528,12 +523,11 @@ function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, wheelRot: 
   ctx.ellipse(w / 2, h + 8, w / 2, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Sprite render (keep shadow above + wheels below)
+  // Vehicle sprites already include wheels; do not draw the fallback wheels.
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
     const spriteH = h * 1.5;
     const spriteW = w * 1.18;
     ctx.drawImage(sprite, (w - spriteW) / 2, h - spriteH + h * 0.18, spriteW, spriteH);
-    drawWheels(ctx, w, h, wheelRot);
     ctx.restore();
     return;
   }
@@ -589,6 +583,114 @@ function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, wheelRot: 
 
   // Wheels
   drawWheels(ctx, w, h, wheelRot);
+
+  ctx.restore();
+}
+
+function drawObstacle(ctx: CanvasRenderingContext2D, o: Ob, groundY: number) {
+  const x = o.x;
+  const y = groundY - o.h;
+
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.lineJoin = "round";
+
+  switch (o.kind) {
+    case "rock": {
+      ctx.fillStyle = "#7f8a86";
+      ctx.strokeStyle = "#2f3a37";
+      ctx.beginPath();
+      ctx.moveTo(x + o.w * 0.18, groundY);
+      ctx.lineTo(x + o.w * 0.06, y + o.h * 0.58);
+      ctx.lineTo(x + o.w * 0.35, y + o.h * 0.18);
+      ctx.lineTo(x + o.w * 0.7, y + o.h * 0.08);
+      ctx.lineTo(x + o.w * 0.96, y + o.h * 0.48);
+      ctx.lineTo(x + o.w * 0.82, groundY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(x + o.w * 0.32, y + o.h * 0.35);
+      ctx.lineTo(x + o.w * 0.56, y + o.h * 0.22);
+      ctx.lineTo(x + o.w * 0.72, y + o.h * 0.44);
+      ctx.lineTo(x + o.w * 0.42, y + o.h * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "log": {
+      ctx.fillStyle = "#8b5a2b";
+      ctx.strokeStyle = "#3f2412";
+      ctx.beginPath();
+      ctx.roundRect(x, groundY - o.h * 0.62, o.w, o.h * 0.34, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#5f3618";
+      for (let i = 0; i < 3; i++) {
+        const lx = x + o.w * (0.22 + i * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(lx, groundY - o.h * 0.6);
+        ctx.lineTo(lx + 8, groundY - o.h * 0.3);
+        ctx.stroke();
+      }
+      break;
+    }
+    case "barrel": {
+      ctx.fillStyle = "#9f342d";
+      ctx.strokeStyle = "#3b1513";
+      ctx.beginPath();
+      ctx.roundRect(x + o.w * 0.12, y + 4, o.w * 0.76, o.h - 4, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#f6c453";
+      ctx.beginPath();
+      ctx.moveTo(x + o.w * 0.18, y + o.h * 0.38);
+      ctx.lineTo(x + o.w * 0.82, y + o.h * 0.38);
+      ctx.moveTo(x + o.w * 0.18, y + o.h * 0.68);
+      ctx.lineTo(x + o.w * 0.82, y + o.h * 0.68);
+      ctx.stroke();
+      break;
+    }
+    case "cone": {
+      ctx.fillStyle = "#f97316";
+      ctx.strokeStyle = "#7c2d12";
+      ctx.beginPath();
+      ctx.moveTo(x + o.w * 0.5, y);
+      ctx.lineTo(x + o.w * 0.14, groundY);
+      ctx.lineTo(x + o.w * 0.86, groundY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#fff7ed";
+      ctx.fillRect(x + o.w * 0.28, y + o.h * 0.55, o.w * 0.44, 5);
+      break;
+    }
+    case "animal": {
+      ctx.fillStyle = "#d8c59a";
+      ctx.strokeStyle = "#3b2f1a";
+      ctx.beginPath();
+      ctx.roundRect(x + 4, y + o.h * 0.38, o.w * 0.66, o.h * 0.34, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + o.w * 0.78, y + o.h * 0.38, o.w * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#3b2f1a";
+      ctx.beginPath();
+      ctx.moveTo(x + o.w * 0.73, y + o.h * 0.27);
+      ctx.lineTo(x + o.w * 0.66, y + o.h * 0.05);
+      ctx.moveTo(x + o.w * 0.84, y + o.h * 0.27);
+      ctx.lineTo(x + o.w * 0.95, y + o.h * 0.08);
+      ctx.moveTo(x + o.w * 0.2, y + o.h * 0.7);
+      ctx.lineTo(x + o.w * 0.16, groundY);
+      ctx.moveTo(x + o.w * 0.55, y + o.h * 0.7);
+      ctx.lineTo(x + o.w * 0.6, groundY);
+      ctx.stroke();
+      break;
+    }
+  }
 
   ctx.restore();
 }
