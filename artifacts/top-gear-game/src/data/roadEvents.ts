@@ -14,6 +14,8 @@ export type EventChoice = {
   foodEffect?: number;
   partsEffect?: number;
   itemRewardId?: string;
+  itemRewardQty?: number;
+  consumedItemId?: string;
   next?: "resolve" | "driving" | "mechanic" | "trivia" | "side-chat";
   proposer?: "jeremy" | "richard" | "james";
   thread?: string[];
@@ -761,6 +763,8 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 20,
         distanceEffect: 25,
         damageEffect: 12,
+        foodEffect: 3,
+        itemRewardId: "market-snacks",
       },
       {
         id: "festival_polite",
@@ -772,6 +776,8 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 0,
         distanceEffect: 45,
         damageEffect: 4,
+        foodEffect: 2,
+        itemRewardId: "market-snacks",
       },
       {
         id: "festival_buy",
@@ -803,6 +809,9 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 50,
         distanceEffect: 40,
         damageEffect: 8,
+        fuelEffect: 20,
+        partsEffect: 1,
+        itemRewardId: "lucky-hose",
       },
       {
         id: "supplies_some",
@@ -814,6 +823,8 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 20,
         distanceEffect: 45,
         damageEffect: 3,
+        fuelEffect: 12,
+        partsEffect: 1,
       },
       {
         id: "supplies_suspicious",
@@ -929,6 +940,8 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: -50,
         distanceEffect: 45,
         damageEffect: 25,
+        partsEffect: 1,
+        itemRewardId: "spare-tyre",
       },
       {
         id: "garage_chat",
@@ -940,6 +953,7 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 0,
         distanceEffect: 75,
         damageEffect: 0,
+        itemRewardId: "local-map",
       },
       {
         id: "garage_haggle",
@@ -971,6 +985,7 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 30,
         distanceEffect: 65,
         damageEffect: -8,
+        itemRewardId: "race-wristband",
       },
       {
         id: "race_wager",
@@ -982,6 +997,7 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 80,
         distanceEffect: 60,
         damageEffect: -15,
+        itemRewardId: "race-wristband",
       },
       {
         id: "race_decline",
@@ -993,6 +1009,395 @@ export const ROAD_EVENTS: RoadEventTemplate[] = [
         fundsEffect: 0,
         distanceEffect: 50,
         damageEffect: 5,
+      },
+    ],
+  },
+  {
+    id: "paperwork_bureau",
+    type: "encounter",
+    title: "The Paperwork Office",
+    situation:
+      "The route has been interrupted by a government office with a fan, a desk, and a man who is certain you need a form you have never heard of. The form appears to require another form.",
+    choices: [
+      {
+        id: "queue_properly",
+        label: "Queue properly and fill in everything",
+        flavor: "Slow, legal, and soul-destroying.",
+        risk: "safe",
+        outcome:
+          "After several stamps and a brief argument about engine numbers, the paperwork is accepted. It costs half a day but saves trouble later.",
+        fundsEffect: -40,
+        distanceEffect: 20,
+        damageEffect: 0,
+        timeEffectHours: 5,
+        itemRewardId: "border-stamp",
+      },
+      {
+        id: "find_fixing_man",
+        label: "Find the man who knows a man",
+        flavor: "Administrative jazz.",
+        risk: "risky",
+        outcome:
+          "A fixer appears from nowhere, makes three phone calls, and returns with a stamped permit and a grin. It works. Somehow.",
+        fundsEffect: -90,
+        distanceEffect: 55,
+        damageEffect: 0,
+        timeEffectHours: 2,
+        itemRewardId: "border-stamp",
+      },
+      {
+        id: "official_confidence",
+        label: "Stride through like you belong",
+        flavor: "The clipboard is mostly theatrical.",
+        risk: "mad",
+        outcome:
+          "Nobody challenges the clipboard. By the time anyone asks who issued it, the convoy is already several towns away.",
+        fundsEffect: 0,
+        distanceEffect: 75,
+        damageEffect: 0,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "night_drive",
+    type: "hazard",
+    title: "The Overnight Push",
+    situation:
+      "Everyone is behind schedule and the road continues into darkness. The headlights illuminate about twelve feet of road and one hundred feet of bad decisions.",
+    choices: [
+      {
+        id: "book_rooms",
+        label: "Stop for the night",
+        flavor: "A scandalously sensible use of beds.",
+        risk: "safe",
+        outcome:
+          "You sleep indoors, eat something hot, and wake up with all major parts still attached. The schedule suffers, but the crew does not.",
+        fundsEffect: -70,
+        distanceEffect: 15,
+        damageEffect: 10,
+        foodEffect: 2,
+        timeEffectHours: 8,
+        itemRewardId: "hotel-voucher",
+      },
+      {
+        id: "rotate_drivers",
+        label: "Rotate drivers every hour",
+        flavor: "Disciplined misery.",
+        risk: "risky",
+        outcome:
+          "The rotating shift works, though nobody is speaking with warmth by dawn. The convoy covers serious ground.",
+        fundsEffect: 0,
+        distanceEffect: 95,
+        damageEffect: -12,
+        fuelEffect: -16,
+        foodEffect: -1,
+        timeEffectHours: 5,
+      },
+      {
+        id: "full_beam_attack",
+        label: "Full beam and absolute commitment",
+        flavor: "Sleep is a rival team.",
+        risk: "mad",
+        outcome:
+          "It is fast, tense, and only technically controlled. You arrive much farther along with a car that now sounds personally offended.",
+        fundsEffect: 20,
+        distanceEffect: 120,
+        damageEffect: -28,
+        fuelEffect: -22,
+        foodEffect: -1,
+        timeEffectHours: 4,
+      },
+    ],
+  },
+  {
+    id: "market_blackout",
+    type: "encounter",
+    title: "Market Power Cut",
+    situation:
+      "The convoy reaches a market just as the power goes out. Generators cough, sellers shout, and someone claims they can sell you fuel if you can help restart a compressor.",
+    choices: [
+      {
+        id: "help_generator",
+        label: "Use tools to help restart the generator",
+        flavor: "Practical, loud, and briefly heroic.",
+        risk: "safe",
+        outcome:
+          "A loose cable is tightened, the market lights return, and the grateful stallholders load the car with food and a little fuel.",
+        fundsEffect: 20,
+        distanceEffect: 35,
+        damageEffect: 4,
+        fuelEffect: 18,
+        foodEffect: 3,
+        partsEffect: -1,
+        timeEffectHours: 2,
+        itemRewardId: "local-favour",
+      },
+      {
+        id: "buy_dark_supplies",
+        label: "Buy supplies by torchlight",
+        flavor: "Expensive mystery shopping.",
+        risk: "risky",
+        outcome:
+          "You buy fuel, snacks, and something sold as a fuse. Two of those things are useful.",
+        fundsEffect: -80,
+        distanceEffect: 45,
+        damageEffect: 0,
+        fuelEffect: 22,
+        foodEffect: 2,
+        partsEffect: 1,
+        timeEffectHours: 2,
+      },
+      {
+        id: "market_shortcut_tip",
+        label: "Trade jokes for a shortcut tip",
+        flavor: "Morale as currency.",
+        risk: "mad",
+        outcome:
+          "The joke barely translates, but the effort is appreciated. A seller draws a route through the old road that saves hours.",
+        fundsEffect: 0,
+        distanceEffect: 90,
+        damageEffect: -8,
+        foodEffect: 1,
+        timeEffectHours: 1,
+        itemRewardId: "local-map",
+      },
+    ],
+  },
+  {
+    id: "sand_trap",
+    type: "obstacle",
+    title: "The Soft Shoulder",
+    situation:
+      "The edge of the road looked firm. It was not. One wheel has sunk to a deeply embarrassing angle and the horizon is doing nothing helpful.",
+    choices: [
+      {
+        id: "dig_patiently",
+        label: "Dig out slowly and use the mats",
+        flavor: "Sweaty but correct.",
+        risk: "safe",
+        outcome:
+          "After a lot of digging and several ruined tempers, the car climbs out. Slow, but damage is minimal.",
+        fundsEffect: 0,
+        distanceEffect: 25,
+        damageEffect: -4,
+        foodEffect: -1,
+        timeEffectHours: 4,
+      },
+      {
+        id: "use_sand_ladders",
+        label: "Deploy proper sand ladders",
+        flavor: "Preparation, annoyingly, works.",
+        risk: "safe",
+        outcome:
+          "The recovery gear does exactly what it is meant to do. Everyone pretends this was the plan all along.",
+        fundsEffect: 0,
+        distanceEffect: 55,
+        damageEffect: 2,
+        timeEffectHours: 2,
+        consumedItemId: "sand-ladders",
+      },
+      {
+        id: "reverse_launch",
+        label: "Reverse, launch, and hope",
+        flavor: "A technique best described as cinematic.",
+        risk: "mad",
+        outcome:
+          "The car bursts free in a spray of dust and shame. Progress resumes, minus some underbody confidence.",
+        fundsEffect: -30,
+        distanceEffect: 70,
+        damageEffect: -22,
+        fuelEffect: -12,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "puncture_alley",
+    type: "breakdown",
+    title: "Puncture Alley",
+    situation:
+      "The road surface has become a glittering field of sharp stones and broken metal. The front tyre begins making the unmistakable sound of a bad afternoon.",
+    choices: [
+      {
+        id: "fit_spare",
+        label: "Fit the good spare tyre",
+        flavor: "Competence with a wheel brace.",
+        risk: "safe",
+        outcome:
+          "The spare goes on, the damaged wheel goes in the boot, and the convoy keeps moving with only a modest delay.",
+        fundsEffect: 0,
+        distanceEffect: 50,
+        damageEffect: 0,
+        timeEffectHours: 2,
+        consumedItemId: "spare-tyre",
+      },
+      {
+        id: "patch_tube",
+        label: "Patch it with the emergency kit",
+        flavor: "A repair with the confidence of wet paper.",
+        risk: "risky",
+        outcome:
+          "The patch holds for now. Nobody trusts it, but distrust is not the same as stopping.",
+        fundsEffect: -20,
+        distanceEffect: 60,
+        damageEffect: -8,
+        partsEffect: -1,
+        timeEffectHours: 2,
+      },
+      {
+        id: "drive_flat",
+        label: "Drive on the flat until civilisation",
+        flavor: "Wheel-shaped optimism.",
+        risk: "mad",
+        outcome:
+          "This is loud, ugly, and expensive. You reach a tyre shop, but the wheel looks like it has seen combat.",
+        fundsEffect: -140,
+        distanceEffect: 80,
+        damageEffect: -30,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "ferry_argument",
+    type: "navigation",
+    title: "The Ferry That May Leave Soon",
+    situation:
+      "A ferry is visible at the dock. A man with a whistle is gesturing in a way that could mean hurry up, go away, or both.",
+    choices: [
+      {
+        id: "buy_new_ticket",
+        label: "Buy a ticket and board normally",
+        flavor: "Radical punctuality.",
+        risk: "safe",
+        outcome:
+          "The car rolls aboard at the last sensible moment. The crossing is uneventful, which feels suspiciously luxurious.",
+        fundsEffect: -60,
+        distanceEffect: 75,
+        damageEffect: 0,
+        timeEffectHours: 2,
+      },
+      {
+        id: "use_saved_ticket",
+        label: "Use the ferry ticket from earlier",
+        flavor: "Forward planning in action.",
+        risk: "safe",
+        outcome:
+          "The old ticket is accepted with a shrug. You board quickly, save cash, and look smug for several miles.",
+        fundsEffect: 0,
+        distanceEffect: 90,
+        damageEffect: 0,
+        timeEffectHours: 1,
+        consumedItemId: "ferry-ticket",
+      },
+      {
+        id: "ramp_it",
+        label: "Make the ferry before the ramp lifts",
+        flavor: "A dockside sprint with witnesses.",
+        risk: "mad",
+        outcome:
+          "The car clatters onto the ferry just as the ramp rises. The dock workers are furious. The presenters are delighted.",
+        fundsEffect: -20,
+        distanceEffect: 100,
+        damageEffect: -18,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "lost_camera_case",
+    type: "good",
+    title: "The Lost Camera Case",
+    situation:
+      "A battered camera case from the production crew is found at the previous stop. It contains cables, batteries, and one memory card labelled only 'do not lose this.'",
+    choices: [
+      {
+        id: "return_case",
+        label: "Return it to the crew immediately",
+        flavor: "Noble and deeply inconvenient.",
+        risk: "safe",
+        outcome:
+          "The crew are relieved and hand over a little cash plus a route update. You lose time but gain goodwill.",
+        fundsEffect: 40,
+        distanceEffect: 30,
+        damageEffect: 0,
+        timeEffectHours: 3,
+        itemRewardId: "local-favour",
+      },
+      {
+        id: "keep_card_safe",
+        label: "Keep the memory card safe",
+        flavor: "This feels important.",
+        risk: "risky",
+        outcome:
+          "You pocket the card and promise to deal with it later. It may be priceless, or footage of someone falling over.",
+        fundsEffect: 0,
+        distanceEffect: 60,
+        damageEffect: 0,
+        timeEffectHours: 1,
+        itemRewardId: "camera-memory-card",
+      },
+      {
+        id: "use_batteries",
+        label: "Borrow the batteries for navigation",
+        flavor: "Morally grey, electrically useful.",
+        risk: "mad",
+        outcome:
+          "The navigation gear comes back to life and finds a faster road. The crew will discover the missing batteries later.",
+        fundsEffect: 0,
+        distanceEffect: 85,
+        damageEffect: -4,
+        timeEffectHours: 1,
+      },
+    ],
+  },
+  {
+    id: "mountain_switchbacks",
+    type: "hazard",
+    title: "Switchback Climb",
+    situation:
+      "The road begins climbing in tight switchbacks. The engine wheezes, the brakes smell hot, and the valley below is becoming increasingly theatrical.",
+    choices: [
+      {
+        id: "cooling_stops",
+        label: "Climb with cooling stops",
+        flavor: "Respect the machine, however undeserving.",
+        risk: "safe",
+        outcome:
+          "The car makes the climb steadily. It takes ages, but nothing vital boils or snaps.",
+        fundsEffect: 0,
+        distanceEffect: 35,
+        damageEffect: 2,
+        fuelEffect: -8,
+        timeEffectHours: 4,
+      },
+      {
+        id: "chains_and_crawl",
+        label: "Fit the snow chains and crawl up",
+        flavor: "Noisy traction.",
+        risk: "safe",
+        outcome:
+          "The chains bite beautifully on the cold upper section. The climb is slow, controlled, and weirdly satisfying.",
+        fundsEffect: 0,
+        distanceEffect: 55,
+        damageEffect: 4,
+        fuelEffect: -6,
+        timeEffectHours: 3,
+        consumedItemId: "snow-chains",
+      },
+      {
+        id: "second_gear_charge",
+        label: "Second gear and do not lift",
+        flavor: "A hill climb with poor judgement.",
+        risk: "mad",
+        outcome:
+          "The engine screams, the brakes complain, and the summit arrives sooner than physics would prefer.",
+        fundsEffect: 20,
+        distanceEffect: 80,
+        damageEffect: -24,
+        fuelEffect: -18,
+        timeEffectHours: 2,
       },
     ],
   },

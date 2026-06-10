@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { EventChoice, RoadEventTemplate } from "@/data/roadEvents";
+import { inventoryItemName } from "@/data/campaign";
 
 interface ChatMessage {
   id: string;
@@ -28,6 +29,7 @@ interface GroupChatProps {
   resolvingAdventure?: boolean;
   saveId?: string | number;
   onAdventureChoice?: (choice: EventChoice) => void;
+  getAdventureChoiceDisabledReason?: (choice: EventChoice) => string | null;
   onPlayerMessage?: () => void;
 }
 
@@ -145,6 +147,7 @@ export default function GroupChat({
   resolvingAdventure = false,
   saveId,
   onAdventureChoice,
+  getAdventureChoiceDisabledReason,
   onPlayerMessage,
 }: GroupChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessages(saveId));
@@ -446,10 +449,22 @@ export default function GroupChat({
             <div className="grid grid-cols-1 gap-2">
               {adventureEvent.choices.map((choice, index) => {
                 const presenter = choice.proposer ?? (["jeremy", "richard", "james"][index] as "jeremy" | "richard" | "james");
+                const disabledReason = getAdventureChoiceDisabledReason?.(choice) ?? null;
+                const effectBits = [
+                  choice.timeEffectHours != null ? `${choice.timeEffectHours}h` : null,
+                  choice.distanceEffect ? `${choice.distanceEffect > 0 ? "+" : ""}${choice.distanceEffect}km` : null,
+                  choice.fundsEffect ? `${choice.fundsEffect > 0 ? "+" : ""}£${choice.fundsEffect}` : null,
+                  choice.damageEffect ? `${choice.damageEffect > 0 ? "+" : ""}${choice.damageEffect}% car` : null,
+                  choice.fuelEffect ? `${choice.fuelEffect > 0 ? "+" : ""}${choice.fuelEffect}% fuel` : null,
+                  choice.foodEffect ? `${choice.foodEffect > 0 ? "+" : ""}${choice.foodEffect} food` : null,
+                  choice.partsEffect ? `${choice.partsEffect > 0 ? "+" : ""}${choice.partsEffect} parts` : null,
+                  choice.itemRewardId ? `gain ${inventoryItemName(choice.itemRewardId)}` : null,
+                  choice.consumedItemId ? `use ${inventoryItemName(choice.consumedItemId)}` : null,
+                ].filter(Boolean);
                 return (
                   <button
                     key={choice.id}
-                    disabled={resolvingAdventure || sending}
+                    disabled={resolvingAdventure || sending || !!disabledReason}
                     onClick={() => onAdventureChoice?.(choice)}
                     className={`w-full text-left px-3 py-2 rounded-lg border bg-card/70 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed ${RISK_COLORS[choice.risk]}`}
                   >
@@ -469,8 +484,13 @@ export default function GroupChat({
                           </span>
                         </div>
                         <p className="text-muted-foreground text-[10px] mt-0.5">
-                          {PRESENTER_NAMES[presenter]} proposes this.
+                          {disabledReason ?? choice.flavor}
                         </p>
+                        {effectBits.length > 0 && (
+                          <p className="mt-1 text-[9px] font-mono uppercase tracking-wide text-muted-foreground/80">
+                            {effectBits.join(" · ")}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </button>

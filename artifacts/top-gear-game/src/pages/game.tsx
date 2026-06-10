@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import {
   useGetSave, getGetSaveQueryKey,
   useRecordSaveEvent, useUpdateSave,
@@ -14,16 +14,21 @@ import { pickTrivia, type TriviaQuestion } from "@/data/trivia";
 import { buildForwardPrompt, buildNavigationPrompt } from "@/data/questTurns";
 import {
   advanceCampaignTime,
+  consumeInventoryItem,
   ensureCampaignState,
+  ensureStarterInventory,
   grantInventoryItem,
+  inventoryItemName,
+  loadInventory,
   recordCampaignTrivia,
   recordDrivingChallenge,
+  type InventoryItem,
 } from "@/data/campaign";
 import DrivingGame from "@/components/DrivingGame";
 import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
 import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
-import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy } from "lucide-react";
+import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy, Backpack, Clock } from "lucide-react";
 
 // ── Upgrade helpers ───────────────────────────────────────────────────────────
 const UPGRADE_KEY = (id: string | number) => `tgrr-upgrades-${id}`;
@@ -142,6 +147,7 @@ export default function Game() {
   const [camaraderie, setCamaraderie] = useState(0);
   const [journeyHours, setJourneyHours] = useState(0);
   const [currentDay, setCurrentDay] = useState(1);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   // Optional advance: trivia ("Pub Quiz") state
   const [trivia, setTrivia] = useState<TriviaQuestion | null>(null);
@@ -204,8 +210,11 @@ export default function Game() {
     setCamaraderie(save.camaraderie ?? 0);
     if (isSeries) {
       const campaignState = ensureCampaignState(save.id);
+      setInventoryItems(ensureStarterInventory(save.id));
       setJourneyHours(campaignState.journeyHours);
       setCurrentDay(campaignState.currentDay);
+    } else {
+      setInventoryItems([]);
     }
     if (isSeries) {
       // Baseline is derived from the stage index so a mid-stage reload restores
@@ -308,6 +317,31 @@ export default function Game() {
     if (choice.risk === "risky") return 2;
     return 1;
   }, []);
+
+  const getChoiceDisabledReason = useCallback((choice: EventChoice) => {
+    if (!isSeries || !choice.consumedItemId) return null;
+    const hasItem = inventoryItems.some((item) => item.id === choice.consumedItemId && item.qty > 0);
+    return hasItem ? null : `Needs ${inventoryItemName(choice.consumedItemId)}.`;
+  }, [isSeries, inventoryItems]);
+
+  const applyInventoryEffects = useCallback((choice: EventChoice) => {
+    if (!isSeries || !save) return [];
+    const notes: string[] = [];
+    if (choice.consumedItemId) {
+      const hasItem = loadInventory(save.id).some((item) => item.id === choice.consumedItemId && item.qty > 0);
+      if (!hasItem) return [`Missing ${inventoryItemName(choice.consumedItemId)}`];
+      const next = consumeInventoryItem(save.id, choice.consumedItemId);
+      setInventoryItems(next);
+      notes.push(`Used ${inventoryItemName(choice.consumedItemId)}`);
+    }
+    if (choice.itemRewardId) {
+      const qty = choice.itemRewardQty ?? 1;
+      const next = grantInventoryItem(save.id, choice.itemRewardId, qty);
+      setInventoryItems(next);
+      notes.push(`Gained ${inventoryItemName(choice.itemRewardId)}${qty > 1 ? ` x${qty}` : ""}`);
+    }
+    return notes;
+  }, [isSeries, save]);
 
   // ── Camaraderie bump (chat + bold choices) ─────────────────────────────────
   const bumpCamaraderie = useCallback((n: number) => {
@@ -471,6 +505,10 @@ export default function Game() {
     if (adventureDrive && save) {
       const { event, choice } = adventureDrive;
       setAdventureDrive(null);
+      const inventoryNotes = applyInventoryEffects(choice);
+      if (inventoryNotes.length > 0) {
+        toast({ title: "Inventory updated", description: inventoryNotes.join(" | ") });
+      }
       if (isSeries) recordDrivingChallenge(save.id);
       void recordEvent.mutateAsync({
         saveId: save.id,
@@ -513,7 +551,7 @@ export default function Game() {
         tone: condDelta < 0 ? "mocking" : "impressed",
       },
     });
-  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice]);
+  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice, applyInventoryEffects]);
 
   // ── Press On: free advance that costs fuel + wear ──────────────────────────
   const handlePressOn = useCallback(() => {
@@ -672,6 +710,12 @@ export default function Game() {
   const handleChoice = useCallback(async (choice: EventChoice) => {
     if (!save || !pendingEvent) return;
     setResolving(true);
+    const disabledReason = getChoiceDisabledReason(choice);
+    if (disabledReason) {
+      toast({ title: "Item needed", description: disabledReason, variant: "destructive" });
+      setResolving(false);
+      return;
+    }
 
     const nextStep = nextStepForChoice(pendingEvent, choice);
     if (nextStep === "driving") {
@@ -727,16 +771,13 @@ export default function Game() {
     const newFuel = Math.max(0, fuel + (choice.fuelEffect ?? -fuelUse));
     const newFood = Math.max(0, food + (choice.foodEffect ?? (hours >= 3 ? -1 : 0)));
     const newParts = Math.max(0, parts + (choice.partsEffect ?? 0));
+    const inventoryNotes = applyInventoryEffects(choice);
 
     setCondition(newCond);
     setFuel(newFuel);
     setFood(newFood);
     setParts(newParts);
     advanceClock(hours);
-    if (isSeries && choice.itemRewardId) grantInventoryItem(save.id, choice.itemRewardId);
-    if (isSeries && pendingEvent.id === "abandoned_supplies") grantInventoryItem(save.id, "lucky-hose");
-    if (isSeries && pendingEvent.id === "local_festival") grantInventoryItem(save.id, "market-snacks");
-    if (isSeries && pendingEvent.id === "village_garage") grantInventoryItem(save.id, "local-map");
 
     // Bold choices grow camaraderie with the lads.
     const camGain = choice.risk === "mad" ? 3 : choice.risk === "risky" ? 2 : 0;
@@ -786,7 +827,7 @@ export default function Game() {
     // Brief outcome toast
     toast({
       title: choice.label,
-      description: choice.outcome,
+      description: inventoryNotes.length > 0 ? `${choice.outcome} ${inventoryNotes.join(" | ")}` : choice.outcome,
     });
 
     // Trip / stage complete via event distance?
@@ -798,7 +839,7 @@ export default function Game() {
       await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
       setTimeout(() => setLocation(`/results/${save.id}`), 2500);
     }
-  }, [save, pendingEvent, funds, distKm, condition, fuel, food, parts, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id, timeForChoice, advanceClock, isSeries, setLocation]);
+  }, [save, pendingEvent, funds, distKm, condition, fuel, food, parts, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id, timeForChoice, advanceClock, isSeries, setLocation, getChoiceDisabledReason, applyInventoryEffects]);
 
   // ── Mechanic purchase ──────────────────────────────────────────────────────
   const handleMechanicPurchase = async (offer: MechanicOffer) => {
@@ -850,6 +891,9 @@ export default function Game() {
   const avatarSrc = !isSeries && character
     ? (character.slug === "richard" ? "/images/hammond.png" : `/images/${character.slug}.png`)
     : null;
+  const visibleInventoryItems = inventoryItems.filter((item) => item.qty > 0).slice(0, 5);
+  const inventoryCount = inventoryItems.reduce((total, item) => total + item.qty, 0);
+  const dayHourLabel = `Day ${currentDay}, Hour ${journeyHours % 12}`;
 
   // ── Driving mode ──────────────────────────────────────────────────────────
   if (mode === "driving") {
@@ -946,6 +990,7 @@ export default function Game() {
             adventureEvent={activeAdventurePrompt}
             resolvingAdventure={resolving}
             saveId={save.id}
+            getAdventureChoiceDisabledReason={getChoiceDisabledReason}
             onAdventureChoice={(choice) => {
               if (isSeries && turnPhase === "navigation") {
                 void handleNavigationChoice(choice);
@@ -979,6 +1024,48 @@ export default function Game() {
               </div>
               <p className="text-[10px] text-muted-foreground">{mission.title}</p>
             </div>
+
+            {isSeries && (
+              <div className="grid grid-cols-1 gap-2">
+                <div className="rounded-xl border border-border bg-background/40 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <Clock className="h-3 w-3" /> Journey Clock
+                    </span>
+                    <span className="font-mono text-xs font-black text-primary">{dayHourLabel}</span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Choices spend journey time. Faster routes usually hit fuel, food, or condition harder.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-background/40 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <Backpack className="h-3 w-3" /> Kit
+                    </span>
+                    <Link href="/inventory" className="text-[10px] font-bold uppercase text-primary hover:underline">
+                      Inventory ({inventoryCount})
+                    </Link>
+                  </div>
+                  {visibleInventoryItems.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {visibleInventoryItems.map((item) => (
+                        <span
+                          key={item.id}
+                          className="rounded border border-border bg-card px-2 py-1 text-[10px] font-bold text-muted-foreground"
+                          title={item.effect}
+                        >
+                          {item.name} x{item.qty}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground">No special kit yet. Road events can change that.</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* ── Drive result (brief, after challenge) ───────────────── */}
             <AnimatePresence>

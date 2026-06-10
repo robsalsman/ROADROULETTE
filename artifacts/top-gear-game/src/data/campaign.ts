@@ -127,7 +127,7 @@ export const CAMPAIGN_ITEMS: InventoryItem[] = [
     category: "special",
     qty: 1,
     rarity: "uncommon",
-    description: "A napkin covered in roads, warnings, and one drawing of a goat.",
+    description: "A napkin covered in roads, warnings, and several alarming arrows.",
     effect: "May unlock safer shortcut choices.",
   },
   {
@@ -147,6 +147,96 @@ export const CAMPAIGN_ITEMS: InventoryItem[] = [
     rarity: "rare",
     description: "Wrong for every car, useful for all of them.",
     effect: "May reduce a breakdown penalty.",
+  },
+  {
+    id: "border-stamp",
+    name: "Dubious Border Stamp",
+    category: "permit",
+    qty: 1,
+    rarity: "rare",
+    description: "Official-looking ink from an office that may or may not exist.",
+    effect: "Can smooth out checkpoint and paperwork trouble.",
+  },
+  {
+    id: "bribe-envelope",
+    name: "Emergency Envelope",
+    category: "permit",
+    qty: 1,
+    rarity: "uncommon",
+    description: "Contains local cash, receipts, and plausible confusion.",
+    effect: "Can reduce unofficial toll and checkpoint penalties.",
+  },
+  {
+    id: "snow-chains",
+    name: "Borrowed Snow Chains",
+    category: "tool",
+    qty: 1,
+    rarity: "uncommon",
+    description: "Heavy, cold, and probably installed backwards.",
+    effect: "Helps with mountain, ice, and ski-road trouble.",
+  },
+  {
+    id: "sand-ladders",
+    name: "Sand Ladders",
+    category: "tool",
+    qty: 1,
+    rarity: "rare",
+    description: "Two battered metal tracks for when confidence sinks into the ground.",
+    effect: "Helps recover from desert and beach traps.",
+  },
+  {
+    id: "ferry-ticket",
+    name: "Ferry Ticket",
+    category: "permit",
+    qty: 1,
+    rarity: "uncommon",
+    description: "A stamped ticket to somewhere across water. Probably the right direction.",
+    effect: "Can turn water crossings into faster routes.",
+  },
+  {
+    id: "spare-tyre",
+    name: "Actually Round Spare Tyre",
+    category: "tool",
+    qty: 1,
+    rarity: "rare",
+    description: "A rare object: a spare that is inflated and roughly the correct size.",
+    effect: "Can soften puncture and rough-road penalties.",
+  },
+  {
+    id: "local-favour",
+    name: "Local Favour",
+    category: "special",
+    qty: 1,
+    rarity: "rare",
+    description: "Someone nearby owes you a helpful phone call.",
+    effect: "Can unlock better local-help outcomes.",
+  },
+  {
+    id: "hotel-voucher",
+    name: "Mysterious Hotel Voucher",
+    category: "supply",
+    qty: 1,
+    rarity: "uncommon",
+    description: "One night indoors, assuming the hotel still exists.",
+    effect: "Can recover morale and condition after a long stage.",
+  },
+  {
+    id: "camera-memory-card",
+    name: "Recovered Memory Card",
+    category: "souvenir",
+    qty: 1,
+    rarity: "legendary",
+    description: "Footage of something nobody should attempt twice.",
+    effect: "A rare collectible for campaign progression.",
+  },
+  {
+    id: "race-wristband",
+    name: "Local Race Wristband",
+    category: "souvenir",
+    qty: 1,
+    rarity: "uncommon",
+    description: "Proof that somebody let this become motorsport.",
+    effect: "Marks a successful challenge encounter.",
   },
 ];
 
@@ -262,6 +352,19 @@ export function grantInventoryItem(saveId: string | number, itemId: string, qty 
     : [...existing, { ...template, qty }];
   saveInventory(saveId, next);
   return next;
+}
+
+export function consumeInventoryItem(saveId: string | number, itemId: string, qty = 1): InventoryItem[] {
+  const existing = ensureStarterInventory(saveId);
+  const next = existing
+    .map((item) => item.id === itemId ? { ...item, qty: Math.max(0, item.qty - qty) } : item)
+    .filter((item) => item.qty > 0);
+  saveInventory(saveId, next);
+  return next;
+}
+
+export function inventoryItemName(itemId: string): string {
+  return CAMPAIGN_ITEMS.find((item) => item.id === itemId)?.name ?? itemId;
 }
 
 export function loadBadges(saveId: string | number | null | undefined): Badge[] {
