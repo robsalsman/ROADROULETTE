@@ -19,10 +19,12 @@ import {
   loadUpgrades,
   saveGarage,
   saveUpgrades,
+  sellValue,
   type GarageCar,
   type GarageState,
   type UpgradeCat,
   type Upgrades,
+  updateGarageCar,
 } from "@/data/garage";
 import { DEFS, EFFECTS } from "@/pages/upgrade-shop";
 import { cn } from "@/lib/utils";
@@ -86,16 +88,6 @@ function saveRoute(save?: GameSave): string {
   return `/game/${save.id}`;
 }
 
-function updateGarageCar(saveId: number, carId: number, patch: Partial<GarageCar>): GarageState {
-  const garage = loadGarage(saveId);
-  const nextGarage = {
-    ...garage,
-    cars: garage.cars.map((car) => (car.id === carId ? { ...car, ...patch } : car)),
-  };
-  saveGarage(saveId, nextGarage);
-  return nextGarage;
-}
-
 export default function Garage() {
   const queryClient = useQueryClient();
   const updateSave = useUpdateSave();
@@ -119,6 +111,13 @@ export default function Garage() {
       map.set(entry.saveId, [...(map.get(entry.saveId) ?? []), entry]);
     }
     return [...map.entries()].sort(([a], [b]) => b - a);
+  }, [entries]);
+
+  const garageStats = useMemo(() => {
+    const totalValue = entries.reduce((total, entry) => total + sellValue(entry.car, entry.spent), 0);
+    const upgradedCars = entries.filter((entry) => Object.keys(entry.upgrades).length > 0).length;
+    const activeCars = entries.filter((entry) => entry.garage.activeCarId === entry.car.id || entry.save?.carId === entry.car.id).length;
+    return { totalValue, upgradedCars, activeCars };
   }, [entries]);
 
   const setActiveCar = async (entry: GarageEntry) => {
@@ -215,6 +214,20 @@ export default function Garage() {
           </div>
         ) : (
           <div className="space-y-8">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                ["Cars", entries.length.toLocaleString()],
+                ["Active", garageStats.activeCars.toLocaleString()],
+                ["Upgraded", garageStats.upgradedCars.toLocaleString()],
+                ["Garage Value", `GBP ${garageStats.totalValue.toLocaleString()}`],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-md border border-border bg-card p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</p>
+                  <p className="mt-1 font-mono text-xl font-black">{value}</p>
+                </div>
+              ))}
+            </div>
+
             {grouped.map(([saveId, saveEntries]) => {
               const save = saveEntries[0]?.save;
               return (

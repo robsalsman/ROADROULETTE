@@ -13,6 +13,7 @@ import {
   loadGarage,
   loadUpgradeSpend,
   loadUpgrades,
+  removeGarageCar,
   saveGarage,
   sellValue,
   upgradeKey,
@@ -117,9 +118,9 @@ export default function MissionDetail() {
     const nextFunds = spendable + refund;
     setCreating(true);
     try {
-      const remainingCars = garage.cars.filter((owned) => owned.id !== car.id);
-      const nextActiveId = garage.activeCarId === car.id ? null : garage.activeCarId;
-      saveGarageState({ activeCarId: nextActiveId, cars: remainingCars });
+      const nextGarage = removeGarageCar(querySaveId, car.id);
+      setGarage(nextGarage);
+      const nextActiveId = nextGarage.activeCarId;
       localStorage.removeItem(upgradeKey(querySaveId, car.id));
       await updateSave.mutateAsync({
         id: existingSave.id,

@@ -111,6 +111,7 @@ export interface DrivingChallengeProps {
   scoreMultiplier?: number;
   scoreBonus?: number;
   vehicleSprite?: string;
+  vehiclePaintColor?: string | null;
   onComplete: (earnings: number, conditionDelta: number, distanceKm: number) => void;
   onExit: () => void;
 }
@@ -121,6 +122,7 @@ export default function DrivingGame({
   scoreMultiplier = 0,
   scoreBonus = 0,
   vehicleSprite,
+  vehiclePaintColor,
   onComplete,
   onExit,
 }: DrivingChallengeProps) {
@@ -405,11 +407,11 @@ export default function DrivingGame({
     }
 
     // Car
-    drawCar(ctx, CAR_X, carY.current, wheelRot.current, crashed.current, spriteImg.current);
+    drawCar(ctx, CAR_X, carY.current, wheelRot.current, crashed.current, spriteImg.current, vehiclePaintColor);
 
     ctx.restore();
     rafRef.current = requestAnimationFrame(loop);
-  }, [theme, collectRadiusBonus, spawnObstacle, spawnCoins, finish]);
+  }, [theme, collectRadiusBonus, spawnObstacle, spawnCoins, finish, vehiclePaintColor]);
 
   // ── Input ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -507,7 +509,15 @@ export default function DrivingGame({
 }
 
 // ── Car drawing (side profile) ────────────────────────────────────────────────
-function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, wheelRot: number, crashed: boolean, sprite?: HTMLImageElement | null) {
+function drawCar(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  wheelRot: number,
+  crashed: boolean,
+  sprite?: HTMLImageElement | null,
+  paintColor?: string | null,
+) {
   const w = CAR_W, h = CAR_H;
   ctx.save();
   ctx.translate(x, y);
@@ -527,7 +537,17 @@ function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, wheelRot: 
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
     const spriteH = h * 1.5;
     const spriteW = w * 1.18;
-    ctx.drawImage(sprite, (w - spriteW) / 2, h - spriteH + h * 0.48, spriteW, spriteH);
+    const spriteX = (w - spriteW) / 2;
+    const spriteY = h - spriteH + h * 0.48;
+    ctx.drawImage(sprite, spriteX, spriteY, spriteW, spriteH);
+    if (paintColor) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = paintColor;
+      ctx.fillRect(spriteX, spriteY, spriteW, spriteH);
+      ctx.restore();
+    }
     ctx.restore();
     return;
   }

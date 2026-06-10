@@ -21,6 +21,7 @@ import {
   inventoryItemName,
   loadInventory,
   recordCampaignTrivia,
+  recordCompletedEpisode,
   recordDrivingChallenge,
   type InventoryItem,
 } from "@/data/campaign";
@@ -363,6 +364,7 @@ export default function Game() {
       const idx = stagesList.findIndex((m) => m.id === save.missionId);
       const next = idx >= 0 ? stagesList[idx + 1] : undefined;
       const cumulative = priorDistRef.current + TRIP_KM;
+      recordCompletedEpisode(save.id, save.missionId);
 
       if (next) {
         try {
@@ -908,6 +910,7 @@ export default function Game() {
           scoreMultiplier={stats.scoreMultiplier}
           scoreBonus={stats.scoreBonus}
           vehicleSprite={getVehicleSprite(car)}
+          vehiclePaintColor={(car as Partial<GarageCar> | undefined)?.paintColor ?? null}
           onComplete={handleDriveComplete}
           onExit={() => setMode("hub")}
         />

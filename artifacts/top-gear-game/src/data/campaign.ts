@@ -351,6 +351,9 @@ export function grantInventoryItem(saveId: string | number, itemId: string, qty 
     ? existing.map((item) => item.id === itemId ? { ...item, qty: item.qty + qty } : item)
     : [...existing, { ...template, qty }];
   saveInventory(saveId, next);
+  if (template.rarity === "rare" || template.rarity === "legendary") {
+    updateBadgeProgress(saveId, "rare-item", 1);
+  }
   return next;
 }
 
@@ -376,6 +379,25 @@ export function loadBadges(saveId: string | number | null | undefined): Badge[] 
 
 export function saveBadges(saveId: string | number, badges: Badge[]): void {
   writeJson(badgesKey(saveId), { badges });
+}
+
+export function updateBadgeProgress(saveId: string | number, badgeId: string, progress: number): Badge[] {
+  const badges = loadBadges(saveId);
+  let changed = false;
+  const next = badges.map((badge) => {
+    if (badge.id !== badgeId) return badge;
+    const nextProgress = Math.max(badge.progress, Math.min(progress, badge.target));
+    const shouldUnlock = nextProgress >= badge.target;
+    if (nextProgress === badge.progress && (!shouldUnlock || badge.unlockedAt)) return badge;
+    changed = true;
+    return {
+      ...badge,
+      progress: nextProgress,
+      unlockedAt: shouldUnlock ? (badge.unlockedAt ?? new Date().toISOString()) : badge.unlockedAt,
+    };
+  });
+  if (changed) saveBadges(saveId, next);
+  return next;
 }
 
 export function loadCampaignState(saveId: string | number | null | undefined): CampaignState | null {
@@ -432,6 +454,7 @@ export function recordCampaignTrivia(saveId: string | number, triviaId: string):
   if (state.triviaAnswered.includes(triviaId)) return state;
   const next = { ...state, triviaAnswered: [...state.triviaAnswered, triviaId] };
   saveCampaignState(next);
+  updateBadgeProgress(saveId, "trivia-five", next.triviaAnswered.length);
   return next;
 }
 
@@ -439,6 +462,22 @@ export function recordDrivingChallenge(saveId: string | number): CampaignState {
   const state = ensureCampaignState(saveId);
   const next = { ...state, drivingChallengesCompleted: state.drivingChallengesCompleted + 1 };
   saveCampaignState(next);
+  updateBadgeProgress(saveId, "challenge-five", next.drivingChallengesCompleted);
+  return next;
+}
+
+export function recordGarageCount(saveId: string | number, count: number): Badge[] {
+  return updateBadgeProgress(saveId, "collector-five", count);
+}
+
+export function recordCompletedEpisode(saveId: string | number, episodeId: number): CampaignState {
+  const state = ensureCampaignState(saveId);
+  const completedEpisodes = state.completedEpisodes.includes(episodeId)
+    ? state.completedEpisodes
+    : [...state.completedEpisodes, episodeId].sort((a, b) => a - b);
+  const next = { ...state, completedEpisodes };
+  saveCampaignState(next);
+  updateBadgeProgress(saveId, "first-stage", completedEpisodes.length);
   return next;
 }
 

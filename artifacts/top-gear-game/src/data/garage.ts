@@ -1,3 +1,5 @@
+import { recordGarageCount } from "@/data/campaign";
+
 export type UpgradeCat = "engine" | "suspension" | "fuel" | "bodywork" | "tyres" | "sponsor" | "charm";
 export type UpgradeTier = 1 | 2 | 3;
 export type Upgrades = Partial<Record<UpgradeCat, UpgradeTier>>;
@@ -24,16 +26,26 @@ export interface GarageState {
 export const garageKey = (saveId: string | number) => `tgrr-garage-${saveId}`;
 export const upgradeKey = (saveId: string | number, carId: string | number) => `tgrr-upgrades-${saveId}-car-${carId}`;
 
+export function normalizeGarage(garage: GarageState): GarageState {
+  const carsById = new Map<number, GarageCar>();
+  for (const car of garage.cars) carsById.set(car.id, { ...carsById.get(car.id), ...car });
+  const cars = [...carsById.values()].sort((a, b) => a.purchasedAt - b.purchasedAt);
+  const activeCarId = garage.activeCarId != null && cars.some((car) => car.id === garage.activeCarId)
+    ? garage.activeCarId
+    : cars[0]?.id ?? null;
+  return { activeCarId, cars };
+}
+
 export function loadGarage(saveId: string | number): GarageState {
   try {
     const raw = localStorage.getItem(garageKey(saveId));
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed.cars)) {
-        return {
+        return normalizeGarage({
           activeCarId: typeof parsed.activeCarId === "number" ? parsed.activeCarId : null,
           cars: parsed.cars,
-        };
+        });
       }
     }
   } catch { /* ignore */ }
@@ -41,7 +53,29 @@ export function loadGarage(saveId: string | number): GarageState {
 }
 
 export function saveGarage(saveId: string | number, garage: GarageState): void {
-  localStorage.setItem(garageKey(saveId), JSON.stringify(garage));
+  const normalized = normalizeGarage(garage);
+  localStorage.setItem(garageKey(saveId), JSON.stringify(normalized));
+  recordGarageCount(saveId, normalized.cars.length);
+}
+
+export function updateGarageCar(saveId: string | number, carId: number, patch: Partial<GarageCar>): GarageState {
+  const garage = loadGarage(saveId);
+  const nextGarage = normalizeGarage({
+    ...garage,
+    cars: garage.cars.map((car) => (car.id === carId ? { ...car, ...patch } : car)),
+  });
+  saveGarage(saveId, nextGarage);
+  return nextGarage;
+}
+
+export function removeGarageCar(saveId: string | number, carId: number): GarageState {
+  const garage = loadGarage(saveId);
+  const nextGarage = normalizeGarage({
+    activeCarId: garage.activeCarId === carId ? null : garage.activeCarId,
+    cars: garage.cars.filter((car) => car.id !== carId),
+  });
+  saveGarage(saveId, nextGarage);
+  return nextGarage;
 }
 
 export function loadUpgrades(saveId: string | number, carId: string | number | null | undefined): Upgrades {
