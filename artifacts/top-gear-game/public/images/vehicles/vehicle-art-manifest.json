@@ -318,8 +318,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/alfa-romeo-4c-spider.png",
       "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-4c-spider.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -342,8 +342,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/mazda-mx-5.png",
       "topDownIcon": "/images/vehicles/unique/top/mazda-mx-5.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -366,8 +366,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/zenos-e10s.png",
       "topDownIcon": "/images/vehicles/unique/top/zenos-e10s.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -390,8 +390,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/ferrari-p3.png",
       "topDownIcon": "/images/vehicles/unique/top/ferrari-p3.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -414,8 +414,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/ford-focus-rs.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-focus-rs.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -449,8 +449,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/ford-gt40.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-gt40.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -473,8 +473,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/ford-mustang-gt.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-mustang-gt.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -497,8 +497,8 @@
       "bodyStyle": "beach-buggy",
       "sideIcon": "/images/vehicles/unique/side/custom-beach-buggy.png",
       "topDownIcon": "/images/vehicles/unique/top/custom-beach-buggy.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -534,8 +534,8 @@
       "bodyStyle": "beach-buggy",
       "sideIcon": "/images/vehicles/unique/side/rally-suspension-beach-buggy.png",
       "topDownIcon": "/images/vehicles/unique/top/rally-suspension-beach-buggy.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -569,8 +569,8 @@
       "bodyStyle": "beach-buggy",
       "sideIcon": "/images/vehicles/unique/side/v8-beach-buggy.png",
       "topDownIcon": "/images/vehicles/unique/top/v8-beach-buggy.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -604,8 +604,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/honda-nsx.png",
       "topDownIcon": "/images/vehicles/unique/top/honda-nsx.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -639,8 +639,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/land-rover-discovery-based-custom-car.png",
       "topDownIcon": "/images/vehicles/unique/top/land-rover-discovery-based-custom-car.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-02-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
