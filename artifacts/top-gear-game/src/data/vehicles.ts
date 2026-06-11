@@ -154,7 +154,7 @@ function sideBodyPath(variant: string): string {
     case "long-coupe":
       return "M10 70h22l25-33h73l23 33h56v16H10Z";
     case "hypercar":
-      return "M10 73c30-6 39-25 61-35h61c25 6 35 25 76 32l-5 17H12Z";
+      return "M9 76c30-4 39-22 60-30h57c26 3 39 21 83 27l-5 14H13Z";
     case "muscle":
       return "M11 68h31l17-22h82l19 22h47v19H11Z";
     default:
@@ -175,7 +175,7 @@ function sideWindowMarkup(variant: string): string {
     case "long-coupe":
       return `<path d="M62 45h63l16 20H48Z" fill="#dbeafe" opacity="0.88"/><path d="M99 45v20" stroke="#1f2937" stroke-width="3"/>`;
     case "hypercar":
-      return `<path d="M72 42h50l20 23H52Z" fill="#dbeafe" opacity="0.88"/><path d="M125 43l24 18" stroke="#1f2937" stroke-width="3" opacity="0.7"/>`;
+      return `<path d="M76 48h41c11 3 20 9 28 17H54c6-8 13-14 22-17Z" fill="#dbeafe" opacity="0.86"/><path d="M119 49l22 16" stroke="#1f2937" stroke-width="3" opacity="0.65"/>`;
     case "muscle":
       return `<path d="M64 49h69l17 18H50Z" fill="#dbeafe" opacity="0.82"/><path d="M101 49v18" stroke="#1f2937" stroke-width="3"/>`;
     case "buggy":
@@ -186,12 +186,12 @@ function sideWindowMarkup(variant: string): string {
 }
 
 function accessoryMarkup(variant: string, hash: number, accent: string): string {
-  const roofRack = hash % 5 === 0 || variant === "offroad" || variant === "tall";
-  const spoiler = hash % 3 === 0 || variant === "rally" || variant === "long-coupe";
+  const roofRack = variant === "offroad" || variant === "tall" || (variant === "pickup" && hash % 5 === 0);
+  const spoiler = variant === "rally" || variant === "long-coupe" || (variant === "muscle" && hash % 3 === 0);
   return [
     roofRack ? `<path d="M63 27h72M67 22v10M131 22v10" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>` : "",
     spoiler ? `<path d="M21 58h26" stroke="${accent}" stroke-width="7" stroke-linecap="round"/>` : "",
-    variant === "hypercar" ? `<path d="M31 75h38" stroke="#020617" stroke-width="4" opacity="0.35"/><path d="M158 72h34" stroke="#020617" stroke-width="4" opacity="0.35"/>` : "",
+    variant === "hypercar" ? `<path d="M35 76c18 7 39 6 64-2" stroke="#020617" stroke-width="4" opacity="0.38" fill="none"/><path d="M151 72h36" stroke="#020617" stroke-width="4" opacity="0.36"/><path d="M23 63h25" stroke="${accent}" stroke-width="4" stroke-linecap="round" opacity="0.78"/>` : "",
     variant === "muscle" ? `<path d="M56 50h82" stroke="#020617" stroke-width="3" opacity="0.28"/><path d="M181 60h18" stroke="${accent}" stroke-width="5" stroke-linecap="round"/>` : "",
     variant === "offroad" ? `<circle cx="177" cy="68" r="10" fill="#111827"/><circle cx="177" cy="68" r="5" fill="#64748b"/>` : "",
     variant === "pickup" ? `<path d="M127 66h53" stroke="#111827" stroke-width="3" opacity="0.55"/>` : "",
@@ -230,6 +230,7 @@ export function vehicleSideSvg(name: string, power = 5, offRoad = 5): string {
   if (variant === "motorcycle") return motorcycleSideSvg(name);
   const { body, accent, hash } = vehicleColors(name);
   const id = `v${hash}`;
+  const stripes = variant === "hypercar" ? "" : stripeMarkup(hash, accent, "side");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" role="img" aria-label="${escapeXml(name)}">
     <defs>
       <linearGradient id="${id}body" x1="20" x2="195" y1="28" y2="91" gradientUnits="userSpaceOnUse">
@@ -244,7 +245,7 @@ export function vehicleSideSvg(name: string, power = 5, offRoad = 5): string {
     <g filter="url(#${id}shadow)">
       <path d="${sideBodyPath(variant)}" fill="url(#${id}body)" stroke="#111827" stroke-width="5" stroke-linejoin="round"/>
       ${sideWindowMarkup(variant)}
-      ${stripeMarkup(hash, accent, "side")}
+      ${stripes}
       ${accessoryMarkup(variant, hash, accent)}
       <path d="M192 67h10" stroke="#fef3c7" stroke-width="5" stroke-linecap="round"/>
       <path d="M18 72h10" stroke="#fecaca" stroke-width="4" stroke-linecap="round"/>
@@ -341,9 +342,7 @@ export function vehicleTopDownSvg(name: string, power = 5, offRoad = 5): string 
 }
 
 export function vehicleSideSprite(name: string, power = 5, offRoad = 5): string {
-  const curated = curatedVehicleSideSprite(name);
-  if (curated) return curated;
-  return vehicleSprite(vehicleArchetype(name, power, offRoad));
+  return svgUrl(vehicleSideSvg(name, power, offRoad));
 }
 
 export function vehicleTopDownSprite(name: string, power = 5, offRoad = 5): string {
