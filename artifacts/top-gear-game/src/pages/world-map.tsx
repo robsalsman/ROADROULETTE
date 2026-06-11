@@ -1,21 +1,102 @@
 import { Link } from "wouter";
 import { ArrowLeft, Award, Backpack, CheckCircle2, Circle, Clock, MapPinned, Play, Trophy } from "lucide-react";
+import { geoEquirectangular, geoPath } from "d3-geo";
+import { feature } from "topojson-client";
+import worldAtlas from "world-atlas/countries-110m.json";
 import { useListSaves, getListSavesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { GRAND_TOUR_EPISODE_STAGES } from "@/data/grand-tour-episode-stages";
 import { loadBadges, loadCampaignState, loadInventory } from "@/data/campaign";
 import { cn } from "@/lib/utils";
 
-const COORDS: Record<number, [number, number]> = {
-  1: [42, 45], 2: [56, 50], 3: [48, 42], 4: [45, 37], 5: [47, 52], 6: [52, 25],
-  7: [51, 72], 8: [52, 74], 9: [44, 37], 10: [32, 58], 11: [47, 43], 12: [48, 39],
-  13: [47, 38], 14: [49, 38], 15: [25, 37], 16: [47, 39], 17: [50, 43], 18: [45, 37],
-  19: [22, 43], 20: [50, 40], 21: [46, 42], 22: [43, 34], 23: [22, 28], 24: [55, 70],
-  25: [23, 39], 26: [30, 60], 27: [30, 60], 28: [45, 37], 29: [52, 26], 30: [70, 47],
-  31: [44, 31], 32: [18, 45], 33: [27, 48], 34: [45, 38], 35: [54, 43], 36: [48, 38],
-  37: [65, 43], 38: [45, 36], 39: [72, 62], 40: [56, 74], 41: [44, 31], 42: [45, 37],
-  43: [52, 23], 44: [50, 38], 45: [49, 64], 46: [53, 73],
+const MAP_WIDTH = 1000;
+const MAP_HEIGHT = 520;
+const MAP_PADDING = 18;
+
+type EpisodeGeo = {
+  lat: number;
+  lon: number;
+  label: string;
 };
+
+const EPISODE_GEO: Record<number, EpisodeGeo> = {
+  1: { lat: 39.5, lon: -8, label: "Portugal launch route" },
+  2: { lat: 31, lon: 36, label: "Jordan special forces course" },
+  3: { lat: 45.4, lon: 10, label: "Northern Italy grand tour" },
+  4: { lat: 52.3, lon: -3.7, label: "Wales rally terrain" },
+  5: { lat: 31.8, lon: -7.1, label: "Morocco desert crossing" },
+  6: { lat: 64, lon: 26, label: "Finland winter roads" },
+  7: { lat: -22.6, lon: 14.5, label: "Namibia beach buggies" },
+  8: { lat: -17.2, lon: 13.5, label: "Namibia and Angola border" },
+  9: { lat: 52, lon: -1.5, label: "British SUV proving ground" },
+  10: { lat: 13.2, lon: -59.5, label: "Barbados reef challenge" },
+  11: { lat: 49.5, lon: 0.1, label: "French coast run" },
+  12: { lat: 48.5, lon: 11, label: "German road trip" },
+  13: { lat: 52, lon: -1, label: "UK test circuit" },
+  14: { lat: 46.8, lon: 8.2, label: "Swiss Alps" },
+  15: { lat: 43.1, lon: -79, label: "Niagara Falls" },
+  16: { lat: 44.5, lon: 7.5, label: "Alpine sports car route" },
+  17: { lat: 45.1, lon: 15.2, label: "Croatia grand tour" },
+  18: { lat: 52.5, lon: -1.8, label: "English farm course" },
+  19: { lat: 39.1, lon: -108.6, label: "Colorado road trip" },
+  20: { lat: 45, lon: 10, label: "European rally history" },
+  21: { lat: 42.5, lon: 1.2, label: "Pau to Barcelona" },
+  22: { lat: 52, lon: 1, label: "British amphibious roads" },
+  23: { lat: 51, lon: -116, label: "Canadian mountains" },
+  24: { lat: -26, lon: 32.6, label: "Mozambique coast" },
+  25: { lat: 42.3, lon: -83, label: "Detroit muscle" },
+  26: { lat: 4.6, lon: -74.1, label: "Colombia roads" },
+  27: { lat: 5, lon: -75.5, label: "Colombian mountains" },
+  28: { lat: 52.3, lon: -3.7, label: "Welsh test route" },
+  29: { lat: 62, lon: 15, label: "Swedish snow route" },
+  30: { lat: 29.6, lon: 106.6, label: "Chongqing, China" },
+  31: { lat: 57.5, lon: -4, label: "Scottish Highlands" },
+  32: { lat: 38.8, lon: -116.4, label: "Nevada desert" },
+  33: { lat: 28.5, lon: -81, label: "Florida road trip" },
+  34: { lat: 52, lon: -1.2, label: "British hot hatch route" },
+  35: { lat: 41.7, lon: 44.8, label: "Georgia and Azerbaijan" },
+  36: { lat: 50.1, lon: 8.6, label: "German performance test" },
+  37: { lat: 46.8, lon: 103, label: "Mongolia" },
+  38: { lat: 52, lon: -1, label: "Ford tribute route" },
+  39: { lat: 11.6, lon: 105, label: "Mekong Delta" },
+  40: { lat: -20.9, lon: 47, label: "Reunion and Madagascar" },
+  41: { lat: 56.8, lon: -4.2, label: "Scotland lockdown route" },
+  42: { lat: 52.4, lon: -2, label: "British caravanning route" },
+  43: { lat: 66, lon: 20, label: "Scandinavian Arctic Circle" },
+  44: { lat: 49, lon: 18, label: "Central Europe road trip" },
+  45: { lat: 20, lon: -12, label: "Mauritania and Senegal" },
+  46: { lat: -20, lon: 26, label: "Zimbabwe and Botswana finale" },
+};
+
+const worldAtlasData = worldAtlas as any;
+const worldCountries = (
+  feature(worldAtlasData, worldAtlasData.objects.countries) as unknown as { features: any[] }
+).features;
+const mapProjection = geoEquirectangular().fitExtent(
+  [
+    [MAP_PADDING, MAP_PADDING],
+    [MAP_WIDTH - MAP_PADDING, MAP_HEIGHT - MAP_PADDING],
+  ],
+  { type: "Sphere" },
+);
+const worldPath = geoPath(mapProjection);
+
+function projectGeo({ lat, lon }: EpisodeGeo) {
+  const projected = mapProjection([lon, lat]) ?? [MAP_WIDTH / 2, MAP_HEIGHT / 2];
+  const [x, y] = projected;
+  return {
+    x,
+    y,
+    left: `${(x / MAP_WIDTH) * 100}%`,
+    top: `${(y / MAP_HEIGHT) * 100}%`,
+  };
+}
+
+const routePoints = GRAND_TOUR_EPISODE_STAGES.map((stage) => {
+  const geo = EPISODE_GEO[stage.id] ?? { lat: 0, lon: 0, label: "Episode location" };
+  const point = projectGeo(geo);
+  return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+}).join(" ");
 
 function latestSeriesSave(saves: any[] | undefined) {
   return [...(saves ?? [])]
@@ -70,22 +151,71 @@ export default function WorldMap() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="relative min-h-[520px] overflow-hidden rounded-md border border-border bg-[#101820]">
-            <div className="absolute inset-0 bg-[url('/images/bolivia.png')] bg-cover bg-center opacity-25 mix-blend-screen" />
-            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(34,197,94,0.16)_0_18%,transparent_18%_33%,rgba(34,197,94,0.12)_33%_48%,transparent_48%_66%,rgba(34,197,94,0.13)_66%_81%,transparent_81%)] opacity-80" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:64px_64px]" />
-            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
+          <div className="relative h-[360px] min-w-0 overflow-hidden rounded-md border border-border bg-[#061722] shadow-2xl sm:h-[460px] lg:h-[560px]">
+            <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <radialGradient id="mapOcean" cx="50%" cy="42%" r="72%">
+                  <stop offset="0%" stopColor="#12394b" />
+                  <stop offset="58%" stopColor="#082433" />
+                  <stop offset="100%" stopColor="#041018" />
+                </radialGradient>
+                <linearGradient id="mapLand" x1="0%" x2="100%" y1="0%" y2="100%">
+                  <stop offset="0%" stopColor="#2f6f48" />
+                  <stop offset="48%" stopColor="#234932" />
+                  <stop offset="100%" stopColor="#172f24" />
+                </linearGradient>
+                <filter id="landShadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#000" floodOpacity="0.35" />
+                </filter>
+              </defs>
+              <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#mapOcean)" />
+              <g opacity="0.16" stroke="#c7f9ff" strokeWidth="1">
+                {Array.from({ length: 13 }, (_, i) => (
+                  <line key={`lon-${i}`} x1={(i * MAP_WIDTH) / 12} x2={(i * MAP_WIDTH) / 12} y1="0" y2={MAP_HEIGHT} />
+                ))}
+                {Array.from({ length: 7 }, (_, i) => (
+                  <line key={`lat-${i}`} x1="0" x2={MAP_WIDTH} y1={(i * MAP_HEIGHT) / 6} y2={(i * MAP_HEIGHT) / 6} />
+                ))}
+              </g>
+              <g filter="url(#landShadow)">
+                {worldCountries.map((country, index) => (
+                  <path
+                    key={index}
+                    d={worldPath(country) ?? undefined}
+                    fill="url(#mapLand)"
+                    stroke="#5a8f68"
+                    strokeWidth="0.65"
+                    opacity="0.92"
+                  />
+                ))}
+              </g>
               <polyline
-                points={GRAND_TOUR_EPISODE_STAGES.map((stage) => `${COORDS[stage.id]?.[0] ?? 50},${COORDS[stage.id]?.[1] ?? 50}`).join(" ")}
+                points={routePoints}
                 fill="none"
-                stroke="rgba(251,191,36,0.45)"
-                strokeWidth="0.35"
-                strokeDasharray="1.4 1.2"
+                stroke="rgba(0,0,0,0.28)"
+                strokeWidth="8"
+                strokeDasharray="10 9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <polyline
+                points={routePoints}
+                fill="none"
+                stroke="rgba(251,191,36,0.58)"
+                strokeWidth="3"
+                strokeDasharray="10 9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
+            <div className="absolute left-4 top-4 max-w-[260px] rounded border border-white/10 bg-black/45 p-3 backdrop-blur">
+              <p className="text-xs font-black uppercase tracking-wide text-primary">Episode Atlas</p>
+              <p className="text-xs text-zinc-300">Pins use approximate real-world filming and challenge locations.</p>
+            </div>
             {GRAND_TOUR_EPISODE_STAGES.map((stage, index) => {
-              const [left, top] = COORDS[stage.id] ?? [50, 50];
+              const geo = EPISODE_GEO[stage.id] ?? { lat: 0, lon: 0, label: "Episode location" };
+              const point = projectGeo(geo);
               const completed = completeCampaign || completedEpisodeIds.has(stage.id) || index < currentIndex;
               const active = !completeCampaign && index === currentIndex;
               return (
@@ -100,8 +230,8 @@ export default function WorldMap() {
                           ? "border-primary bg-primary text-black"
                           : "border-zinc-500 bg-zinc-900 text-zinc-300",
                     )}
-                    style={{ left: `${left}%`, top: `${top}%` }}
-                    title={`Episode ${stage.episodeNumber}: ${stage.title}`}
+                    style={{ left: point.left, top: point.top, zIndex: active ? 30 : completed ? 20 : 10 }}
+                    title={`Episode ${stage.episodeNumber}: ${stage.title} - ${geo.label}`}
                   >
                     {stage.episodeNumber}
                   </button>
@@ -110,7 +240,7 @@ export default function WorldMap() {
             })}
           </div>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div className="rounded-md border border-border bg-card p-4">
               <div className="flex items-center gap-2 text-amber-400">
                 <Trophy className="h-5 w-5" />
