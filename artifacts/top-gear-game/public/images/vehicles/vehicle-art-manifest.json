@@ -17,8 +17,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/bmw-m2.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-m2.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
