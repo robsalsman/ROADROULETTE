@@ -41,8 +41,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/laferrari.png",
       "topDownIcon": "/images/vehicles/unique/top/laferrari.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -65,8 +65,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/mclaren-p1.png",
       "topDownIcon": "/images/vehicles/unique/top/mclaren-p1.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -89,8 +89,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/porsche-918-spyder.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-918-spyder.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -124,8 +124,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-vulcan.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-vulcan.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -148,8 +148,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/audi-s8-plus.png",
       "topDownIcon": "/images/vehicles/unique/top/audi-s8-plus.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -172,8 +172,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-db11.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-db11.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -196,8 +196,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/dodge-challenger-srt-hellcat.png",
       "topDownIcon": "/images/vehicles/unique/top/dodge-challenger-srt-hellcat.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -220,8 +220,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/rolls-royce-dawn.png",
       "topDownIcon": "/images/vehicles/unique/top/rolls-royce-dawn.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -244,8 +244,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/bmw-m4-gts.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-m4-gts.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -268,8 +268,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/land-rover-discovery-eco-builds.png",
       "topDownIcon": "/images/vehicles/unique/top/land-rover-discovery-eco-builds.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -294,8 +294,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/porsche-911-gt3-rs.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-911-gt3-rs.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-01-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
