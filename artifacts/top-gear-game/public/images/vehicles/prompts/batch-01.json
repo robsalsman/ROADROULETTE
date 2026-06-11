@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "batch": 1,
+  "status": "research-started",
+  "notes": [
+    "Use these notes as factual shape/proportion guidance only.",
+    "Do not trace, crop, repaint, or copy referenced photos or manufacturer imagery.",
+    "Every output must be original game art with consistent Road Roulette icon style."
+  ],
+  "vehicles": [
+    {
+      "id": "bmw-m2",
+      "displayName": "BMW M2",
+      "referenceUrls": [
+        "https://www.press.bmwgroup.com/usa/article/detail/T0238507EN_US/the-all-new-2016-bmw-m2?language=en_US",
+        "https://www.bmwusa.com/vehicles/m-series/bmw-2-series-m-models/bmw-m2-coupe.html"
+      ],
+      "visualCues": [
+        "compact two-door coupe stance",
+        "short rear deck and upright cabin",
+        "wide fender arches",
+        "low front bumper and M-style performance posture"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 BMW M2 coupe, compact two-door performance coupe, wide fender arches, low front bumper, short rear deck, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 BMW M2 coupe, compact two-door shape, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, readable at minigame size, 512x768 composition."
+    },
+    {
+      "id": "laferrari",
+      "displayName": "LaFerrari",
+      "referenceUrls": [
+        "https://www.ferrari.com/en-EN/auto/laferrari"
+      ],
+      "visualCues": [
+        "very low mid-engine hypercar",
+        "sharp downward nose",
+        "muscular rear haunches",
+        "arched canopy and deep side sculpting"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a Ferrari LaFerrari-inspired 2013 hybrid hypercar, very low mid-engine profile, sharp downward nose, arched canopy, muscular rear haunches, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a LaFerrari-inspired hybrid hypercar, broad rear haunches, pointed nose, central teardrop cabin, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "mclaren-p1",
+      "displayName": "McLaren P1",
+      "referenceUrls": [
+        "https://cars.mclaren.com/us_en/ultimate-models/mclaren-p1"
+      ],
+      "visualCues": [
+        "low cab-forward hypercar",
+        "sweeping aerodynamic side intake",
+        "rounded nose and active rear wing",
+        "compact cockpit over long flowing body"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a McLaren P1-inspired hybrid hypercar, low cab-forward profile, sweeping side intake, rounded nose, active rear wing cue, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a McLaren P1-inspired hypercar, flowing aerodynamic plan shape, central cockpit, active wing cue, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "porsche-918-spyder",
+      "displayName": "Porsche 918 Spyder",
+      "referenceUrls": [
+        "https://press.porsche.com/prod/presse_pag/PressResources.nsf/Content?ReadForm=&languageversionid=866610"
+      ],
+      "visualCues": [
+        "open-top mid-engine spyder proportions",
+        "smooth Porsche nose",
+        "short cabin and low rear deck",
+        "visible rollover hoops or targa-like roof cue"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a Porsche 918 Spyder-inspired hybrid hypercar, open-top mid-engine spyder proportions, smooth low nose, short cabin, low rear deck, rollover hoop cue, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a Porsche 918 Spyder-inspired hypercar, open cockpit/roof cue, wide mid-engine body, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "aston-martin-vulcan",
+      "displayName": "Aston Martin Vulcan",
+      "referenceUrls": [
+        "https://www.caranddriver.com/news/a15106217/2016-aston-martin-vulcan-photos-and-info-news/",
+        "https://www.autoevolution.com/cars/aston-martin-vulcan-2016.html"
+      ],
+      "visualCues": [
+        "track-only GT racer stance",
+        "long bonnet and low cockpit",
+        "large rear wing",
+        "aggressive splitter and race bodywork"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of an Aston Martin Vulcan-inspired track-only GT racer, long bonnet, low cockpit, aggressive splitter, large rear wing, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of an Aston Martin Vulcan-inspired track GT racer, long bonnet, low cockpit, big rear wing, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "audi-s8-plus",
+      "displayName": "Audi S8 Plus",
+      "referenceUrls": [
+        "https://www.caranddriver.com/reviews/a15102934/2016-audi-s8-plus-quattro-test-review/",
+        "https://www.kbb.com/audi/s8/2016/specs/"
+      ],
+      "visualCues": [
+        "large executive performance saloon",
+        "long wheelbase",
+        "reserved boxy luxury profile",
+        "subtle performance trim rather than race-car styling"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 Audi S8 Plus-inspired executive performance saloon, long wheelbase, understated luxury sedan profile, subtle sporty trim, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 Audi S8 Plus-inspired large performance saloon, long rectangular sedan footprint, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "aston-martin-db11",
+      "displayName": "Aston Martin DB11",
+      "referenceUrls": [
+        "https://en.wikipedia.org/wiki/Aston_Martin_DB11",
+        "https://www.autoevolution.com/cars/aston-martin-db11-2016.html"
+      ],
+      "visualCues": [
+        "long front-engine grand tourer proportions",
+        "low roofline",
+        "short rear deck",
+        "elegant vented side profile"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of an Aston Martin DB11-inspired grand tourer coupe, long bonnet, low roofline, short rear deck, elegant side vent cue, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of an Aston Martin DB11-inspired grand tourer coupe, long front-engine hood, tapered rear, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "dodge-challenger-srt-hellcat",
+      "displayName": "Dodge Challenger SRT Hellcat",
+      "referenceUrls": [
+        "https://www.caranddriver.com/reviews/a15100533/2016-dodge-challenger-srt-hellcat-automatic-test-review/",
+        "https://www.edmunds.com/dodge/challenger/2016/srt-hellcat/features-specs/"
+      ],
+      "visualCues": [
+        "wide retro American muscle coupe",
+        "long flat bonnet",
+        "upright cabin",
+        "thick rear quarter panel and high beltline"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 Dodge Challenger SRT Hellcat-inspired muscle coupe, wide retro body, long flat bonnet, upright cabin, thick rear quarter panel, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 Dodge Challenger Hellcat-inspired muscle coupe, long rectangular hood, broad rear haunches, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "rolls-royce-dawn",
+      "displayName": "Rolls-Royce Dawn",
+      "referenceUrls": [
+        "https://www.caranddriver.com/rolls-royce/dawn/specs/2016/rolls-royce_dawn_rolls-royce-dawn_2016",
+        "https://www.kbb.com/rolls-royce/dawn/2016/specs/"
+      ],
+      "visualCues": [
+        "large luxury convertible grand tourer",
+        "very long wheelbase",
+        "upright formal grille area without using brand marks",
+        "soft-top convertible profile and heavy elegant body"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 Rolls-Royce Dawn-inspired luxury convertible, very long wheelbase, formal upright nose, soft-top grand tourer profile, heavy elegant body, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 Rolls-Royce Dawn-inspired luxury convertible, long wide body, soft-top cabin cue, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "bmw-m4-gts",
+      "displayName": "BMW M4 GTS",
+      "referenceUrls": [
+        "https://www.caranddriver.com/reviews/a15102466/2016-bmw-m4-gts-drive-review/",
+        "https://www.edmunds.com/bmw/m4-gts/2016/features-specs/"
+      ],
+      "visualCues": [
+        "two-door performance coupe",
+        "low stance and flared arches",
+        "track-focused splitter and small rear wing",
+        "more aggressive than M2, longer and wider"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 BMW M4 GTS-inspired track coupe, two-door performance shape, low stance, flared arches, front splitter, small rear wing, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 BMW M4 GTS-inspired track coupe, longer than an M2, flared arches, rear wing cue, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "land-rover-discovery-eco-builds",
+      "displayName": "Land Rover Discovery eco builds",
+      "referenceUrls": [
+        "https://thegrandtour.fandom.com/wiki/Enviro-mental",
+        "https://www.imdb.com/title/tt6068832/plotsummary/"
+      ],
+      "visualCues": [
+        "boxy Land Rover Discovery platform proportions",
+        "episode-inspired sustainable bodywork",
+        "mud/plant/scrap-material build cues",
+        "purposefully awkward off-road experiment"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a boxy Land Rover Discovery-based eco challenge build, off-road SUV proportions, homemade sustainable body panels made from mud and plant-like materials, intentionally awkward but readable, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a Land Rover Discovery-based eco challenge build, boxy SUV footprint, homemade mud and plant-material roof/body cues, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    },
+    {
+      "id": "porsche-911-gt3-rs",
+      "displayName": "Porsche 911 GT3 RS",
+      "referenceUrls": [
+        "https://www.caranddriver.com/reviews/a15099637/2016-porsche-911-gt3-rs-tested-on-the-street-and-track-review/",
+        "https://www.porsche.com/international/models/911/911-gt3-rs/911-gt3-rs/"
+      ],
+      "visualCues": [
+        "rear-engine 911 coupe silhouette",
+        "rounded nose and fastback roof",
+        "large fixed rear wing",
+        "wide rear haunches and track wheels"
+      ],
+      "sidePrompt": "Create an original realistic illustrated game vehicle icon of a 2016 Porsche 911 GT3 RS-inspired track coupe, rear-engine 911 silhouette, rounded nose, fastback roofline, wide rear haunches, large fixed rear wing, front facing right, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, crisp studio lighting, 1024x384 composition.",
+      "topDownPrompt": "Create an original realistic illustrated top-down game vehicle sprite of a 2016 Porsche 911 GT3 RS-inspired track coupe, rounded front, wide rear stance, large rear wing, front facing upward, centered, full vehicle visible, transparent-background-ready, no text, no logo, no watermark, 512x768 composition."
+    }
+  ]
+}

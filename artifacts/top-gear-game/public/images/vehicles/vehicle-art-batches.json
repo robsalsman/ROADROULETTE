@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "batchSize": 12,
+  "batchCount": 14,
+  "batches": [
+    {
+      "batch": 1,
+      "vehicleIds": [
+        "bmw-m2",
+        "laferrari",
+        "mclaren-p1",
+        "porsche-918-spyder",
+        "aston-martin-vulcan",
+        "audi-s8-plus",
+        "aston-martin-db11",
+        "dodge-challenger-srt-hellcat",
+        "rolls-royce-dawn",
+        "bmw-m4-gts",
+        "land-rover-discovery-eco-builds",
+        "porsche-911-gt3-rs"
+      ]
+    },
+    {
+      "batch": 2,
+      "vehicleIds": [
+        "alfa-romeo-4c-spider",
+        "mazda-mx-5",
+        "zenos-e10s",
+        "ferrari-p3",
+        "ford-focus-rs",
+        "ford-gt40",
+        "ford-mustang-gt",
+        "custom-beach-buggy",
+        "rally-suspension-beach-buggy",
+        "v8-beach-buggy",
+        "honda-nsx",
+        "land-rover-discovery-based-custom-car"
+      ]
+    },
+    {
+      "batch": 3,
+      "vehicleIds": [
+        "alfa-romeo-giulia-quadrifoglio",
+        "car-body-shells",
+        "fiat-abarth-124-spider",
+        "maserati-430-saloon",
+        "maserati-biturbo-s-coupe",
+        "maserati-zagato-spyder",
+        "bentley-bentayga",
+        "jaguar-f-pace",
+        "lexus-gs-f",
+        "range-rover",
+        "bmw-i3",
+        "bugatti-veyron"
+      ]
+    },
+    {
+      "batch": 4,
+      "vehicleIds": [
+        "volkswagen-golf-gti",
+        "lamborghini-aventador-s",
+        "rimac-concept-one",
+        "ford-gt",
+        "mercedes-amg-gt-r",
+        "bugatti-chiron",
+        "kia-stinger-gt",
+        "ariel-nomad",
+        "audi-tt-rs",
+        "lada-riva",
+        "mclaren-720s",
+        "ripsaw-ev2"
+      ]
+    },
+    {
+      "batch": 5,
+      "vehicleIds": [
+        "volkswagen-up-gti",
+        "jaguar-420g",
+        "jaguar-xj-s",
+        "jaguar-xj6",
+        "jaguar-xjr",
+        "jaguar-xk8-convertible",
+        "audi-quattro",
+        "lamborghini-huracan-performante",
+        "lancia-rally-037",
+        "aston-martin-db4-gt",
+        "honda-civic-type-r",
+        "jaguar-xkss"
+      ]
+    },
+    {
+      "batch": 6,
+      "vehicleIds": [
+        "bond-bug-amphibious-build",
+        "bugatti-eb-110-super-sport",
+        "jaguar-xj220",
+        "rolls-royce-spey-amphibious-build",
+        "alfa-romeo-stelvio-quadrifoglio",
+        "ford-f-150-raptor",
+        "porsche-macan-turbo",
+        "range-rover-velar-p380",
+        "tesla-model-x",
+        "mercedes-benz-200t",
+        "nissan-hardbody",
+        "tvs-star"
+      ]
+    },
+    {
+      "batch": 7,
+      "vehicleIds": [
+        "dodge-challenger-srt-demon",
+        "ford-mustang-rtr-spec-3",
+        "hennessey-exorcist",
+        "mclaren-senna",
+        "chevrolet-k2500",
+        "fiat-panda-4x4-sisley",
+        "jeep-wrangler",
+        "ford-ranger",
+        "jaguar-xe-project-8",
+        "mercedes-benz-x-class",
+        "volkswagen-amarok",
+        "alpine-a110"
+      ]
+    },
+    {
+      "batch": 8,
+      "vehicleIds": [
+        "lamborghini-urus",
+        "porsche-911-turbo-s",
+        "bmw-750li",
+        "cadillac-sts",
+        "hongqi-l5",
+        "mercedes-benz-s600",
+        "nio-ep9",
+        "alfa-romeo-gtv6",
+        "alpina-b5",
+        "bmw-m5",
+        "fiat-x1-9",
+        "lancia-gamma-coupe"
+      ]
+    },
+    {
+      "batch": 9,
+      "vehicleIds": [
+        "cadillac-cts-v",
+        "chevrolet-corvette-zr1",
+        "fleetwood-pace-arrow",
+        "international-harvester-s-series",
+        "jeep-grand-cherokee-trackhawk",
+        "national-rv-tropi-cal-6350",
+        "apollo-astronaut-cars",
+        "aston-martin-vantage",
+        "citroen-c3-aircross",
+        "ferrari-testarossa",
+        "ford-fiesta-st",
+        "lamborghini-countach-lp5000"
+      ]
+    },
+    {
+      "batch": 10,
+      "vehicleIds": [
+        "toyota-yaris-grmn",
+        "volkswagen-polo-gti",
+        "aston-martin-dbs-superleggera",
+        "bentley-continental-gt",
+        "bmw-m850i",
+        "lancia-delta-futurista",
+        "lancia-stratos-mat",
+        "porsche-911-gt2-rs",
+        "porsche-917",
+        "self-constructed-vehicle-named-john",
+        "ford-cortina",
+        "ford-mondeo"
+      ]
+    },
+    {
+      "batch": 11,
+      "vehicleIds": [
+        "ford-sierra",
+        "ford-sierra-rs-cosworth",
+        "1939-wooden-cruiser",
+        "pbr-replica",
+        "scarab-thunder",
+        "bentley-continental-gt-v8",
+        "caterham-7-310r",
+        "buick-riviera",
+        "cadillac-coupe-de-ville",
+        "chevrolet-camaro-z-28",
+        "chrysler-pt-cruiser",
+        "chrysler-voyager"
+      ]
+    },
+    {
+      "batch": 12,
+      "vehicleIds": [
+        "dodge-charger-r-t",
+        "ford-shelby-mustang-gt500",
+        "lincoln-continental-mark-v",
+        "pontiac-aztek",
+        "citroen-berlingo",
+        "citroen-cx-safari",
+        "citroen-sm",
+        "matra-murena",
+        "peugeot-407",
+        "renault-avantime",
+        "renault-scenic",
+        "audi-rs4"
+      ]
+    },
+    {
+      "batch": 13,
+      "vehicleIds": [
+        "mitsubishi-lancer-evolution-viii",
+        "subaru-impreza-wrx-sti",
+        "chevrolet-ssr",
+        "crosley-cc-convertible",
+        "ford-popular-hot-rod",
+        "klein-vision-aircar",
+        "mitsuoka-le-seyde",
+        "praga-bohema",
+        "skoda-1100-ohc",
+        "aston-martin-db9-volante",
+        "jaguar-f-type",
+        "maserati-grancabrio"
+      ]
+    },
+    {
+      "batch": 14,
+      "vehicleIds": [
+        "ford-capri-gxl",
+        "lancia-beta-coupe",
+        "lancia-montecarlo",
+        "mercedes-benz-230e",
+        "rover-sd1",
+        "triumph-stag",
+        "volkswagen-new-beetle"
+      ]
+    }
+  ]
+}

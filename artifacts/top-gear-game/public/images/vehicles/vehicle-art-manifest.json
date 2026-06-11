@@ -1,0 +1,4060 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Standalone vehicle icon production manifest for Road Roulette. This file is an art source-of-truth and does not wire assets into gameplay by itself.",
+  "generatedAt": "2026-06-11T15:14:18.696Z",
+  "generatedFrom": "artifacts/top-gear-game/src/data/grand-tour-episode-stages.ts",
+  "assetRoot": "/images/vehicles/unique",
+  "vehicleCount": 163,
+  "requiredAssetsPerVehicle": [
+    "sideIcon",
+    "topDownIcon"
+  ],
+  "vehicles": [
+    {
+      "id": "bmw-m2",
+      "displayName": "BMW M2",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/bmw-m2.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-m2.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 1,
+          "episodeNumber": 1,
+          "series": 1,
+          "episodeInSeries": 1,
+          "title": "The Holy Trinity",
+          "releaseDate": "2016-11-18",
+          "locationTheme": "Portugal and California hypercar launch",
+          "terrain": "track",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "laferrari",
+      "displayName": "LaFerrari",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/laferrari.png",
+      "topDownIcon": "/images/vehicles/unique/top/laferrari.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 1,
+          "episodeNumber": 1,
+          "series": 1,
+          "episodeInSeries": 1,
+          "title": "The Holy Trinity",
+          "releaseDate": "2016-11-18",
+          "locationTheme": "Portugal and California hypercar launch",
+          "terrain": "track",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "mclaren-p1",
+      "displayName": "McLaren P1",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/mclaren-p1.png",
+      "topDownIcon": "/images/vehicles/unique/top/mclaren-p1.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 1,
+          "episodeNumber": 1,
+          "series": 1,
+          "episodeInSeries": 1,
+          "title": "The Holy Trinity",
+          "releaseDate": "2016-11-18",
+          "locationTheme": "Portugal and California hypercar launch",
+          "terrain": "track",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "porsche-918-spyder",
+      "displayName": "Porsche 918 Spyder",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/porsche-918-spyder.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-918-spyder.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 1,
+          "episodeNumber": 1,
+          "series": 1,
+          "episodeInSeries": 1,
+          "title": "The Holy Trinity",
+          "releaseDate": "2016-11-18",
+          "locationTheme": "Portugal and California hypercar launch",
+          "terrain": "track",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 13,
+          "episodeNumber": 13,
+          "series": 1,
+          "episodeInSeries": 13,
+          "title": "Past v Future",
+          "releaseDate": "2017-02-03",
+          "locationTheme": "Past versus future cars and drifting",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-vulcan",
+      "displayName": "Aston Martin Vulcan",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-vulcan.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-vulcan.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 2,
+          "episodeNumber": 2,
+          "series": 1,
+          "episodeInSeries": 2,
+          "title": "Operation Desert Stumble",
+          "releaseDate": "2016-11-25",
+          "locationTheme": "Jordan special-forces training and South African spinning",
+          "terrain": "desert",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "audi-s8-plus",
+      "displayName": "Audi S8 Plus",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/audi-s8-plus.png",
+      "topDownIcon": "/images/vehicles/unique/top/audi-s8-plus.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 2,
+          "episodeNumber": 2,
+          "series": 1,
+          "episodeInSeries": 2,
+          "title": "Operation Desert Stumble",
+          "releaseDate": "2016-11-25",
+          "locationTheme": "Jordan special-forces training and South African spinning",
+          "terrain": "desert",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-db11",
+      "displayName": "Aston Martin DB11",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-db11.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-db11.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 3,
+          "episodeNumber": 3,
+          "series": 1,
+          "episodeInSeries": 3,
+          "title": "Opera, Arts and Donuts",
+          "releaseDate": "2016-12-02",
+          "locationTheme": "Northern Italy grand tour",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "dodge-challenger-srt-hellcat",
+      "displayName": "Dodge Challenger SRT Hellcat",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/dodge-challenger-srt-hellcat.png",
+      "topDownIcon": "/images/vehicles/unique/top/dodge-challenger-srt-hellcat.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 3,
+          "episodeNumber": 3,
+          "series": 1,
+          "episodeInSeries": 3,
+          "title": "Opera, Arts and Donuts",
+          "releaseDate": "2016-12-02",
+          "locationTheme": "Northern Italy grand tour",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "rolls-royce-dawn",
+      "displayName": "Rolls-Royce Dawn",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/rolls-royce-dawn.png",
+      "topDownIcon": "/images/vehicles/unique/top/rolls-royce-dawn.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 3,
+          "episodeNumber": 3,
+          "series": 1,
+          "episodeInSeries": 3,
+          "title": "Opera, Arts and Donuts",
+          "releaseDate": "2016-12-02",
+          "locationTheme": "Northern Italy grand tour",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bmw-m4-gts",
+      "displayName": "BMW M4 GTS",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/bmw-m4-gts.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-m4-gts.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 4,
+          "episodeNumber": 4,
+          "series": 1,
+          "episodeInSeries": 4,
+          "title": "Enviro-mental",
+          "releaseDate": "2016-12-09",
+          "locationTheme": "Wales eco-car build",
+          "terrain": "mud",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "land-rover-discovery-eco-builds",
+      "displayName": "Land Rover Discovery eco builds",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/land-rover-discovery-eco-builds.png",
+      "topDownIcon": "/images/vehicles/unique/top/land-rover-discovery-eco-builds.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 4,
+          "episodeNumber": 4,
+          "series": 1,
+          "episodeInSeries": 4,
+          "title": "Enviro-mental",
+          "releaseDate": "2016-12-09",
+          "locationTheme": "Wales eco-car build",
+          "terrain": "mud",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "porsche-911-gt3-rs",
+      "displayName": "Porsche 911 GT3 RS",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/porsche-911-gt3-rs.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-911-gt3-rs.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 4,
+          "episodeNumber": 4,
+          "series": 1,
+          "episodeInSeries": 4,
+          "title": "Enviro-mental",
+          "releaseDate": "2016-12-09",
+          "locationTheme": "Wales eco-car build",
+          "terrain": "mud",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "alfa-romeo-4c-spider",
+      "displayName": "Alfa Romeo 4C Spider",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/alfa-romeo-4c-spider.png",
+      "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-4c-spider.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 5,
+          "episodeNumber": 5,
+          "series": 1,
+          "episodeInSeries": 5,
+          "title": "Moroccan Roll",
+          "releaseDate": "2016-12-16",
+          "locationTheme": "Morocco roadster test",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "mazda-mx-5",
+      "displayName": "Mazda MX-5",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/mazda-mx-5.png",
+      "topDownIcon": "/images/vehicles/unique/top/mazda-mx-5.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 5,
+          "episodeNumber": 5,
+          "series": 1,
+          "episodeInSeries": 5,
+          "title": "Moroccan Roll",
+          "releaseDate": "2016-12-16",
+          "locationTheme": "Morocco roadster test",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "zenos-e10s",
+      "displayName": "Zenos E10S",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/zenos-e10s.png",
+      "topDownIcon": "/images/vehicles/unique/top/zenos-e10s.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 5,
+          "episodeNumber": 5,
+          "series": 1,
+          "episodeInSeries": 5,
+          "title": "Moroccan Roll",
+          "releaseDate": "2016-12-16",
+          "locationTheme": "Morocco roadster test",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ferrari-p3",
+      "displayName": "Ferrari P3",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/ferrari-p3.png",
+      "topDownIcon": "/images/vehicles/unique/top/ferrari-p3.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 6,
+          "episodeNumber": 6,
+          "series": 1,
+          "episodeInSeries": 6,
+          "title": "Happy Finnish Christmas",
+          "releaseDate": "2016-12-23",
+          "locationTheme": "Finland tent and Ford/Ferrari rivalry",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ford-focus-rs",
+      "displayName": "Ford Focus RS",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/ford-focus-rs.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-focus-rs.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 6,
+          "episodeNumber": 6,
+          "series": 1,
+          "episodeInSeries": 6,
+          "title": "Happy Finnish Christmas",
+          "releaseDate": "2016-12-23",
+          "locationTheme": "Finland tent and Ford/Ferrari rivalry",
+          "terrain": "snow",
+          "difficulty": "medium"
+        },
+        {
+          "stageId": 40,
+          "episodeNumber": 40,
+          "series": 4,
+          "episodeInSeries": 2,
+          "title": "A Massive Hunt",
+          "releaseDate": "2020-12-17",
+          "locationTheme": "Reunion and Madagascar treasure route",
+          "terrain": "jungle",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "ford-gt40",
+      "displayName": "Ford GT40",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/ford-gt40.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-gt40.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 6,
+          "episodeNumber": 6,
+          "series": 1,
+          "episodeInSeries": 6,
+          "title": "Happy Finnish Christmas",
+          "releaseDate": "2016-12-23",
+          "locationTheme": "Finland tent and Ford/Ferrari rivalry",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ford-mustang-gt",
+      "displayName": "Ford Mustang GT",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/ford-mustang-gt.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-mustang-gt.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 6,
+          "episodeNumber": 6,
+          "series": 1,
+          "episodeInSeries": 6,
+          "title": "Happy Finnish Christmas",
+          "releaseDate": "2016-12-23",
+          "locationTheme": "Finland tent and Ford/Ferrari rivalry",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "custom-beach-buggy",
+      "displayName": "Custom beach buggy",
+      "vehicleClass": "buggy",
+      "bodyStyle": "beach-buggy",
+      "sideIcon": "/images/vehicles/unique/side/custom-beach-buggy.png",
+      "topDownIcon": "/images/vehicles/unique/top/custom-beach-buggy.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 7,
+          "episodeNumber": 7,
+          "series": 1,
+          "episodeInSeries": 7,
+          "title": "The Beach (Buggy) Boys - Part 1",
+          "releaseDate": "2016-12-30",
+          "locationTheme": "Namibia beach buggy special",
+          "terrain": "desert",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 8,
+          "episodeNumber": 8,
+          "series": 1,
+          "episodeInSeries": 8,
+          "title": "The Beach (Buggy) Boys - Part 2",
+          "releaseDate": "2016-12-31",
+          "locationTheme": "Namibia to Angola border",
+          "terrain": "desert",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "rally-suspension-beach-buggy",
+      "displayName": "Rally-suspension beach buggy",
+      "vehicleClass": "buggy",
+      "bodyStyle": "beach-buggy",
+      "sideIcon": "/images/vehicles/unique/side/rally-suspension-beach-buggy.png",
+      "topDownIcon": "/images/vehicles/unique/top/rally-suspension-beach-buggy.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 7,
+          "episodeNumber": 7,
+          "series": 1,
+          "episodeInSeries": 7,
+          "title": "The Beach (Buggy) Boys - Part 1",
+          "releaseDate": "2016-12-30",
+          "locationTheme": "Namibia beach buggy special",
+          "terrain": "desert",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 8,
+          "episodeNumber": 8,
+          "series": 1,
+          "episodeInSeries": 8,
+          "title": "The Beach (Buggy) Boys - Part 2",
+          "releaseDate": "2016-12-31",
+          "locationTheme": "Namibia to Angola border",
+          "terrain": "desert",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "v8-beach-buggy",
+      "displayName": "V8 beach buggy",
+      "vehicleClass": "buggy",
+      "bodyStyle": "beach-buggy",
+      "sideIcon": "/images/vehicles/unique/side/v8-beach-buggy.png",
+      "topDownIcon": "/images/vehicles/unique/top/v8-beach-buggy.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 7,
+          "episodeNumber": 7,
+          "series": 1,
+          "episodeInSeries": 7,
+          "title": "The Beach (Buggy) Boys - Part 1",
+          "releaseDate": "2016-12-30",
+          "locationTheme": "Namibia beach buggy special",
+          "terrain": "desert",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 8,
+          "episodeNumber": 8,
+          "series": 1,
+          "episodeInSeries": 8,
+          "title": "The Beach (Buggy) Boys - Part 2",
+          "releaseDate": "2016-12-31",
+          "locationTheme": "Namibia to Angola border",
+          "terrain": "desert",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "honda-nsx",
+      "displayName": "Honda NSX",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/honda-nsx.png",
+      "topDownIcon": "/images/vehicles/unique/top/honda-nsx.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 9,
+          "episodeNumber": 9,
+          "series": 1,
+          "episodeInSeries": 9,
+          "title": "Berks to the Future",
+          "releaseDate": "2017-01-06",
+          "locationTheme": "Proper SUV build and post-apocalyptic cars",
+          "terrain": "urban",
+          "difficulty": "medium"
+        },
+        {
+          "stageId": 14,
+          "episodeNumber": 14,
+          "series": 2,
+          "episodeInSeries": 1,
+          "title": "Past, Present or Future",
+          "releaseDate": "2017-12-08",
+          "locationTheme": "Swiss Alps supercar powertrain test",
+          "terrain": "mountain",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "land-rover-discovery-based-custom-car",
+      "displayName": "Land Rover Discovery-based custom car",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/land-rover-discovery-based-custom-car.png",
+      "topDownIcon": "/images/vehicles/unique/top/land-rover-discovery-based-custom-car.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 9,
+          "episodeNumber": 9,
+          "series": 1,
+          "episodeInSeries": 9,
+          "title": "Berks to the Future",
+          "releaseDate": "2017-01-06",
+          "locationTheme": "Proper SUV build and post-apocalyptic cars",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "alfa-romeo-giulia-quadrifoglio",
+      "displayName": "Alfa Romeo Giulia Quadrifoglio",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/alfa-romeo-giulia-quadrifoglio.png",
+      "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-giulia-quadrifoglio.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 10,
+          "episodeNumber": 10,
+          "series": 1,
+          "episodeInSeries": 10,
+          "title": "Dumb Fight at the O.K. Coral",
+          "releaseDate": "2017-01-13",
+          "locationTheme": "Barbados coral-reef car-shell mission",
+          "terrain": "coastal",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "car-body-shells",
+      "displayName": "Car body shells",
+      "vehicleClass": "prop",
+      "bodyStyle": "car-shell",
+      "sideIcon": "/images/vehicles/unique/side/car-body-shells.png",
+      "topDownIcon": "/images/vehicles/unique/top/car-body-shells.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 10,
+          "episodeNumber": 10,
+          "series": 1,
+          "episodeInSeries": 10,
+          "title": "Dumb Fight at the O.K. Coral",
+          "releaseDate": "2017-01-13",
+          "locationTheme": "Barbados coral-reef car-shell mission",
+          "terrain": "coastal",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "fiat-abarth-124-spider",
+      "displayName": "Fiat Abarth 124 Spider",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/fiat-abarth-124-spider.png",
+      "topDownIcon": "/images/vehicles/unique/top/fiat-abarth-124-spider.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 11,
+          "episodeNumber": 11,
+          "series": 1,
+          "episodeInSeries": 11,
+          "title": "Italian Lessons",
+          "releaseDate": "2017-01-20",
+          "locationTheme": "France used Maserati challenge",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "maserati-430-saloon",
+      "displayName": "Maserati 430 Saloon",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/maserati-430-saloon.png",
+      "topDownIcon": "/images/vehicles/unique/top/maserati-430-saloon.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 11,
+          "episodeNumber": 11,
+          "series": 1,
+          "episodeInSeries": 11,
+          "title": "Italian Lessons",
+          "releaseDate": "2017-01-20",
+          "locationTheme": "France used Maserati challenge",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "maserati-biturbo-s-coupe",
+      "displayName": "Maserati Biturbo S Coupe",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/maserati-biturbo-s-coupe.png",
+      "topDownIcon": "/images/vehicles/unique/top/maserati-biturbo-s-coupe.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 11,
+          "episodeNumber": 11,
+          "series": 1,
+          "episodeInSeries": 11,
+          "title": "Italian Lessons",
+          "releaseDate": "2017-01-20",
+          "locationTheme": "France used Maserati challenge",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "maserati-zagato-spyder",
+      "displayName": "Maserati Zagato Spyder",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/maserati-zagato-spyder.png",
+      "topDownIcon": "/images/vehicles/unique/top/maserati-zagato-spyder.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 11,
+          "episodeNumber": 11,
+          "series": 1,
+          "episodeInSeries": 11,
+          "title": "Italian Lessons",
+          "releaseDate": "2017-01-20",
+          "locationTheme": "France used Maserati challenge",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "bentley-bentayga",
+      "displayName": "Bentley Bentayga",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/bentley-bentayga.png",
+      "topDownIcon": "/images/vehicles/unique/top/bentley-bentayga.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 12,
+          "episodeNumber": 12,
+          "series": 1,
+          "episodeInSeries": 12,
+          "title": "[censored] to [censored]",
+          "releaseDate": "2017-01-27",
+          "locationTheme": "Romantic Road British SUV trip",
+          "terrain": "mountain",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-f-pace",
+      "displayName": "Jaguar F-Pace",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-f-pace.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-f-pace.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 12,
+          "episodeNumber": 12,
+          "series": 1,
+          "episodeInSeries": 12,
+          "title": "[censored] to [censored]",
+          "releaseDate": "2017-01-27",
+          "locationTheme": "Romantic Road British SUV trip",
+          "terrain": "mountain",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lexus-gs-f",
+      "displayName": "Lexus GS-F",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/lexus-gs-f.png",
+      "topDownIcon": "/images/vehicles/unique/top/lexus-gs-f.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 12,
+          "episodeNumber": 12,
+          "series": 1,
+          "episodeInSeries": 12,
+          "title": "[censored] to [censored]",
+          "releaseDate": "2017-01-27",
+          "locationTheme": "Romantic Road British SUV trip",
+          "terrain": "mountain",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "range-rover",
+      "displayName": "Range Rover",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/range-rover.png",
+      "topDownIcon": "/images/vehicles/unique/top/range-rover.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 12,
+          "episodeNumber": 12,
+          "series": 1,
+          "episodeInSeries": 12,
+          "title": "[censored] to [censored]",
+          "releaseDate": "2017-01-27",
+          "locationTheme": "Romantic Road British SUV trip",
+          "terrain": "mountain",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bmw-i3",
+      "displayName": "BMW i3",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/bmw-i3.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-i3.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 13,
+          "episodeNumber": 13,
+          "series": 1,
+          "episodeInSeries": 13,
+          "title": "Past v Future",
+          "releaseDate": "2017-02-03",
+          "locationTheme": "Past versus future cars and drifting",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bugatti-veyron",
+      "displayName": "Bugatti Veyron",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/bugatti-veyron.png",
+      "topDownIcon": "/images/vehicles/unique/top/bugatti-veyron.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 13,
+          "episodeNumber": 13,
+          "series": 1,
+          "episodeInSeries": 13,
+          "title": "Past v Future",
+          "releaseDate": "2017-02-03",
+          "locationTheme": "Past versus future cars and drifting",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "volkswagen-golf-gti",
+      "displayName": "Volkswagen Golf GTI",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/volkswagen-golf-gti.png",
+      "topDownIcon": "/images/vehicles/unique/top/volkswagen-golf-gti.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 13,
+          "episodeNumber": 13,
+          "series": 1,
+          "episodeInSeries": 13,
+          "title": "Past v Future",
+          "releaseDate": "2017-02-03",
+          "locationTheme": "Past versus future cars and drifting",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lamborghini-aventador-s",
+      "displayName": "Lamborghini Aventador S",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/lamborghini-aventador-s.png",
+      "topDownIcon": "/images/vehicles/unique/top/lamborghini-aventador-s.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 14,
+          "episodeNumber": 14,
+          "series": 2,
+          "episodeInSeries": 1,
+          "title": "Past, Present or Future",
+          "releaseDate": "2017-12-08",
+          "locationTheme": "Swiss Alps supercar powertrain test",
+          "terrain": "mountain",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "rimac-concept-one",
+      "displayName": "Rimac Concept One",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/rimac-concept-one.png",
+      "topDownIcon": "/images/vehicles/unique/top/rimac-concept-one.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 14,
+          "episodeNumber": 14,
+          "series": 2,
+          "episodeInSeries": 1,
+          "title": "Past, Present or Future",
+          "releaseDate": "2017-12-08",
+          "locationTheme": "Swiss Alps supercar powertrain test",
+          "terrain": "mountain",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "ford-gt",
+      "displayName": "Ford GT",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/ford-gt.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-gt.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 15,
+          "episodeNumber": 15,
+          "series": 2,
+          "episodeInSeries": 2,
+          "title": "The Falls Guys",
+          "releaseDate": "2017-12-15",
+          "locationTheme": "New York to Niagara Falls race",
+          "terrain": "road",
+          "difficulty": "medium"
+        },
+        {
+          "stageId": 21,
+          "episodeNumber": 21,
+          "series": 2,
+          "episodeInSeries": 8,
+          "title": "Blasts from the Past",
+          "releaseDate": "2018-01-26",
+          "locationTheme": "France to Spain modernised classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "mercedes-amg-gt-r",
+      "displayName": "Mercedes-AMG GT R",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/mercedes-amg-gt-r.png",
+      "topDownIcon": "/images/vehicles/unique/top/mercedes-amg-gt-r.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 15,
+          "episodeNumber": 15,
+          "series": 2,
+          "episodeInSeries": 2,
+          "title": "The Falls Guys",
+          "releaseDate": "2017-12-15",
+          "locationTheme": "New York to Niagara Falls race",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bugatti-chiron",
+      "displayName": "Bugatti Chiron",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/bugatti-chiron.png",
+      "topDownIcon": "/images/vehicles/unique/top/bugatti-chiron.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 16,
+          "episodeNumber": 16,
+          "series": 2,
+          "episodeInSeries": 3,
+          "title": "Bah Humbug-atti",
+          "releaseDate": "2017-12-22",
+          "locationTheme": "Alpine Chiron trip and Mallorca Stinger test",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "kia-stinger-gt",
+      "displayName": "Kia Stinger GT",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/kia-stinger-gt.png",
+      "topDownIcon": "/images/vehicles/unique/top/kia-stinger-gt.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 16,
+          "episodeNumber": 16,
+          "series": 2,
+          "episodeInSeries": 3,
+          "title": "Bah Humbug-atti",
+          "releaseDate": "2017-12-22",
+          "locationTheme": "Alpine Chiron trip and Mallorca Stinger test",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "ariel-nomad",
+      "displayName": "Ariel Nomad",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/ariel-nomad.png",
+      "topDownIcon": "/images/vehicles/unique/top/ariel-nomad.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 17,
+          "episodeNumber": 17,
+          "series": 2,
+          "episodeInSeries": 4,
+          "title": "Unscripted",
+          "releaseDate": "2017-12-29",
+          "locationTheme": "Croatia unscripted film challenge",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "audi-tt-rs",
+      "displayName": "Audi TT RS",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/audi-tt-rs.png",
+      "topDownIcon": "/images/vehicles/unique/top/audi-tt-rs.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 17,
+          "episodeNumber": 17,
+          "series": 2,
+          "episodeInSeries": 4,
+          "title": "Unscripted",
+          "releaseDate": "2017-12-29",
+          "locationTheme": "Croatia unscripted film challenge",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lada-riva",
+      "displayName": "Lada Riva",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/lada-riva.png",
+      "topDownIcon": "/images/vehicles/unique/top/lada-riva.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 17,
+          "episodeNumber": 17,
+          "series": 2,
+          "episodeInSeries": 4,
+          "title": "Unscripted",
+          "releaseDate": "2017-12-29",
+          "locationTheme": "Croatia unscripted film challenge",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "mclaren-720s",
+      "displayName": "McLaren 720S",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/mclaren-720s.png",
+      "topDownIcon": "/images/vehicles/unique/top/mclaren-720s.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 17,
+          "episodeNumber": 17,
+          "series": 2,
+          "episodeInSeries": 4,
+          "title": "Unscripted",
+          "releaseDate": "2017-12-29",
+          "locationTheme": "Croatia unscripted film challenge",
+          "terrain": "mixed",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ripsaw-ev2",
+      "displayName": "Ripsaw EV2",
+      "vehicleClass": "special",
+      "bodyStyle": "tracked-vehicle",
+      "sideIcon": "/images/vehicles/unique/side/ripsaw-ev2.png",
+      "topDownIcon": "/images/vehicles/unique/top/ripsaw-ev2.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 18,
+          "episodeNumber": 18,
+          "series": 2,
+          "episodeInSeries": 5,
+          "title": "Up, Down and Round the Farm",
+          "releaseDate": "2018-01-05",
+          "locationTheme": "Farmkhana and Dubai Ripsaw test",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "volkswagen-up-gti",
+      "displayName": "Volkswagen Up GTI",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/volkswagen-up-gti.png",
+      "topDownIcon": "/images/vehicles/unique/top/volkswagen-up-gti.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 18,
+          "episodeNumber": 18,
+          "series": 2,
+          "episodeInSeries": 5,
+          "title": "Up, Down and Round the Farm",
+          "releaseDate": "2018-01-05",
+          "locationTheme": "Farmkhana and Dubai Ripsaw test",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-420g",
+      "displayName": "Jaguar 420G",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-420g.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-420g.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 19,
+          "episodeNumber": 19,
+          "series": 2,
+          "episodeInSeries": 6,
+          "title": "Jaaaaaaaags",
+          "releaseDate": "2018-01-12",
+          "locationTheme": "Colorado used Jaguar road trip",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xj-s",
+      "displayName": "Jaguar XJ-S",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xj-s.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xj-s.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 19,
+          "episodeNumber": 19,
+          "series": 2,
+          "episodeInSeries": 6,
+          "title": "Jaaaaaaaags",
+          "releaseDate": "2018-01-12",
+          "locationTheme": "Colorado used Jaguar road trip",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xj6",
+      "displayName": "Jaguar XJ6",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xj6.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xj6.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 19,
+          "episodeNumber": 19,
+          "series": 2,
+          "episodeInSeries": 6,
+          "title": "Jaaaaaaaags",
+          "releaseDate": "2018-01-12",
+          "locationTheme": "Colorado used Jaguar road trip",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xjr",
+      "displayName": "Jaguar XJR",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xjr.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xjr.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 19,
+          "episodeNumber": 19,
+          "series": 2,
+          "episodeInSeries": 6,
+          "title": "Jaaaaaaaags",
+          "releaseDate": "2018-01-12",
+          "locationTheme": "Colorado used Jaguar road trip",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xk8-convertible",
+      "displayName": "Jaguar XK8 Convertible",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xk8-convertible.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xk8-convertible.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 19,
+          "episodeNumber": 19,
+          "series": 2,
+          "episodeInSeries": 6,
+          "title": "Jaaaaaaaags",
+          "releaseDate": "2018-01-12",
+          "locationTheme": "Colorado used Jaguar road trip",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "audi-quattro",
+      "displayName": "Audi Quattro",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/audi-quattro.png",
+      "topDownIcon": "/images/vehicles/unique/top/audi-quattro.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 20,
+          "episodeNumber": 20,
+          "series": 2,
+          "episodeInSeries": 7,
+          "title": "It's a Gas, Gas, Gas",
+          "releaseDate": "2018-01-19",
+          "locationTheme": "Audi versus Lancia rally story",
+          "terrain": "gravel",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "lamborghini-huracan-performante",
+      "displayName": "Lamborghini Huracan Performante",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/lamborghini-huracan-performante.png",
+      "topDownIcon": "/images/vehicles/unique/top/lamborghini-huracan-performante.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 20,
+          "episodeNumber": 20,
+          "series": 2,
+          "episodeInSeries": 7,
+          "title": "It's a Gas, Gas, Gas",
+          "releaseDate": "2018-01-19",
+          "locationTheme": "Audi versus Lancia rally story",
+          "terrain": "gravel",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "lancia-rally-037",
+      "displayName": "Lancia Rally 037",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/lancia-rally-037.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-rally-037.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 20,
+          "episodeNumber": 20,
+          "series": 2,
+          "episodeInSeries": 7,
+          "title": "It's a Gas, Gas, Gas",
+          "releaseDate": "2018-01-19",
+          "locationTheme": "Audi versus Lancia rally story",
+          "terrain": "gravel",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-db4-gt",
+      "displayName": "Aston Martin DB4 GT",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-db4-gt.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-db4-gt.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 21,
+          "episodeNumber": 21,
+          "series": 2,
+          "episodeInSeries": 8,
+          "title": "Blasts from the Past",
+          "releaseDate": "2018-01-26",
+          "locationTheme": "France to Spain modernised classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "honda-civic-type-r",
+      "displayName": "Honda Civic Type R",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/honda-civic-type-r.png",
+      "topDownIcon": "/images/vehicles/unique/top/honda-civic-type-r.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 21,
+          "episodeNumber": 21,
+          "series": 2,
+          "episodeInSeries": 8,
+          "title": "Blasts from the Past",
+          "releaseDate": "2018-01-26",
+          "locationTheme": "France to Spain modernised classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xkss",
+      "displayName": "Jaguar XKSS",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xkss.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xkss.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 21,
+          "episodeNumber": 21,
+          "series": 2,
+          "episodeInSeries": 8,
+          "title": "Blasts from the Past",
+          "releaseDate": "2018-01-26",
+          "locationTheme": "France to Spain modernised classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bond-bug-amphibious-build",
+      "displayName": "Bond Bug amphibious build",
+      "vehicleClass": "amphibious",
+      "bodyStyle": "custom-amphibious",
+      "sideIcon": "/images/vehicles/unique/side/bond-bug-amphibious-build.png",
+      "topDownIcon": "/images/vehicles/unique/top/bond-bug-amphibious-build.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 22,
+          "episodeNumber": 22,
+          "series": 2,
+          "episodeInSeries": 9,
+          "title": "Breaking, Badly",
+          "releaseDate": "2018-02-02",
+          "locationTheme": "British amphibious speed record attempt",
+          "terrain": "water",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "bugatti-eb-110-super-sport",
+      "displayName": "Bugatti EB 110 Super Sport",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/bugatti-eb-110-super-sport.png",
+      "topDownIcon": "/images/vehicles/unique/top/bugatti-eb-110-super-sport.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 22,
+          "episodeNumber": 22,
+          "series": 2,
+          "episodeInSeries": 9,
+          "title": "Breaking, Badly",
+          "releaseDate": "2018-02-02",
+          "locationTheme": "British amphibious speed record attempt",
+          "terrain": "water",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xj220",
+      "displayName": "Jaguar XJ220",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xj220.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xj220.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 22,
+          "episodeNumber": 22,
+          "series": 2,
+          "episodeInSeries": 9,
+          "title": "Breaking, Badly",
+          "releaseDate": "2018-02-02",
+          "locationTheme": "British amphibious speed record attempt",
+          "terrain": "water",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "rolls-royce-spey-amphibious-build",
+      "displayName": "Rolls-Royce Spey amphibious build",
+      "vehicleClass": "amphibious",
+      "bodyStyle": "custom-amphibious",
+      "sideIcon": "/images/vehicles/unique/side/rolls-royce-spey-amphibious-build.png",
+      "topDownIcon": "/images/vehicles/unique/top/rolls-royce-spey-amphibious-build.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 22,
+          "episodeNumber": 22,
+          "series": 2,
+          "episodeInSeries": 9,
+          "title": "Breaking, Badly",
+          "releaseDate": "2018-02-02",
+          "locationTheme": "British amphibious speed record attempt",
+          "terrain": "water",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "alfa-romeo-stelvio-quadrifoglio",
+      "displayName": "Alfa Romeo Stelvio Quadrifoglio",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/alfa-romeo-stelvio-quadrifoglio.png",
+      "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-stelvio-quadrifoglio.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 23,
+          "episodeNumber": 23,
+          "series": 2,
+          "episodeInSeries": 10,
+          "title": "Oh, Canada",
+          "releaseDate": "2018-02-09",
+          "locationTheme": "Canada small SUV tests",
+          "terrain": "snow",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "ford-f-150-raptor",
+      "displayName": "Ford F-150 Raptor",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/ford-f-150-raptor.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-f-150-raptor.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 23,
+          "episodeNumber": 23,
+          "series": 2,
+          "episodeInSeries": 10,
+          "title": "Oh, Canada",
+          "releaseDate": "2018-02-09",
+          "locationTheme": "Canada small SUV tests",
+          "terrain": "snow",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "porsche-macan-turbo",
+      "displayName": "Porsche Macan Turbo",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/porsche-macan-turbo.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-macan-turbo.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 23,
+          "episodeNumber": 23,
+          "series": 2,
+          "episodeInSeries": 10,
+          "title": "Oh, Canada",
+          "releaseDate": "2018-02-09",
+          "locationTheme": "Canada small SUV tests",
+          "terrain": "snow",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "range-rover-velar-p380",
+      "displayName": "Range Rover Velar P380",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/range-rover-velar-p380.png",
+      "topDownIcon": "/images/vehicles/unique/top/range-rover-velar-p380.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 23,
+          "episodeNumber": 23,
+          "series": 2,
+          "episodeInSeries": 10,
+          "title": "Oh, Canada",
+          "releaseDate": "2018-02-09",
+          "locationTheme": "Canada small SUV tests",
+          "terrain": "snow",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "tesla-model-x",
+      "displayName": "Tesla Model X",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/tesla-model-x.png",
+      "topDownIcon": "/images/vehicles/unique/top/tesla-model-x.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 23,
+          "episodeNumber": 23,
+          "series": 2,
+          "episodeInSeries": 10,
+          "title": "Oh, Canada",
+          "releaseDate": "2018-02-09",
+          "locationTheme": "Canada small SUV tests",
+          "terrain": "snow",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "mercedes-benz-200t",
+      "displayName": "Mercedes-Benz 200T",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/mercedes-benz-200t.png",
+      "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-200t.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 24,
+          "episodeNumber": 24,
+          "series": 2,
+          "episodeInSeries": 11,
+          "title": "Feed the World",
+          "releaseDate": "2018-02-16",
+          "locationTheme": "Mozambique fish delivery special",
+          "terrain": "coastal",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "nissan-hardbody",
+      "displayName": "Nissan Hardbody",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/nissan-hardbody.png",
+      "topDownIcon": "/images/vehicles/unique/top/nissan-hardbody.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 24,
+          "episodeNumber": 24,
+          "series": 2,
+          "episodeInSeries": 11,
+          "title": "Feed the World",
+          "releaseDate": "2018-02-16",
+          "locationTheme": "Mozambique fish delivery special",
+          "terrain": "coastal",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "tvs-star",
+      "displayName": "TVS Star",
+      "vehicleClass": "motorcycle",
+      "bodyStyle": "motorcycle",
+      "sideIcon": "/images/vehicles/unique/side/tvs-star.png",
+      "topDownIcon": "/images/vehicles/unique/top/tvs-star.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 24,
+          "episodeNumber": 24,
+          "series": 2,
+          "episodeInSeries": 11,
+          "title": "Feed the World",
+          "releaseDate": "2018-02-16",
+          "locationTheme": "Mozambique fish delivery special",
+          "terrain": "coastal",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "dodge-challenger-srt-demon",
+      "displayName": "Dodge Challenger SRT Demon",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/dodge-challenger-srt-demon.png",
+      "topDownIcon": "/images/vehicles/unique/top/dodge-challenger-srt-demon.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 25,
+          "episodeNumber": 25,
+          "series": 3,
+          "episodeInSeries": 1,
+          "title": "Motown Funk",
+          "releaseDate": "2019-01-18",
+          "locationTheme": "Detroit muscle car tests",
+          "terrain": "urban",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "ford-mustang-rtr-spec-3",
+      "displayName": "Ford Mustang RTR Spec 3",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/ford-mustang-rtr-spec-3.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-mustang-rtr-spec-3.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 25,
+          "episodeNumber": 25,
+          "series": 3,
+          "episodeInSeries": 1,
+          "title": "Motown Funk",
+          "releaseDate": "2019-01-18",
+          "locationTheme": "Detroit muscle car tests",
+          "terrain": "urban",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "hennessey-exorcist",
+      "displayName": "Hennessey Exorcist",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/hennessey-exorcist.png",
+      "topDownIcon": "/images/vehicles/unique/top/hennessey-exorcist.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 25,
+          "episodeNumber": 25,
+          "series": 3,
+          "episodeInSeries": 1,
+          "title": "Motown Funk",
+          "releaseDate": "2019-01-18",
+          "locationTheme": "Detroit muscle car tests",
+          "terrain": "urban",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "mclaren-senna",
+      "displayName": "McLaren Senna",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/mclaren-senna.png",
+      "topDownIcon": "/images/vehicles/unique/top/mclaren-senna.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 25,
+          "episodeNumber": 25,
+          "series": 3,
+          "episodeInSeries": 1,
+          "title": "Motown Funk",
+          "releaseDate": "2019-01-18",
+          "locationTheme": "Detroit muscle car tests",
+          "terrain": "urban",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "chevrolet-k2500",
+      "displayName": "Chevrolet K2500",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/chevrolet-k2500.png",
+      "topDownIcon": "/images/vehicles/unique/top/chevrolet-k2500.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 26,
+          "episodeNumber": 26,
+          "series": 3,
+          "episodeInSeries": 2,
+          "title": "Colombia Special - Part 1",
+          "releaseDate": "2019-01-25",
+          "locationTheme": "Colombia wildlife-photo road trip",
+          "terrain": "jungle",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 27,
+          "episodeNumber": 27,
+          "series": 3,
+          "episodeInSeries": 3,
+          "title": "Colombia Special - Part 2",
+          "releaseDate": "2019-01-26",
+          "locationTheme": "Colombia mountain continuation",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "fiat-panda-4x4-sisley",
+      "displayName": "Fiat Panda 4x4 Sisley",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/fiat-panda-4x4-sisley.png",
+      "topDownIcon": "/images/vehicles/unique/top/fiat-panda-4x4-sisley.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 26,
+          "episodeNumber": 26,
+          "series": 3,
+          "episodeInSeries": 2,
+          "title": "Colombia Special - Part 1",
+          "releaseDate": "2019-01-25",
+          "locationTheme": "Colombia wildlife-photo road trip",
+          "terrain": "jungle",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 27,
+          "episodeNumber": 27,
+          "series": 3,
+          "episodeInSeries": 3,
+          "title": "Colombia Special - Part 2",
+          "releaseDate": "2019-01-26",
+          "locationTheme": "Colombia mountain continuation",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "jeep-wrangler",
+      "displayName": "Jeep Wrangler",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/jeep-wrangler.png",
+      "topDownIcon": "/images/vehicles/unique/top/jeep-wrangler.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 26,
+          "episodeNumber": 26,
+          "series": 3,
+          "episodeInSeries": 2,
+          "title": "Colombia Special - Part 1",
+          "releaseDate": "2019-01-25",
+          "locationTheme": "Colombia wildlife-photo road trip",
+          "terrain": "jungle",
+          "difficulty": "hard"
+        },
+        {
+          "stageId": 27,
+          "episodeNumber": 27,
+          "series": 3,
+          "episodeInSeries": 3,
+          "title": "Colombia Special - Part 2",
+          "releaseDate": "2019-01-26",
+          "locationTheme": "Colombia mountain continuation",
+          "terrain": "mountain",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "ford-ranger",
+      "displayName": "Ford Ranger",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/ford-ranger.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-ranger.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 28,
+          "episodeNumber": 28,
+          "series": 3,
+          "episodeInSeries": 4,
+          "title": "Pick Up, Put Downs",
+          "releaseDate": "2019-02-01",
+          "locationTheme": "Wales pickup challenge",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-xe-project-8",
+      "displayName": "Jaguar XE Project 8",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-xe-project-8.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-xe-project-8.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 28,
+          "episodeNumber": 28,
+          "series": 3,
+          "episodeInSeries": 4,
+          "title": "Pick Up, Put Downs",
+          "releaseDate": "2019-02-01",
+          "locationTheme": "Wales pickup challenge",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "mercedes-benz-x-class",
+      "displayName": "Mercedes-Benz X-Class",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/mercedes-benz-x-class.png",
+      "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-x-class.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 28,
+          "episodeNumber": 28,
+          "series": 3,
+          "episodeInSeries": 4,
+          "title": "Pick Up, Put Downs",
+          "releaseDate": "2019-02-01",
+          "locationTheme": "Wales pickup challenge",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "volkswagen-amarok",
+      "displayName": "Volkswagen Amarok",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/volkswagen-amarok.png",
+      "topDownIcon": "/images/vehicles/unique/top/volkswagen-amarok.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 28,
+          "episodeNumber": 28,
+          "series": 3,
+          "episodeInSeries": 4,
+          "title": "Pick Up, Put Downs",
+          "releaseDate": "2019-02-01",
+          "locationTheme": "Wales pickup challenge",
+          "terrain": "farm",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "alpine-a110",
+      "displayName": "Alpine A110",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/alpine-a110.png",
+      "topDownIcon": "/images/vehicles/unique/top/alpine-a110.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 29,
+          "episodeNumber": 29,
+          "series": 3,
+          "episodeInSeries": 5,
+          "title": "An Itchy Urus",
+          "releaseDate": "2019-02-08",
+          "locationTheme": "Sweden Urus ice and Jim Clark tribute",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lamborghini-urus",
+      "displayName": "Lamborghini Urus",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/lamborghini-urus.png",
+      "topDownIcon": "/images/vehicles/unique/top/lamborghini-urus.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 29,
+          "episodeNumber": 29,
+          "series": 3,
+          "episodeInSeries": 5,
+          "title": "An Itchy Urus",
+          "releaseDate": "2019-02-08",
+          "locationTheme": "Sweden Urus ice and Jim Clark tribute",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "porsche-911-turbo-s",
+      "displayName": "Porsche 911 Turbo S",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/porsche-911-turbo-s.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-911-turbo-s.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 29,
+          "episodeNumber": 29,
+          "series": 3,
+          "episodeInSeries": 5,
+          "title": "An Itchy Urus",
+          "releaseDate": "2019-02-08",
+          "locationTheme": "Sweden Urus ice and Jim Clark tribute",
+          "terrain": "snow",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bmw-750li",
+      "displayName": "BMW 750Li",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/bmw-750li.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-750li.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 30,
+          "episodeNumber": 30,
+          "series": 3,
+          "episodeInSeries": 6,
+          "title": "Chinese Food for Thought",
+          "releaseDate": "2019-02-15",
+          "locationTheme": "Chongqing luxury-car comparison",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "cadillac-sts",
+      "displayName": "Cadillac STS",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/cadillac-sts.png",
+      "topDownIcon": "/images/vehicles/unique/top/cadillac-sts.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 30,
+          "episodeNumber": 30,
+          "series": 3,
+          "episodeInSeries": 6,
+          "title": "Chinese Food for Thought",
+          "releaseDate": "2019-02-15",
+          "locationTheme": "Chongqing luxury-car comparison",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "hongqi-l5",
+      "displayName": "Hongqi L5",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/hongqi-l5.png",
+      "topDownIcon": "/images/vehicles/unique/top/hongqi-l5.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 30,
+          "episodeNumber": 30,
+          "series": 3,
+          "episodeInSeries": 6,
+          "title": "Chinese Food for Thought",
+          "releaseDate": "2019-02-15",
+          "locationTheme": "Chongqing luxury-car comparison",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "mercedes-benz-s600",
+      "displayName": "Mercedes-Benz S600",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/mercedes-benz-s600.png",
+      "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-s600.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 30,
+          "episodeNumber": 30,
+          "series": 3,
+          "episodeInSeries": 6,
+          "title": "Chinese Food for Thought",
+          "releaseDate": "2019-02-15",
+          "locationTheme": "Chongqing luxury-car comparison",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "nio-ep9",
+      "displayName": "NIO EP9",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/nio-ep9.png",
+      "topDownIcon": "/images/vehicles/unique/top/nio-ep9.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 30,
+          "episodeNumber": 30,
+          "series": 3,
+          "episodeInSeries": 6,
+          "title": "Chinese Food for Thought",
+          "releaseDate": "2019-02-15",
+          "locationTheme": "Chongqing luxury-car comparison",
+          "terrain": "urban",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "alfa-romeo-gtv6",
+      "displayName": "Alfa Romeo GTV6",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/alfa-romeo-gtv6.png",
+      "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-gtv6.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 31,
+          "episodeNumber": 31,
+          "series": 3,
+          "episodeInSeries": 7,
+          "title": "Well Aged Scotch",
+          "releaseDate": "2019-02-22",
+          "locationTheme": "Scotland rare Italian classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "alpina-b5",
+      "displayName": "Alpina B5",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/alpina-b5.png",
+      "topDownIcon": "/images/vehicles/unique/top/alpina-b5.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 31,
+          "episodeNumber": 31,
+          "series": 3,
+          "episodeInSeries": 7,
+          "title": "Well Aged Scotch",
+          "releaseDate": "2019-02-22",
+          "locationTheme": "Scotland rare Italian classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bmw-m5",
+      "displayName": "BMW M5",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/bmw-m5.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-m5.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 31,
+          "episodeNumber": 31,
+          "series": 3,
+          "episodeInSeries": 7,
+          "title": "Well Aged Scotch",
+          "releaseDate": "2019-02-22",
+          "locationTheme": "Scotland rare Italian classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "fiat-x1-9",
+      "displayName": "Fiat X1/9",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/fiat-x1-9.png",
+      "topDownIcon": "/images/vehicles/unique/top/fiat-x1-9.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 31,
+          "episodeNumber": 31,
+          "series": 3,
+          "episodeInSeries": 7,
+          "title": "Well Aged Scotch",
+          "releaseDate": "2019-02-22",
+          "locationTheme": "Scotland rare Italian classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lancia-gamma-coupe",
+      "displayName": "Lancia Gamma Coupe",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/lancia-gamma-coupe.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-gamma-coupe.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 31,
+          "episodeNumber": 31,
+          "series": 3,
+          "episodeInSeries": 7,
+          "title": "Well Aged Scotch",
+          "releaseDate": "2019-02-22",
+          "locationTheme": "Scotland rare Italian classics",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "cadillac-cts-v",
+      "displayName": "Cadillac CTS-V",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/cadillac-cts-v.png",
+      "topDownIcon": "/images/vehicles/unique/top/cadillac-cts-v.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "chevrolet-corvette-zr1",
+      "displayName": "Chevrolet Corvette ZR1",
+      "vehicleClass": "rv",
+      "bodyStyle": "rv",
+      "sideIcon": "/images/vehicles/unique/side/chevrolet-corvette-zr1.png",
+      "topDownIcon": "/images/vehicles/unique/top/chevrolet-corvette-zr1.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "fleetwood-pace-arrow",
+      "displayName": "Fleetwood Pace Arrow",
+      "vehicleClass": "rv",
+      "bodyStyle": "rv",
+      "sideIcon": "/images/vehicles/unique/side/fleetwood-pace-arrow.png",
+      "topDownIcon": "/images/vehicles/unique/top/fleetwood-pace-arrow.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "international-harvester-s-series",
+      "displayName": "International Harvester S series",
+      "vehicleClass": "rv",
+      "bodyStyle": "rv",
+      "sideIcon": "/images/vehicles/unique/side/international-harvester-s-series.png",
+      "topDownIcon": "/images/vehicles/unique/top/international-harvester-s-series.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "jeep-grand-cherokee-trackhawk",
+      "displayName": "Jeep Grand Cherokee Trackhawk",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/jeep-grand-cherokee-trackhawk.png",
+      "topDownIcon": "/images/vehicles/unique/top/jeep-grand-cherokee-trackhawk.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "national-rv-tropi-cal-6350",
+      "displayName": "National RV Tropi-Cal 6350",
+      "vehicleClass": "rv",
+      "bodyStyle": "rv",
+      "sideIcon": "/images/vehicles/unique/side/national-rv-tropi-cal-6350.png",
+      "topDownIcon": "/images/vehicles/unique/top/national-rv-tropi-cal-6350.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 32,
+          "episodeNumber": 32,
+          "series": 3,
+          "episodeInSeries": 8,
+          "title": "International Buffoons' Vacation",
+          "releaseDate": "2019-03-01",
+          "locationTheme": "Nevada RV holiday",
+          "terrain": "desert",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "apollo-astronaut-cars",
+      "displayName": "Apollo astronaut cars",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/apollo-astronaut-cars.png",
+      "topDownIcon": "/images/vehicles/unique/top/apollo-astronaut-cars.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 33,
+          "episodeNumber": 33,
+          "series": 3,
+          "episodeInSeries": 9,
+          "title": "Aston, Astronauts and Angelina's Children",
+          "releaseDate": "2019-03-08",
+          "locationTheme": "Florida astronaut-car history",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-vantage",
+      "displayName": "Aston Martin Vantage",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-vantage.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-vantage.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 33,
+          "episodeNumber": 33,
+          "series": 3,
+          "episodeInSeries": 9,
+          "title": "Aston, Astronauts and Angelina's Children",
+          "releaseDate": "2019-03-08",
+          "locationTheme": "Florida astronaut-car history",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "citroen-c3-aircross",
+      "displayName": "Citroen C3 Aircross",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/citroen-c3-aircross.png",
+      "topDownIcon": "/images/vehicles/unique/top/citroen-c3-aircross.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 33,
+          "episodeNumber": 33,
+          "series": 3,
+          "episodeInSeries": 9,
+          "title": "Aston, Astronauts and Angelina's Children",
+          "releaseDate": "2019-03-08",
+          "locationTheme": "Florida astronaut-car history",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "ferrari-testarossa",
+      "displayName": "Ferrari Testarossa",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/ferrari-testarossa.png",
+      "topDownIcon": "/images/vehicles/unique/top/ferrari-testarossa.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 34,
+          "episodeNumber": 34,
+          "series": 3,
+          "episodeInSeries": 10,
+          "title": "The Youth Vote",
+          "releaseDate": "2019-03-15",
+          "locationTheme": "Hot hatches and social campaigns",
+          "terrain": "track",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ford-fiesta-st",
+      "displayName": "Ford Fiesta ST",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/ford-fiesta-st.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-fiesta-st.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 34,
+          "episodeNumber": 34,
+          "series": 3,
+          "episodeInSeries": 10,
+          "title": "The Youth Vote",
+          "releaseDate": "2019-03-15",
+          "locationTheme": "Hot hatches and social campaigns",
+          "terrain": "track",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lamborghini-countach-lp5000",
+      "displayName": "Lamborghini Countach LP5000",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/lamborghini-countach-lp5000.png",
+      "topDownIcon": "/images/vehicles/unique/top/lamborghini-countach-lp5000.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 34,
+          "episodeNumber": 34,
+          "series": 3,
+          "episodeInSeries": 10,
+          "title": "The Youth Vote",
+          "releaseDate": "2019-03-15",
+          "locationTheme": "Hot hatches and social campaigns",
+          "terrain": "track",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "toyota-yaris-grmn",
+      "displayName": "Toyota Yaris GRMN",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/toyota-yaris-grmn.png",
+      "topDownIcon": "/images/vehicles/unique/top/toyota-yaris-grmn.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 34,
+          "episodeNumber": 34,
+          "series": 3,
+          "episodeInSeries": 10,
+          "title": "The Youth Vote",
+          "releaseDate": "2019-03-15",
+          "locationTheme": "Hot hatches and social campaigns",
+          "terrain": "track",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "volkswagen-polo-gti",
+      "displayName": "Volkswagen Polo GTI",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/volkswagen-polo-gti.png",
+      "topDownIcon": "/images/vehicles/unique/top/volkswagen-polo-gti.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 34,
+          "episodeNumber": 34,
+          "series": 3,
+          "episodeInSeries": 10,
+          "title": "The Youth Vote",
+          "releaseDate": "2019-03-15",
+          "locationTheme": "Hot hatches and social campaigns",
+          "terrain": "track",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-dbs-superleggera",
+      "displayName": "Aston Martin DBS Superleggera",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-dbs-superleggera.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-dbs-superleggera.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 35,
+          "episodeNumber": 35,
+          "series": 3,
+          "episodeInSeries": 11,
+          "title": "Sea to Unsalty Sea",
+          "releaseDate": "2019-03-22",
+          "locationTheme": "Georgia to Azerbaijan GT trip",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bentley-continental-gt",
+      "displayName": "Bentley Continental GT",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/bentley-continental-gt.png",
+      "topDownIcon": "/images/vehicles/unique/top/bentley-continental-gt.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 35,
+          "episodeNumber": 35,
+          "series": 3,
+          "episodeInSeries": 11,
+          "title": "Sea to Unsalty Sea",
+          "releaseDate": "2019-03-22",
+          "locationTheme": "Georgia to Azerbaijan GT trip",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "bmw-m850i",
+      "displayName": "BMW M850i",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/bmw-m850i.png",
+      "topDownIcon": "/images/vehicles/unique/top/bmw-m850i.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 35,
+          "episodeNumber": 35,
+          "series": 3,
+          "episodeInSeries": 11,
+          "title": "Sea to Unsalty Sea",
+          "releaseDate": "2019-03-22",
+          "locationTheme": "Georgia to Azerbaijan GT trip",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lancia-delta-futurista",
+      "displayName": "Lancia Delta Futurista",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/lancia-delta-futurista.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-delta-futurista.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 36,
+          "episodeNumber": 36,
+          "series": 3,
+          "episodeInSeries": 12,
+          "title": "Legends and Luggage",
+          "releaseDate": "2019-03-29",
+          "locationTheme": "Porsche 917 tribute and motorised luggage",
+          "terrain": "airport",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lancia-stratos-mat",
+      "displayName": "Lancia Stratos MAT",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/lancia-stratos-mat.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-stratos-mat.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 36,
+          "episodeNumber": 36,
+          "series": 3,
+          "episodeInSeries": 12,
+          "title": "Legends and Luggage",
+          "releaseDate": "2019-03-29",
+          "locationTheme": "Porsche 917 tribute and motorised luggage",
+          "terrain": "airport",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "porsche-911-gt2-rs",
+      "displayName": "Porsche 911 GT2 RS",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/porsche-911-gt2-rs.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-911-gt2-rs.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 36,
+          "episodeNumber": 36,
+          "series": 3,
+          "episodeInSeries": 12,
+          "title": "Legends and Luggage",
+          "releaseDate": "2019-03-29",
+          "locationTheme": "Porsche 917 tribute and motorised luggage",
+          "terrain": "airport",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "porsche-917",
+      "displayName": "Porsche 917",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/porsche-917.png",
+      "topDownIcon": "/images/vehicles/unique/top/porsche-917.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 36,
+          "episodeNumber": 36,
+          "series": 3,
+          "episodeInSeries": 12,
+          "title": "Legends and Luggage",
+          "releaseDate": "2019-03-29",
+          "locationTheme": "Porsche 917 tribute and motorised luggage",
+          "terrain": "airport",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "self-constructed-vehicle-named-john",
+      "displayName": "Self-constructed vehicle named John",
+      "vehicleClass": "special",
+      "bodyStyle": "kit-car",
+      "sideIcon": "/images/vehicles/unique/side/self-constructed-vehicle-named-john.png",
+      "topDownIcon": "/images/vehicles/unique/top/self-constructed-vehicle-named-john.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
+      ],
+      "appearances": [
+        {
+          "stageId": 37,
+          "episodeNumber": 37,
+          "series": 3,
+          "episodeInSeries": 13,
+          "title": "Survival of the Fattest",
+          "releaseDate": "2019-04-05",
+          "locationTheme": "Mongolia kit-car survival",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "ford-cortina",
+      "displayName": "Ford Cortina",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/ford-cortina.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-cortina.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 38,
+          "episodeNumber": 38,
+          "series": 3,
+          "episodeInSeries": 14,
+          "title": "Funeral for a Ford",
+          "releaseDate": "2019-04-12",
+          "locationTheme": "Ford saloon tribute",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "ford-mondeo",
+      "displayName": "Ford Mondeo",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/ford-mondeo.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-mondeo.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 38,
+          "episodeNumber": 38,
+          "series": 3,
+          "episodeInSeries": 14,
+          "title": "Funeral for a Ford",
+          "releaseDate": "2019-04-12",
+          "locationTheme": "Ford saloon tribute",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "ford-sierra",
+      "displayName": "Ford Sierra",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/ford-sierra.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-sierra.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 38,
+          "episodeNumber": 38,
+          "series": 3,
+          "episodeInSeries": 14,
+          "title": "Funeral for a Ford",
+          "releaseDate": "2019-04-12",
+          "locationTheme": "Ford saloon tribute",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "ford-sierra-rs-cosworth",
+      "displayName": "Ford Sierra RS Cosworth",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/ford-sierra-rs-cosworth.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-sierra-rs-cosworth.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 38,
+          "episodeNumber": 38,
+          "series": 3,
+          "episodeInSeries": 14,
+          "title": "Funeral for a Ford",
+          "releaseDate": "2019-04-12",
+          "locationTheme": "Ford saloon tribute",
+          "terrain": "road",
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "id": "1939-wooden-cruiser",
+      "displayName": "1939 Wooden Cruiser",
+      "vehicleClass": "boat",
+      "bodyStyle": "boat",
+      "sideIcon": "/images/vehicles/unique/side/1939-wooden-cruiser.png",
+      "topDownIcon": "/images/vehicles/unique/top/1939-wooden-cruiser.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Use boat-specific side/top-down silhouettes rather than car proportions."
+      ],
+      "appearances": [
+        {
+          "stageId": 39,
+          "episodeNumber": 39,
+          "series": 4,
+          "episodeInSeries": 1,
+          "title": "Seamen",
+          "releaseDate": "2019-12-13",
+          "locationTheme": "Mekong boat journey",
+          "terrain": "water",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "pbr-replica",
+      "displayName": "PBR replica",
+      "vehicleClass": "boat",
+      "bodyStyle": "boat",
+      "sideIcon": "/images/vehicles/unique/side/pbr-replica.png",
+      "topDownIcon": "/images/vehicles/unique/top/pbr-replica.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Use boat-specific side/top-down silhouettes rather than car proportions."
+      ],
+      "appearances": [
+        {
+          "stageId": 39,
+          "episodeNumber": 39,
+          "series": 4,
+          "episodeInSeries": 1,
+          "title": "Seamen",
+          "releaseDate": "2019-12-13",
+          "locationTheme": "Mekong boat journey",
+          "terrain": "water",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "scarab-thunder",
+      "displayName": "Scarab Thunder",
+      "vehicleClass": "boat",
+      "bodyStyle": "boat",
+      "sideIcon": "/images/vehicles/unique/side/scarab-thunder.png",
+      "topDownIcon": "/images/vehicles/unique/top/scarab-thunder.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Use boat-specific side/top-down silhouettes rather than car proportions."
+      ],
+      "appearances": [
+        {
+          "stageId": 39,
+          "episodeNumber": 39,
+          "series": 4,
+          "episodeInSeries": 1,
+          "title": "Seamen",
+          "releaseDate": "2019-12-13",
+          "locationTheme": "Mekong boat journey",
+          "terrain": "water",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "bentley-continental-gt-v8",
+      "displayName": "Bentley Continental GT V8",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/bentley-continental-gt-v8.png",
+      "topDownIcon": "/images/vehicles/unique/top/bentley-continental-gt-v8.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 40,
+          "episodeNumber": 40,
+          "series": 4,
+          "episodeInSeries": 2,
+          "title": "A Massive Hunt",
+          "releaseDate": "2020-12-17",
+          "locationTheme": "Reunion and Madagascar treasure route",
+          "terrain": "jungle",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "caterham-7-310r",
+      "displayName": "Caterham 7 310R",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/caterham-7-310r.png",
+      "topDownIcon": "/images/vehicles/unique/top/caterham-7-310r.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 40,
+          "episodeNumber": 40,
+          "series": 4,
+          "episodeInSeries": 2,
+          "title": "A Massive Hunt",
+          "releaseDate": "2020-12-17",
+          "locationTheme": "Reunion and Madagascar treasure route",
+          "terrain": "jungle",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "buick-riviera",
+      "displayName": "Buick Riviera",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/buick-riviera.png",
+      "topDownIcon": "/images/vehicles/unique/top/buick-riviera.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "cadillac-coupe-de-ville",
+      "displayName": "Cadillac Coupe de Ville",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/cadillac-coupe-de-ville.png",
+      "topDownIcon": "/images/vehicles/unique/top/cadillac-coupe-de-ville.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "chevrolet-camaro-z-28",
+      "displayName": "Chevrolet Camaro Z/28",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/chevrolet-camaro-z-28.png",
+      "topDownIcon": "/images/vehicles/unique/top/chevrolet-camaro-z-28.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "chrysler-pt-cruiser",
+      "displayName": "Chrysler PT Cruiser",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/chrysler-pt-cruiser.png",
+      "topDownIcon": "/images/vehicles/unique/top/chrysler-pt-cruiser.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "chrysler-voyager",
+      "displayName": "Chrysler Voyager",
+      "vehicleClass": "rv",
+      "bodyStyle": "rv",
+      "sideIcon": "/images/vehicles/unique/side/chrysler-voyager.png",
+      "topDownIcon": "/images/vehicles/unique/top/chrysler-voyager.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "dodge-charger-r-t",
+      "displayName": "Dodge Charger R/T",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/dodge-charger-r-t.png",
+      "topDownIcon": "/images/vehicles/unique/top/dodge-charger-r-t.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "ford-shelby-mustang-gt500",
+      "displayName": "Ford Shelby Mustang GT500",
+      "vehicleClass": "car",
+      "bodyStyle": "muscle-car",
+      "sideIcon": "/images/vehicles/unique/side/ford-shelby-mustang-gt500.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-shelby-mustang-gt500.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "lincoln-continental-mark-v",
+      "displayName": "Lincoln Continental Mark V",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/lincoln-continental-mark-v.png",
+      "topDownIcon": "/images/vehicles/unique/top/lincoln-continental-mark-v.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "pontiac-aztek",
+      "displayName": "Pontiac Aztek",
+      "vehicleClass": "car",
+      "bodyStyle": "suv",
+      "sideIcon": "/images/vehicles/unique/side/pontiac-aztek.png",
+      "topDownIcon": "/images/vehicles/unique/top/pontiac-aztek.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 41,
+          "episodeNumber": 41,
+          "series": 4,
+          "episodeInSeries": 3,
+          "title": "Lochdown",
+          "releaseDate": "2021-07-30",
+          "locationTheme": "Scotland American-car journey",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "citroen-berlingo",
+      "displayName": "Citroen Berlingo",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/citroen-berlingo.png",
+      "topDownIcon": "/images/vehicles/unique/top/citroen-berlingo.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "citroen-cx-safari",
+      "displayName": "Citroen CX Safari",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/citroen-cx-safari.png",
+      "topDownIcon": "/images/vehicles/unique/top/citroen-cx-safari.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "citroen-sm",
+      "displayName": "Citroen SM",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/citroen-sm.png",
+      "topDownIcon": "/images/vehicles/unique/top/citroen-sm.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "matra-murena",
+      "displayName": "Matra Murena",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/matra-murena.png",
+      "topDownIcon": "/images/vehicles/unique/top/matra-murena.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "peugeot-407",
+      "displayName": "Peugeot 407",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/peugeot-407.png",
+      "topDownIcon": "/images/vehicles/unique/top/peugeot-407.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "renault-avantime",
+      "displayName": "Renault Avantime",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/renault-avantime.png",
+      "topDownIcon": "/images/vehicles/unique/top/renault-avantime.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "renault-scenic",
+      "displayName": "Renault Scenic",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/renault-scenic.png",
+      "topDownIcon": "/images/vehicles/unique/top/renault-scenic.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 42,
+          "episodeNumber": 42,
+          "series": 4,
+          "episodeInSeries": 4,
+          "title": "Carnage A Trois",
+          "releaseDate": "2021-12-17",
+          "locationTheme": "England and Wales French-car investigation",
+          "terrain": "road",
+          "difficulty": "medium"
+        }
+      ]
+    },
+    {
+      "id": "audi-rs4",
+      "displayName": "Audi RS4",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/audi-rs4.png",
+      "topDownIcon": "/images/vehicles/unique/top/audi-rs4.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 43,
+          "episodeNumber": 43,
+          "series": 5,
+          "episodeInSeries": 1,
+          "title": "A Scandi Flick",
+          "releaseDate": "2022-09-16",
+          "locationTheme": "Norway, Sweden, and Finland rally saloons",
+          "terrain": "snow",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "mitsubishi-lancer-evolution-viii",
+      "displayName": "Mitsubishi Lancer Evolution VIII",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/mitsubishi-lancer-evolution-viii.png",
+      "topDownIcon": "/images/vehicles/unique/top/mitsubishi-lancer-evolution-viii.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 43,
+          "episodeNumber": 43,
+          "series": 5,
+          "episodeInSeries": 1,
+          "title": "A Scandi Flick",
+          "releaseDate": "2022-09-16",
+          "locationTheme": "Norway, Sweden, and Finland rally saloons",
+          "terrain": "snow",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "subaru-impreza-wrx-sti",
+      "displayName": "Subaru Impreza WRX STI",
+      "vehicleClass": "car",
+      "bodyStyle": "rally-or-hot-hatch",
+      "sideIcon": "/images/vehicles/unique/side/subaru-impreza-wrx-sti.png",
+      "topDownIcon": "/images/vehicles/unique/top/subaru-impreza-wrx-sti.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 43,
+          "episodeNumber": 43,
+          "series": 5,
+          "episodeInSeries": 1,
+          "title": "A Scandi Flick",
+          "releaseDate": "2022-09-16",
+          "locationTheme": "Norway, Sweden, and Finland rally saloons",
+          "terrain": "snow",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "chevrolet-ssr",
+      "displayName": "Chevrolet SSR",
+      "vehicleClass": "car",
+      "bodyStyle": "pickup",
+      "sideIcon": "/images/vehicles/unique/side/chevrolet-ssr.png",
+      "topDownIcon": "/images/vehicles/unique/top/chevrolet-ssr.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "crosley-cc-convertible",
+      "displayName": "Crosley CC Convertible",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/crosley-cc-convertible.png",
+      "topDownIcon": "/images/vehicles/unique/top/crosley-cc-convertible.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "ford-popular-hot-rod",
+      "displayName": "Ford Popular Hot Rod",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/ford-popular-hot-rod.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-popular-hot-rod.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "klein-vision-aircar",
+      "displayName": "Klein Vision AirCar",
+      "vehicleClass": "aircraft",
+      "bodyStyle": "roadable-aircraft",
+      "sideIcon": "/images/vehicles/unique/side/klein-vision-aircar.png",
+      "topDownIcon": "/images/vehicles/unique/top/klein-vision-aircar.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [
+        "Create both roadable-car and folded-wing cues so it reads as the AirCar."
+      ],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "mitsuoka-le-seyde",
+      "displayName": "Mitsuoka Le-Seyde",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/mitsuoka-le-seyde.png",
+      "topDownIcon": "/images/vehicles/unique/top/mitsuoka-le-seyde.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "praga-bohema",
+      "displayName": "Praga Bohema",
+      "vehicleClass": "car",
+      "bodyStyle": "hypercar",
+      "sideIcon": "/images/vehicles/unique/side/praga-bohema.png",
+      "topDownIcon": "/images/vehicles/unique/top/praga-bohema.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "skoda-1100-ohc",
+      "displayName": "Skoda 1100 OHC",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/skoda-1100-ohc.png",
+      "topDownIcon": "/images/vehicles/unique/top/skoda-1100-ohc.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 44,
+          "episodeNumber": 44,
+          "series": 5,
+          "episodeInSeries": 2,
+          "title": "Eurocrash",
+          "releaseDate": "2023-06-16",
+          "locationTheme": "Central Europe strange-car road trip",
+          "terrain": "road",
+          "difficulty": "hard"
+        }
+      ]
+    },
+    {
+      "id": "aston-martin-db9-volante",
+      "displayName": "Aston Martin DB9 Volante",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/aston-martin-db9-volante.png",
+      "topDownIcon": "/images/vehicles/unique/top/aston-martin-db9-volante.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 45,
+          "episodeNumber": 45,
+          "series": 5,
+          "episodeInSeries": 3,
+          "title": "Sand Job",
+          "releaseDate": "2024-02-16",
+          "locationTheme": "Sahara Dakar-inspired GT convertible route",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "jaguar-f-type",
+      "displayName": "Jaguar F-Type",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/jaguar-f-type.png",
+      "topDownIcon": "/images/vehicles/unique/top/jaguar-f-type.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 45,
+          "episodeNumber": 45,
+          "series": 5,
+          "episodeInSeries": 3,
+          "title": "Sand Job",
+          "releaseDate": "2024-02-16",
+          "locationTheme": "Sahara Dakar-inspired GT convertible route",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "maserati-grancabrio",
+      "displayName": "Maserati GranCabrio",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/maserati-grancabrio.png",
+      "topDownIcon": "/images/vehicles/unique/top/maserati-grancabrio.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 45,
+          "episodeNumber": 45,
+          "series": 5,
+          "episodeInSeries": 3,
+          "title": "Sand Job",
+          "releaseDate": "2024-02-16",
+          "locationTheme": "Sahara Dakar-inspired GT convertible route",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "ford-capri-gxl",
+      "displayName": "Ford Capri GXL",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/ford-capri-gxl.png",
+      "topDownIcon": "/images/vehicles/unique/top/ford-capri-gxl.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "lancia-beta-coupe",
+      "displayName": "Lancia Beta Coupe",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/lancia-beta-coupe.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-beta-coupe.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "lancia-montecarlo",
+      "displayName": "Lancia Montecarlo",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/lancia-montecarlo.png",
+      "topDownIcon": "/images/vehicles/unique/top/lancia-montecarlo.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "mercedes-benz-230e",
+      "displayName": "Mercedes-Benz 230E",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/mercedes-benz-230e.png",
+      "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-230e.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "rover-sd1",
+      "displayName": "Rover SD1",
+      "vehicleClass": "car",
+      "bodyStyle": "saloon-or-coupe",
+      "sideIcon": "/images/vehicles/unique/side/rover-sd1.png",
+      "topDownIcon": "/images/vehicles/unique/top/rover-sd1.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "triumph-stag",
+      "displayName": "Triumph Stag",
+      "vehicleClass": "car",
+      "bodyStyle": "convertible",
+      "sideIcon": "/images/vehicles/unique/side/triumph-stag.png",
+      "topDownIcon": "/images/vehicles/unique/top/triumph-stag.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    },
+    {
+      "id": "volkswagen-new-beetle",
+      "displayName": "Volkswagen New Beetle",
+      "vehicleClass": "car",
+      "bodyStyle": "sports-or-gt",
+      "sideIcon": "/images/vehicles/unique/side/volkswagen-new-beetle.png",
+      "topDownIcon": "/images/vehicles/unique/top/volkswagen-new-beetle.png",
+      "referenceStatus": "pending-research",
+      "artStatus": "pending",
+      "notes": [],
+      "appearances": [
+        {
+          "stageId": 46,
+          "episodeNumber": 46,
+          "series": 6,
+          "episodeInSeries": 1,
+          "title": "One for the Road",
+          "releaseDate": "2024-09-13",
+          "locationTheme": "Zimbabwe to Botswana finale",
+          "terrain": "desert",
+          "difficulty": "insane"
+        }
+      ]
+    }
+  ]
+}
