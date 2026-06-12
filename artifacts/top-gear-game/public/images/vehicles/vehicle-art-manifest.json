@@ -2443,8 +2443,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/cadillac-cts-v.png",
       "topDownIcon": "/images/vehicles/unique/top/cadillac-cts-v.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2467,8 +2467,8 @@
       "bodyStyle": "rv",
       "sideIcon": "/images/vehicles/unique/side/chevrolet-corvette-zr1.png",
       "topDownIcon": "/images/vehicles/unique/top/chevrolet-corvette-zr1.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2491,8 +2491,8 @@
       "bodyStyle": "rv",
       "sideIcon": "/images/vehicles/unique/side/fleetwood-pace-arrow.png",
       "topDownIcon": "/images/vehicles/unique/top/fleetwood-pace-arrow.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2515,8 +2515,8 @@
       "bodyStyle": "rv",
       "sideIcon": "/images/vehicles/unique/side/international-harvester-s-series.png",
       "topDownIcon": "/images/vehicles/unique/top/international-harvester-s-series.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2539,8 +2539,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/jeep-grand-cherokee-trackhawk.png",
       "topDownIcon": "/images/vehicles/unique/top/jeep-grand-cherokee-trackhawk.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2563,8 +2563,8 @@
       "bodyStyle": "rv",
       "sideIcon": "/images/vehicles/unique/side/national-rv-tropi-cal-6350.png",
       "topDownIcon": "/images/vehicles/unique/top/national-rv-tropi-cal-6350.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2587,8 +2587,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/apollo-astronaut-cars.png",
       "topDownIcon": "/images/vehicles/unique/top/apollo-astronaut-cars.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -2613,8 +2613,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-vantage.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-vantage.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2637,8 +2637,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/citroen-c3-aircross.png",
       "topDownIcon": "/images/vehicles/unique/top/citroen-c3-aircross.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2661,8 +2661,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/ferrari-testarossa.png",
       "topDownIcon": "/images/vehicles/unique/top/ferrari-testarossa.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2685,8 +2685,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/ford-fiesta-st.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-fiesta-st.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2709,8 +2709,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/lamborghini-countach-lp5000.png",
       "topDownIcon": "/images/vehicles/unique/top/lamborghini-countach-lp5000.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-09-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
