@@ -665,8 +665,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/alfa-romeo-giulia-quadrifoglio.png",
       "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-giulia-quadrifoglio.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -689,8 +689,8 @@
       "bodyStyle": "car-shell",
       "sideIcon": "/images/vehicles/unique/side/car-body-shells.png",
       "topDownIcon": "/images/vehicles/unique/top/car-body-shells.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -715,8 +715,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/fiat-abarth-124-spider.png",
       "topDownIcon": "/images/vehicles/unique/top/fiat-abarth-124-spider.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -739,8 +739,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/maserati-430-saloon.png",
       "topDownIcon": "/images/vehicles/unique/top/maserati-430-saloon.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -763,8 +763,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/maserati-biturbo-s-coupe.png",
       "topDownIcon": "/images/vehicles/unique/top/maserati-biturbo-s-coupe.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -787,8 +787,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/maserati-zagato-spyder.png",
       "topDownIcon": "/images/vehicles/unique/top/maserati-zagato-spyder.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -811,8 +811,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/bentley-bentayga.png",
       "topDownIcon": "/images/vehicles/unique/top/bentley-bentayga.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -835,8 +835,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/jaguar-f-pace.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-f-pace.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -859,8 +859,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/lexus-gs-f.png",
       "topDownIcon": "/images/vehicles/unique/top/lexus-gs-f.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -883,8 +883,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/range-rover.png",
       "topDownIcon": "/images/vehicles/unique/top/range-rover.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -907,8 +907,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/bmw-i3.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-i3.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -931,8 +931,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/bugatti-veyron.png",
       "topDownIcon": "/images/vehicles/unique/top/bugatti-veyron.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-03-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
