@@ -2155,8 +2155,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/lamborghini-urus.png",
       "topDownIcon": "/images/vehicles/unique/top/lamborghini-urus.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2179,8 +2179,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/porsche-911-turbo-s.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-911-turbo-s.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2203,8 +2203,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/bmw-750li.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-750li.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2227,8 +2227,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/cadillac-sts.png",
       "topDownIcon": "/images/vehicles/unique/top/cadillac-sts.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2251,8 +2251,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/hongqi-l5.png",
       "topDownIcon": "/images/vehicles/unique/top/hongqi-l5.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2275,8 +2275,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/mercedes-benz-s600.png",
       "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-s600.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2299,8 +2299,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/nio-ep9.png",
       "topDownIcon": "/images/vehicles/unique/top/nio-ep9.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2323,8 +2323,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/alfa-romeo-gtv6.png",
       "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-gtv6.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2347,8 +2347,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/alpina-b5.png",
       "topDownIcon": "/images/vehicles/unique/top/alpina-b5.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2371,8 +2371,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/bmw-m5.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-m5.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2395,8 +2395,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/fiat-x1-9.png",
       "topDownIcon": "/images/vehicles/unique/top/fiat-x1-9.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2419,8 +2419,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/lancia-gamma-coupe.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-gamma-coupe.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-08-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
