@@ -1254,8 +1254,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/volkswagen-up-gti.png",
       "topDownIcon": "/images/vehicles/unique/top/volkswagen-up-gti.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1278,8 +1278,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/jaguar-420g.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-420g.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1302,8 +1302,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xj-s.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xj-s.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1326,8 +1326,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xj6.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xj6.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1350,8 +1350,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xjr.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xjr.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1374,8 +1374,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xk8-convertible.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xk8-convertible.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1398,8 +1398,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/audi-quattro.png",
       "topDownIcon": "/images/vehicles/unique/top/audi-quattro.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1422,8 +1422,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/lamborghini-huracan-performante.png",
       "topDownIcon": "/images/vehicles/unique/top/lamborghini-huracan-performante.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1446,8 +1446,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/lancia-rally-037.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-rally-037.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1470,8 +1470,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-db4-gt.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-db4-gt.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1494,8 +1494,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/honda-civic-type-r.png",
       "topDownIcon": "/images/vehicles/unique/top/honda-civic-type-r.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1518,8 +1518,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xkss.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xkss.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-05-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
