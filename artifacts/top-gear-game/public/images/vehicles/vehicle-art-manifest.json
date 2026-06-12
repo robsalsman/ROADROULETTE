@@ -2733,8 +2733,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/toyota-yaris-grmn.png",
       "topDownIcon": "/images/vehicles/unique/top/toyota-yaris-grmn.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2757,8 +2757,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/volkswagen-polo-gti.png",
       "topDownIcon": "/images/vehicles/unique/top/volkswagen-polo-gti.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2781,8 +2781,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-dbs-superleggera.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-dbs-superleggera.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2805,8 +2805,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/bentley-continental-gt.png",
       "topDownIcon": "/images/vehicles/unique/top/bentley-continental-gt.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2829,8 +2829,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/bmw-m850i.png",
       "topDownIcon": "/images/vehicles/unique/top/bmw-m850i.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2853,8 +2853,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/lancia-delta-futurista.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-delta-futurista.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2877,8 +2877,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/lancia-stratos-mat.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-stratos-mat.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2901,8 +2901,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/porsche-911-gt2-rs.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-911-gt2-rs.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2925,8 +2925,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/porsche-917.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-917.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2949,8 +2949,8 @@
       "bodyStyle": "kit-car",
       "sideIcon": "/images/vehicles/unique/side/self-constructed-vehicle-named-john.png",
       "topDownIcon": "/images/vehicles/unique/top/self-constructed-vehicle-named-john.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -2975,8 +2975,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/ford-cortina.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-cortina.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2999,8 +2999,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/ford-mondeo.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-mondeo.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-10-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
