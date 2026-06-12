@@ -1542,8 +1542,8 @@
       "bodyStyle": "custom-amphibious",
       "sideIcon": "/images/vehicles/unique/side/bond-bug-amphibious-build.png",
       "topDownIcon": "/images/vehicles/unique/top/bond-bug-amphibious-build.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -1568,8 +1568,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/bugatti-eb-110-super-sport.png",
       "topDownIcon": "/images/vehicles/unique/top/bugatti-eb-110-super-sport.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1592,8 +1592,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xj220.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xj220.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1616,8 +1616,8 @@
       "bodyStyle": "custom-amphibious",
       "sideIcon": "/images/vehicles/unique/side/rolls-royce-spey-amphibious-build.png",
       "topDownIcon": "/images/vehicles/unique/top/rolls-royce-spey-amphibious-build.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Composite/show-specific entry: research episode stills and design an original in-universe icon that preserves the recognizable build idea without copying footage."
       ],
@@ -1642,8 +1642,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/alfa-romeo-stelvio-quadrifoglio.png",
       "topDownIcon": "/images/vehicles/unique/top/alfa-romeo-stelvio-quadrifoglio.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1666,8 +1666,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/ford-f-150-raptor.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-f-150-raptor.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1690,8 +1690,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/porsche-macan-turbo.png",
       "topDownIcon": "/images/vehicles/unique/top/porsche-macan-turbo.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1714,8 +1714,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/range-rover-velar-p380.png",
       "topDownIcon": "/images/vehicles/unique/top/range-rover-velar-p380.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1738,8 +1738,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/tesla-model-x.png",
       "topDownIcon": "/images/vehicles/unique/top/tesla-model-x.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1762,8 +1762,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/mercedes-benz-200t.png",
       "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-200t.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1786,8 +1786,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/nissan-hardbody.png",
       "topDownIcon": "/images/vehicles/unique/top/nissan-hardbody.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1810,8 +1810,8 @@
       "bodyStyle": "motorcycle",
       "sideIcon": "/images/vehicles/unique/side/tvs-star.png",
       "topDownIcon": "/images/vehicles/unique/top/tvs-star.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-06-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
