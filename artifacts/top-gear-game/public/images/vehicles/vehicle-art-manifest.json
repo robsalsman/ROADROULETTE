@@ -955,8 +955,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/volkswagen-golf-gti.png",
       "topDownIcon": "/images/vehicles/unique/top/volkswagen-golf-gti.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -979,8 +979,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/lamborghini-aventador-s.png",
       "topDownIcon": "/images/vehicles/unique/top/lamborghini-aventador-s.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1003,8 +1003,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/rimac-concept-one.png",
       "topDownIcon": "/images/vehicles/unique/top/rimac-concept-one.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1027,8 +1027,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/ford-gt.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-gt.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1062,8 +1062,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/mercedes-amg-gt-r.png",
       "topDownIcon": "/images/vehicles/unique/top/mercedes-amg-gt-r.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1086,8 +1086,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/bugatti-chiron.png",
       "topDownIcon": "/images/vehicles/unique/top/bugatti-chiron.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1110,8 +1110,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/kia-stinger-gt.png",
       "topDownIcon": "/images/vehicles/unique/top/kia-stinger-gt.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1134,8 +1134,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/ariel-nomad.png",
       "topDownIcon": "/images/vehicles/unique/top/ariel-nomad.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1158,8 +1158,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/audi-tt-rs.png",
       "topDownIcon": "/images/vehicles/unique/top/audi-tt-rs.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1182,8 +1182,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/lada-riva.png",
       "topDownIcon": "/images/vehicles/unique/top/lada-riva.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1206,8 +1206,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/mclaren-720s.png",
       "topDownIcon": "/images/vehicles/unique/top/mclaren-720s.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1230,8 +1230,8 @@
       "bodyStyle": "tracked-vehicle",
       "sideIcon": "/images/vehicles/unique/side/ripsaw-ev2.png",
       "topDownIcon": "/images/vehicles/unique/top/ripsaw-ev2.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-04-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
