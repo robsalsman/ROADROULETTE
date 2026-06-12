@@ -1834,8 +1834,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/dodge-challenger-srt-demon.png",
       "topDownIcon": "/images/vehicles/unique/top/dodge-challenger-srt-demon.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1858,8 +1858,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/ford-mustang-rtr-spec-3.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-mustang-rtr-spec-3.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1882,8 +1882,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/hennessey-exorcist.png",
       "topDownIcon": "/images/vehicles/unique/top/hennessey-exorcist.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1906,8 +1906,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/mclaren-senna.png",
       "topDownIcon": "/images/vehicles/unique/top/mclaren-senna.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1930,8 +1930,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/chevrolet-k2500.png",
       "topDownIcon": "/images/vehicles/unique/top/chevrolet-k2500.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -1965,8 +1965,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/fiat-panda-4x4-sisley.png",
       "topDownIcon": "/images/vehicles/unique/top/fiat-panda-4x4-sisley.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2000,8 +2000,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/jeep-wrangler.png",
       "topDownIcon": "/images/vehicles/unique/top/jeep-wrangler.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2035,8 +2035,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/ford-ranger.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-ranger.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2059,8 +2059,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/jaguar-xe-project-8.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-xe-project-8.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2083,8 +2083,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/mercedes-benz-x-class.png",
       "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-x-class.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2107,8 +2107,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/volkswagen-amarok.png",
       "topDownIcon": "/images/vehicles/unique/top/volkswagen-amarok.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -2131,8 +2131,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/alpine-a110.png",
       "topDownIcon": "/images/vehicles/unique/top/alpine-a110.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-07-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
