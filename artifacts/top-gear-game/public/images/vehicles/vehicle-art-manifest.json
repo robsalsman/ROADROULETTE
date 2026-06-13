@@ -3023,8 +3023,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/ford-sierra.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-sierra.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3047,8 +3047,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/ford-sierra-rs-cosworth.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-sierra-rs-cosworth.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3071,8 +3071,8 @@
       "bodyStyle": "boat",
       "sideIcon": "/images/vehicles/unique/side/1939-wooden-cruiser.png",
       "topDownIcon": "/images/vehicles/unique/top/1939-wooden-cruiser.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Use boat-specific side/top-down silhouettes rather than car proportions."
       ],
@@ -3097,8 +3097,8 @@
       "bodyStyle": "boat",
       "sideIcon": "/images/vehicles/unique/side/pbr-replica.png",
       "topDownIcon": "/images/vehicles/unique/top/pbr-replica.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Use boat-specific side/top-down silhouettes rather than car proportions."
       ],
@@ -3123,8 +3123,8 @@
       "bodyStyle": "boat",
       "sideIcon": "/images/vehicles/unique/side/scarab-thunder.png",
       "topDownIcon": "/images/vehicles/unique/top/scarab-thunder.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Use boat-specific side/top-down silhouettes rather than car proportions."
       ],
@@ -3149,8 +3149,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/bentley-continental-gt-v8.png",
       "topDownIcon": "/images/vehicles/unique/top/bentley-continental-gt-v8.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3173,8 +3173,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/caterham-7-310r.png",
       "topDownIcon": "/images/vehicles/unique/top/caterham-7-310r.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3197,8 +3197,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/buick-riviera.png",
       "topDownIcon": "/images/vehicles/unique/top/buick-riviera.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3221,8 +3221,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/cadillac-coupe-de-ville.png",
       "topDownIcon": "/images/vehicles/unique/top/cadillac-coupe-de-ville.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3245,8 +3245,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/chevrolet-camaro-z-28.png",
       "topDownIcon": "/images/vehicles/unique/top/chevrolet-camaro-z-28.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3269,8 +3269,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/chrysler-pt-cruiser.png",
       "topDownIcon": "/images/vehicles/unique/top/chrysler-pt-cruiser.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3293,8 +3293,8 @@
       "bodyStyle": "rv",
       "sideIcon": "/images/vehicles/unique/side/chrysler-voyager.png",
       "topDownIcon": "/images/vehicles/unique/top/chrysler-voyager.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-11-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
