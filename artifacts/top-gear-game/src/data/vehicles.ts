@@ -1,5 +1,6 @@
 // Vehicle art is generated from each car's name so garage cards and mini-games
 // don't collapse distinct vehicles into one generic archetype image.
+import vehicleArtManifest from "../../public/images/vehicles/vehicle-art-manifest.json";
 
 export type VehicleArchetype =
   | "offroader"
@@ -42,6 +43,37 @@ export function vehicleArchetype(
 
 export function vehicleSprite(archetype: VehicleArchetype): string {
   return `/images/vehicles/${archetype}.png`;
+}
+
+type VehicleArtEntry = {
+  id: string;
+  displayName: string;
+  sideIcon?: string;
+  topDownIcon?: string;
+  artStatus?: string;
+};
+
+const UNIQUE_ART_STATUS = "side-and-top-generated";
+
+function normalizeVehicleKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const VEHICLE_ART_BY_KEY = new Map<string, VehicleArtEntry>();
+
+for (const vehicle of (vehicleArtManifest.vehicles as VehicleArtEntry[])) {
+  if (vehicle.artStatus !== UNIQUE_ART_STATUS) continue;
+  VEHICLE_ART_BY_KEY.set(normalizeVehicleKey(vehicle.id), vehicle);
+  VEHICLE_ART_BY_KEY.set(normalizeVehicleKey(vehicle.displayName), vehicle);
+}
+
+function uniqueVehicleArt(name: string): VehicleArtEntry | undefined {
+  const key = normalizeVehicleKey(name);
+  return VEHICLE_ART_BY_KEY.get(key);
 }
 
 const BRAND_COLORS: Array<[RegExp, string, string]> = [
@@ -341,11 +373,15 @@ export function vehicleTopDownSvg(name: string, power = 5, offRoad = 5): string 
 }
 
 export function vehicleSideSprite(name: string, power = 5, offRoad = 5): string {
+  const unique = uniqueVehicleArt(name)?.sideIcon;
+  if (unique) return unique;
   const curated = curatedVehicleSideSprite(name);
   if (curated) return curated;
   return vehicleSprite(vehicleArchetype(name, power, offRoad));
 }
 
 export function vehicleTopDownSprite(name: string, power = 5, offRoad = 5): string {
+  const unique = uniqueVehicleArt(name)?.topDownIcon;
+  if (unique) return unique;
   return svgUrl(vehicleTopDownSvg(name, power, offRoad));
 }
