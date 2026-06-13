@@ -16,13 +16,15 @@ import {
   loadUpgrades,
   removeGarageCar,
   saveGarage,
+  saveUpgrades,
   sellValue,
   upgradeKey,
   type GarageCar,
   type GarageState,
 } from "@/data/garage";
 import { canonicalVehicleKey } from "@/data/vehicles";
-import { carToBuyInput, garageApi } from "@/services/garageApi";
+import { carToBuyInput, garageApi, type OwnedVehicle } from "@/services/garageApi";
+import { deriveVehiclePerformance, saleValueForVehicle } from "@/data/vehiclePerformance";
 
 type MissionCar = {
   id: number;
@@ -34,6 +36,30 @@ type MissionCar = {
   offRoad: number;
   description: string;
 };
+
+function stableGarageId(canonicalKey: string): number {
+  let hash = 0;
+  for (let i = 0; i < canonicalKey.length; i += 1) {
+    hash = ((hash << 5) - hash + canonicalKey.charCodeAt(i)) | 0;
+  }
+  return -Math.max(1, Math.abs(hash));
+}
+
+function persistentToSeriesCar(vehicle: OwnedVehicle): GarageCar {
+  return {
+    id: stableGarageId(vehicle.canonicalVehicleKey),
+    missionId: vehicle.sourceMissionId ?? 0,
+    name: vehicle.name,
+    year: vehicle.year,
+    price: vehicle.purchasePrice,
+    reliability: vehicle.reliability,
+    power: vehicle.power,
+    offRoad: vehicle.offRoad,
+    description: vehicle.description,
+    purchasedAt: new Date(vehicle.acquiredAt).getTime(),
+    paintColor: vehicle.paintColor ?? undefined,
+  };
+}
 
 export default function MissionDetail() {
   const { id } = useParams();
@@ -88,6 +114,18 @@ export default function MissionDetail() {
     if (!querySaveId) return;
     saveGarage(querySaveId, nextGarage);
     setGarage(nextGarage);
+  };
+
+  const importPersistentVehicle = (vehicle: OwnedVehicle, forcedCarId?: number): GarageCar => {
+    const imported = { ...persistentToSeriesCar(vehicle), id: forcedCarId ?? stableGarageId(vehicle.canonicalVehicleKey) };
+    const existing = garage.cars.find((car) => canonicalVehicleKey(car.name) === vehicle.canonicalVehicleKey);
+    const nextCar = existing ?? imported;
+    const nextCars = existing
+      ? garage.cars.map((car) => (car.id === existing.id ? { ...car, ...imported, id: existing.id } : car))
+      : [...garage.cars, nextCar];
+    saveGarageState({ activeCarId: nextCar.id, cars: nextCars });
+    if (querySaveId) saveUpgrades(querySaveId, nextCar.id, vehicle.upgrades, vehicle.upgradeSpend);
+    return nextCar;
   };
 
   const toGarageCar = (car: MissionCar): GarageCar => ({
@@ -154,16 +192,24 @@ export default function MissionDetail() {
       const selectedCar = mission.availableCars.find((car) => car.id === carId);
       if (!selectedCar) return;
       const canonicalKey = canonicalVehicleKey(selectedCar.name);
+      const persistentVehicle = persistentGarage?.vehicles.find((car) => car.canonicalVehicleKey === canonicalKey);
       const alreadyOwned = garage.cars.some((car) => canonicalVehicleKey(car.name) === canonicalKey)
-        || persistentGarage?.vehicles.some((car) => car.canonicalVehicleKey === canonicalKey);
+        || Boolean(persistentVehicle);
       if (alreadyOwned) {
-        const nextGarage = garage.cars.some((car) => canonicalVehicleKey(car.name) === canonicalKey)
-          ? { ...garage, activeCarId: carId }
-          : { activeCarId: carId, cars: [...garage.cars, toGarageCar(selectedCar)] };
-        saveGarageState(nextGarage);
+        const localCar = garage.cars.find((car) => canonicalVehicleKey(car.name) === canonicalKey);
+        const selectedSeriesCar = persistentVehicle
+          ? importPersistentVehicle(persistentVehicle, localCar?.id ?? carId)
+          : toGarageCar(selectedCar);
+        if (!persistentVehicle) {
+          const nextGarage = localCar
+            ? { ...garage, activeCarId: localCar.id }
+            : { activeCarId: carId, cars: [...garage.cars, selectedSeriesCar] };
+          saveGarageState(nextGarage);
+        }
+        if (persistentVehicle) await garageApi.setActive(persistentVehicle.canonicalVehicleKey).catch(() => undefined);
         await updateSave.mutateAsync({
           id: existingSave.id,
-          data: { carId, status: "on_road" },
+          data: { carId: selectedSeriesCar.id, status: "on_road" },
         });
         toast({ title: "Already Owned", description: `${selectedCar.name} is already in your garage.` });
         setLocation(`/upgrade-shop/${existingSave.id}`);
@@ -237,6 +283,29 @@ export default function MissionDetail() {
     ...garage.cars.map((car) => canonicalVehicleKey(car.name)),
     ...(persistentGarage?.vehicles.map((car) => car.canonicalVehicleKey) ?? []),
   ]);
+  const localOwnedKeys = new Set(garage.cars.map((car) => canonicalVehicleKey(car.name)));
+  const persistentCarryover = isSeries
+    ? (persistentGarage?.vehicles ?? []).filter((vehicle) => !localOwnedKeys.has(vehicle.canonicalVehicleKey))
+    : [];
+
+  const usePersistentCar = async (vehicle: OwnedVehicle) => {
+    if (!existingSave || !querySaveId) return;
+    setCreating(true);
+    try {
+      const imported = importPersistentVehicle(vehicle);
+      await garageApi.setActive(vehicle.canonicalVehicleKey).catch(() => undefined);
+      await updateSave.mutateAsync({
+        id: existingSave.id,
+        data: { carId: imported.id, status: "on_road" },
+      });
+      await refetchPersistentGarage();
+      toast({ title: "Garage car selected", description: `${vehicle.year} ${vehicle.name} is ready for this episode.` });
+      setLocation(`/upgrade-shop/${existingSave.id}`);
+    } catch {
+      toast({ title: "Error", description: "Failed to select persistent garage car.", variant: "destructive" });
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="flex-1 p-6 md:p-12">
@@ -274,10 +343,72 @@ export default function MissionDetail() {
           <p className="max-w-3xl text-muted-foreground">{mission.description}</p>
           {isSeries && (
             <p className="text-sm text-amber-400/80">
-              Your garage carries through the series. Buy, sell, upgrade, and pick the machine for this stage.
+              Your owned vehicles can be reused between episodes. Buy something new, or pull a proven car from the persistent garage.
             </p>
           )}
         </div>
+
+        {isSeries && persistentCarryover.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Warehouse className="h-5 w-5 text-primary" />
+              <h3 className="text-2xl font-bold uppercase tracking-tight">Persistent Garage</h3>
+            </div>
+            <p className="text-muted-foreground">
+              These cars already belong to your profile. Select one to bring it into this series save with its upgrades intact.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {persistentCarryover.map((vehicle) => {
+                const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+                const resale = saleValueForVehicle(vehicle);
+                return (
+                  <Card key={vehicle.canonicalVehicleKey} className="flex flex-col border-2 border-amber-500/30">
+                    <CardHeader>
+                      <div className="flex justify-between items-start gap-4">
+                        <CardTitle className="uppercase font-bold">{vehicle.year} {vehicle.name}</CardTitle>
+                        {vehicle.isActive && <span className="text-xs font-bold uppercase text-primary">Active</span>}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 space-y-4">
+                      <VehicleSprite
+                        vehicle={persistentToSeriesCar(vehicle)}
+                        className="h-28 w-full"
+                        label={`${vehicle.year} ${vehicle.name}`}
+                      />
+                      <p className="text-sm text-muted-foreground min-h-[3rem]">{vehicle.description}</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {[
+                          ["HP", performance.horsepower.toLocaleString()],
+                          ["Drive", performance.drivetrain],
+                          ["Tier", performance.tier],
+                          ["Condition", `${vehicle.condition}%`],
+                          ["Upgrades", Object.keys(vehicle.upgrades).length.toLocaleString()],
+                          ["Resale", `GBP ${resale.toLocaleString()}`],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
+                            <p className="font-bold uppercase text-muted-foreground">{label}</p>
+                            <p className="font-mono text-sm font-black">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        className="w-full uppercase font-bold"
+                        disabled={creating}
+                        onClick={() => usePersistentCar(vehicle)}
+                        data-testid={`button-use-persistent-${vehicle.canonicalVehicleKey}`}
+                      >
+                        Use This Car
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {isSeries && garage.cars.length > 0 && (
           <div className="space-y-4">
