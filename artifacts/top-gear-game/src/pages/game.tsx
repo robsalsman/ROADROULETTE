@@ -77,8 +77,9 @@ interface MechanicOffer {
   label: string;
   desc: string;
   cost: number;
-  action: "repair" | "fuel" | "food" | "parts";
+  action: "repair" | "fuel" | "food" | "parts" | "item";
   amount: number;
+  itemId?: string;
 }
 
 const MECHANIC_OFFERS: MechanicOffer[] = [
@@ -87,6 +88,11 @@ const MECHANIC_OFFERS: MechanicOffer[] = [
   { label: "Jerry Cans",   desc: "Refill fuel to 100%",          cost: 80, action: "fuel",   amount: 100 },
   { label: "Packed Lunch", desc: "5 food rations for the crew",  cost: 40, action: "food",   amount: 5 },
   { label: "Spare Parts",  desc: "3 spare parts for the road",   cost: 55, action: "parts",  amount: 3 },
+  { label: "Snow Chains", desc: "Campaign kit for icy passes", cost: 90, action: "item", amount: 1, itemId: "snow-chains" },
+  { label: "Sand Ladders", desc: "Campaign kit for beaches and desert", cost: 120, action: "item", amount: 1, itemId: "sand-ladders" },
+  { label: "River Permit", desc: "Campaign kit for ferry and river trouble", cost: 75, action: "item", amount: 1, itemId: "river-permit" },
+  { label: "Emergency Envelope", desc: "Campaign kit for suspicious tolls", cost: 85, action: "item", amount: 1, itemId: "bribe-envelope" },
+  { label: "Tyre Compressor", desc: "Campaign kit for rough-road punctures", cost: 70, action: "item", amount: 1, itemId: "portable-compressor" },
 ];
 
 const RISK_COLORS: Record<string, string> = {
@@ -1020,6 +1026,10 @@ export default function Game() {
   // ── Mechanic purchase ──────────────────────────────────────────────────────
   const handleMechanicPurchase = async (offer: MechanicOffer) => {
     if (!save || funds < offer.cost) { toast({ title: "Not enough funds", variant: "destructive" }); return; }
+    if (offer.action === "item" && (!isSeries || !offer.itemId)) {
+      toast({ title: "Campaign item", description: "Trip kit is saved in Series Mode inventories." });
+      return;
+    }
     const newFunds = funds - offer.cost;
     const nextCondition = offer.action === "repair" ? Math.min(100, condition + offer.amount) : condition;
     setFunds(newFunds);
@@ -1032,6 +1042,10 @@ export default function Game() {
     let newParts = parts;
     if (offer.action === "food") { newFood = Math.min(10, food + offer.amount); setFood(newFood); }
     if (offer.action === "parts") { newParts = Math.min(10, parts + offer.amount); setParts(newParts); }
+    if (offer.action === "item" && offer.itemId) {
+      const nextInventory = grantInventoryItem(save.id, offer.itemId, offer.amount);
+      setInventoryItems(nextInventory);
+    }
     await updateSave.mutateAsync({ id: save.id, data: { funds: newFunds, food: newFood, parts: newParts } });
     if (isSeries) advanceClock(1);
     if (pendingAfterMechanic && isSeries) {
@@ -1045,7 +1059,9 @@ export default function Game() {
       title: offer.label,
       detail: offer.action === "repair"
         ? "A local stop eats time and money, and the garage condition record has been updated."
-        : "A local stop eats time and money, but the team is better prepared for the next bad idea.",
+        : offer.action === "item" && offer.itemId
+          ? `${inventoryItemName(offer.itemId)} added to the trip inventory for later trouble.`
+          : "A local stop eats time and money, but the team is better prepared for the next bad idea.",
       tone: "good",
       fundsDelta: -offer.cost,
       conditionDelta: offer.action === "repair" ? nextCondition - condition : undefined,
@@ -1053,9 +1069,9 @@ export default function Game() {
       foodDelta: offer.action === "food" ? newFood - food : undefined,
       partsDelta: offer.action === "parts" ? newParts - parts : undefined,
       timeHours: isSeries ? 1 : undefined,
-      xpDelta: isSeries ? 12 : undefined,
+      xpDelta: isSeries ? (offer.action === "item" ? 8 : 12) : undefined,
     });
-    if (isSeries) addPlayerXp(save.id, 12, save.playerName ?? displayName);
+    if (isSeries) addPlayerXp(save.id, offer.action === "item" ? 8 : 12, save.playerName ?? displayName);
     toast({ title: offer.label, description: "Sorted. Back on the road." });
   };
 
@@ -1586,7 +1602,7 @@ export default function Game() {
                 {MECHANIC_OFFERS.map((offer, i) => (
                   <button
                     key={i}
-                    disabled={funds < offer.cost}
+                    disabled={funds < offer.cost || (offer.action === "item" && !isSeries)}
                     onClick={() => handleMechanicPurchase(offer)}
                     className="w-full text-left p-3 rounded-xl border border-border bg-card/50 hover:border-primary/50 hover:bg-primary/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >

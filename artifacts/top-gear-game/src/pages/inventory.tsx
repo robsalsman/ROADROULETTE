@@ -56,7 +56,7 @@ export default function Inventory() {
           <div className="space-y-5">
             <div className="rounded-md border border-border bg-card p-4">
               <p className="text-sm font-bold uppercase">Save #{save.id} - {save.playerName ?? "Campaign Driver"}</p>
-              <p className="text-xs text-muted-foreground">Items are persistent and will eventually unlock special event choices.</p>
+              <p className="text-xs text-muted-foreground">Items are persistent and can unlock special event choices during the journey.</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {items.map((item) => (
