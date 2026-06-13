@@ -150,6 +150,19 @@ export const garageApi = {
       method: "PATCH",
       body: JSON.stringify(patch),
     }),
+  awardCredits: (amount: number, reason: string) => jsonFetch<{ profile: GarageProfile; reason: string }>("/api/garage/credits", {
+    method: "POST",
+    body: JSON.stringify({ amount, reason }),
+  }),
+  sellVehicle: (canonicalKey: string) =>
+    jsonFetch<{ sold: OwnedVehicle; saleCredits: number; profile: GarageProfile; garage: GarageResponse }>(`/api/garage/vehicles/${encodeURIComponent(canonicalKey)}`, {
+      method: "DELETE",
+    }),
+  repairVehicle: (canonicalKey: string) =>
+    jsonFetch<{ profile: GarageProfile; vehicle: OwnedVehicle; repairCost: number; garage: GarageResponse }>(`/api/garage/vehicles/${encodeURIComponent(canonicalKey)}/repair`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   saveUpgrades: (canonicalKey: string, upgrades: Upgrades, spent: number, creditsDelta = 0) =>
     jsonFetch<{ profile: GarageProfile; vehicle: OwnedVehicle; garage: GarageResponse }>(`/api/garage/vehicles/${encodeURIComponent(canonicalKey)}/upgrades`, {
       method: "PATCH",

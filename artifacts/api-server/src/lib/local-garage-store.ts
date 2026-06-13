@@ -232,6 +232,30 @@ export const localGarageStore = {
     saveStore(store);
     return store.profile;
   },
+  sellVehicle: (canonicalVehicleKey: string, saleCredits: number) => {
+    const store = loadStore();
+    const vehicle = store.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
+    if (!vehicle) return undefined;
+    store.vehicles = store.vehicles.filter((item) => item.canonicalVehicleKey !== canonicalVehicleKey);
+    if (vehicle.isActive && store.vehicles[0]) store.vehicles[0].isActive = true;
+    store.profile = { ...store.profile, credits: store.profile.credits + saleCredits, updatedAt: now() };
+    saveStore(store);
+    return { vehicle, profile: store.profile };
+  },
+  repairVehicle: (canonicalVehicleKey: string, cost: number) => {
+    const store = loadStore();
+    if (store.profile.credits < cost) return { error: "Not enough credits" as const, profile: store.profile };
+    let updated: GarageVehicle | undefined;
+    store.vehicles = store.vehicles.map((vehicle) => {
+      if (vehicle.canonicalVehicleKey !== canonicalVehicleKey) return vehicle;
+      updated = normalizeVehicle({ ...vehicle, condition: 100, updatedAt: now() });
+      return updated;
+    });
+    if (!updated) return undefined;
+    store.profile = { ...store.profile, credits: store.profile.credits - cost, updatedAt: now() };
+    saveStore(store);
+    return { vehicle: updated, profile: store.profile };
+  },
   recordRace: (entry: Omit<GarageRaceHistory, "id" | "profileId" | "createdAt">) => {
     const store = loadStore();
     const timestamp = now();

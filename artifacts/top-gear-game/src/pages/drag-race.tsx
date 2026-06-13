@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import VehicleSprite from "@/components/VehicleSprite";
 import { garageApi, defaultGarageTuning, ownedToGarageCar, type GarageTuning, type OwnedVehicle } from "@/services/garageApi";
-import { DRAG_OPPONENTS, simulateDragRace, timingScore, type DragOpponent, type DragRaceResult } from "@/game/dragRaceEngine";
+import { opponentsForVehicle, simulateDragRace, timingScore, type DragOpponent, type DragRaceResult } from "@/game/dragRaceEngine";
+import { deriveVehiclePerformance } from "@/data/vehiclePerformance";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -37,8 +38,9 @@ export default function DragRace() {
 
   const garage = garageQuery.data;
   const vehicle = selectVehicle(garage?.vehicles ?? [], requestedVehicle);
-  const [opponentKey, setOpponentKey] = useState(DRAG_OPPONENTS[0].key);
-  const opponent = DRAG_OPPONENTS.find((item) => item.key === opponentKey) ?? DRAG_OPPONENTS[0];
+  const opponents = useMemo(() => opponentsForVehicle(vehicle ? { ...vehicle, tuning: vehicle.tuning ?? defaultGarageTuning } : undefined), [vehicle]);
+  const [opponentKey, setOpponentKey] = useState(opponents[0]?.key ?? "service-road-sleeper");
+  const opponent = opponents.find((item) => item.key === opponentKey) ?? opponents[0];
   const [tuning, setTuning] = useState<GarageTuning>(vehicle?.tuning ?? defaultGarageTuning);
   const [phase, setPhase] = useState<RacePhase>("staging");
   const [needle, setNeedle] = useState(0.35);
@@ -49,6 +51,12 @@ export default function DragRace() {
   useEffect(() => {
     if (vehicle) setTuning(vehicle.tuning ?? defaultGarageTuning);
   }, [vehicle?.canonicalVehicleKey]);
+
+  useEffect(() => {
+    if (!opponents.some((item) => item.key === opponentKey)) {
+      setOpponentKey(opponents[0]?.key ?? "service-road-sleeper");
+    }
+  }, [opponents, opponentKey]);
 
   const saveTuningMutation = useMutation({
     mutationFn: ({ selected, nextTuning }: { selected: OwnedVehicle; nextTuning: GarageTuning }) =>
@@ -148,6 +156,7 @@ export default function DragRace() {
   }
 
   const garageCar = ownedToGarageCar({ ...vehicle, tuning });
+  const vehiclePerformance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
 
   return (
     <div className="flex-1 bg-background p-4 md:p-8">
@@ -194,6 +203,21 @@ export default function DragRace() {
                     <p className="mt-2 text-center text-sm font-black uppercase">Reward CR {opponent.rewardCredits}</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-5">
+                {[
+                  ["HP", vehiclePerformance.horsepower.toLocaleString()],
+                  ["Weight", `${vehiclePerformance.weight.toLocaleString()} lb`],
+                  ["Drive", vehiclePerformance.drivetrain],
+                  ["Tier", vehiclePerformance.tier],
+                  ["Grip", vehiclePerformance.traction.toFixed(1)],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                    <p className="font-black uppercase text-muted-foreground">{label}</p>
+                    <p className="font-mono text-base font-black">{value}</p>
+                  </div>
+                ))}
               </div>
 
               {(phase === "launching" || phase === "shifting") && (
@@ -287,7 +311,7 @@ export default function DragRace() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {DRAG_OPPONENTS.map((item) => (
+                {opponents.map((item) => (
                   <button
                     key={item.key}
                     type="button"

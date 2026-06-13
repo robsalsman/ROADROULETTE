@@ -61,6 +61,21 @@ const raceCompleteSchema = z.object({
   breakdown: z.unknown().optional(),
 });
 
+const creditsSchema = z.object({
+  amount: z.number().int(),
+  reason: z.string().min(1).max(120).default("Garage reward"),
+});
+
+function saleValue(vehicle: typeof ownedVehiclesTable.$inferSelect): number {
+  return Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35 + vehicle.condition * 1.5));
+}
+
+function repairCost(vehicle: typeof ownedVehiclesTable.$inferSelect): number {
+  const missingCondition = Math.max(0, 100 - vehicle.condition);
+  if (missingCondition === 0) return 0;
+  return Math.max(25, Math.ceil(missingCondition * (6 + vehicle.power * 0.7)));
+}
+
 function toBool(value: number | boolean): boolean {
   return value === true || value === 1;
 }
@@ -284,6 +299,26 @@ router.post("/garage/vehicles/buy", async (req, res): Promise<void> => {
   }
 });
 
+router.post("/garage/credits", async (req, res): Promise<void> => {
+  const parsed = creditsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const profile = await ensureProfile();
+    const [updatedProfile] = await db
+      .update(playerProfilesTable)
+      .set({ credits: Math.max(0, profile.credits + parsed.data.amount) })
+      .where(eq(playerProfilesTable.id, profile.id))
+      .returning();
+    res.json({ profile: formatProfile(updatedProfile), reason: parsed.data.reason });
+  } catch {
+    const profile = localGarageStore.changeCredits(parsed.data.amount);
+    res.json({ profile, reason: parsed.data.reason });
+  }
+});
+
 router.patch("/garage/vehicles/:canonicalVehicleKey/active", async (req, res): Promise<void> => {
   const canonicalVehicleKey = req.params.canonicalVehicleKey;
   try {
@@ -335,6 +370,97 @@ router.patch("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise<
       return;
     }
     res.json({ vehicle: updated, garage: localGarageStore.garage() });
+  }
+});
+
+router.delete("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise<void> => {
+  const canonicalVehicleKey = req.params.canonicalVehicleKey;
+  try {
+    const profile = await ensureProfile();
+    const [vehicle] = await db
+      .select()
+      .from(ownedVehiclesTable)
+      .where(and(eq(ownedVehiclesTable.profileId, profile.id), eq(ownedVehiclesTable.canonicalVehicleKey, canonicalVehicleKey)));
+    if (!vehicle) {
+      res.status(404).json({ error: "Vehicle not found" });
+      return;
+    }
+    const creditGain = saleValue(vehicle);
+    await db.delete(ownedVehiclesTable).where(eq(ownedVehiclesTable.id, vehicle.id));
+    const [updatedProfile] = await db
+      .update(playerProfilesTable)
+      .set({ credits: profile.credits + creditGain })
+      .where(eq(playerProfilesTable.id, profile.id))
+      .returning();
+    const remaining = await db.select().from(ownedVehiclesTable).where(eq(ownedVehiclesTable.profileId, profile.id));
+    if (vehicle.isActive && remaining[0]) {
+      await db.update(ownedVehiclesTable).set({ isActive: 1 }).where(eq(ownedVehiclesTable.id, remaining[0].id));
+    }
+    res.json({ sold: formatVehicle(vehicle), saleCredits: creditGain, profile: formatProfile(updatedProfile), garage: await garageResponse() });
+  } catch {
+    const garage = localGarageStore.garage();
+    const vehicle = garage.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
+    if (!vehicle) {
+      res.status(404).json({ error: "Vehicle not found" });
+      return;
+    }
+    const creditGain = Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35 + vehicle.condition * 1.5));
+    const result = localGarageStore.sellVehicle(canonicalVehicleKey, creditGain);
+    res.json({ sold: vehicle, saleCredits: creditGain, profile: result?.profile, garage: localGarageStore.garage() });
+  }
+});
+
+router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Promise<void> => {
+  const canonicalVehicleKey = req.params.canonicalVehicleKey;
+  try {
+    const profile = await ensureProfile();
+    const [vehicle] = await db
+      .select()
+      .from(ownedVehiclesTable)
+      .where(and(eq(ownedVehiclesTable.profileId, profile.id), eq(ownedVehiclesTable.canonicalVehicleKey, canonicalVehicleKey)));
+    if (!vehicle) {
+      res.status(404).json({ error: "Vehicle not found" });
+      return;
+    }
+    const cost = repairCost(vehicle);
+    if (cost <= 0) {
+      res.json({ profile: formatProfile(profile), vehicle: formatVehicle(vehicle), repairCost: 0, garage: await garageResponse() });
+      return;
+    }
+    if (profile.credits < cost) {
+      res.status(400).json({ error: "Not enough credits", repairCost: cost, profile: formatProfile(profile) });
+      return;
+    }
+    const [updatedProfile] = await db
+      .update(playerProfilesTable)
+      .set({ credits: profile.credits - cost })
+      .where(eq(playerProfilesTable.id, profile.id))
+      .returning();
+    const [updated] = await db
+      .update(ownedVehiclesTable)
+      .set({ condition: 100 })
+      .where(eq(ownedVehiclesTable.id, vehicle.id))
+      .returning();
+    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), repairCost: cost, garage: await garageResponse() });
+  } catch {
+    const garage = localGarageStore.garage();
+    const vehicle = garage.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
+    if (!vehicle) {
+      res.status(404).json({ error: "Vehicle not found" });
+      return;
+    }
+    const missingCondition = Math.max(0, 100 - vehicle.condition);
+    const cost = missingCondition === 0 ? 0 : Math.max(25, Math.ceil(missingCondition * (6 + vehicle.power * 0.7)));
+    const result = localGarageStore.repairVehicle(canonicalVehicleKey, cost);
+    if (!result) {
+      res.status(404).json({ error: "Vehicle not found" });
+      return;
+    }
+    if ("error" in result) {
+      res.status(400).json({ ...result, repairCost: cost });
+      return;
+    }
+    res.json({ ...result, repairCost: cost, garage: localGarageStore.garage() });
   }
 });
 

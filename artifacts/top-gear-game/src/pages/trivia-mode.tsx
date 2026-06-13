@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Brain, CheckCircle2, Shuffle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_TRIVIA, triviaByType, type TriviaQuestion } from "@/data/trivia";
+import { garageApi } from "@/services/garageApi";
 import { cn } from "@/lib/utils";
 
 type QuizMode = "mixed" | "episode" | "vehicle" | "mechanics" | "motorsport" | "geography";
@@ -43,6 +44,9 @@ export default function TriviaMode() {
 
   const answer = (index: number) => {
     if (answered) return;
+    if (index === question.answer) {
+      void garageApi.awardCredits(15, "Standalone trivia reward").catch(() => undefined);
+    }
     setSelected(index);
     setScore((prev) => ({
       right: prev.right + (index === question.answer ? 1 : 0),

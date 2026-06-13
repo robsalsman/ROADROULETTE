@@ -1,8 +1,11 @@
 import type { GarageTuning, OwnedVehicle } from "@/services/garageApi";
 import type { Upgrades } from "@/data/garage";
+import { deriveVehiclePerformance, type VehiclePerformance } from "@/data/vehiclePerformance";
+
+type DragVehicle = Pick<OwnedVehicle, "canonicalVehicleKey" | "name" | "reliability" | "power" | "offRoad" | "condition" | "purchasePrice" | "upgrades" | "tuning">;
 
 export type DragRaceInput = {
-  vehicle: Pick<OwnedVehicle, "name" | "reliability" | "power" | "offRoad" | "condition" | "upgrades" | "tuning">;
+  vehicle: DragVehicle;
   opponent: DragOpponent;
   launchScore: number;
   shiftScore: number;
@@ -27,6 +30,8 @@ export type DragRaceResult = {
   breakdown: {
     horsepower: number;
     weight: number;
+    drivetrain: VehiclePerformance["drivetrain"];
+    tier: VehiclePerformance["tier"];
     traction: number;
     launchQuality: number;
     shiftQuality: number;
@@ -37,22 +42,21 @@ export type DragRaceResult = {
 };
 
 export const DRAG_OPPONENTS: DragOpponent[] = [
-  { key: "service-road-sleeper", name: "Service Road Sleeper", power: 5, traction: 5, consistency: 6, rewardCredits: 120 },
-  { key: "runway-local", name: "Runway Local Hero", power: 7, traction: 6, consistency: 7, rewardCredits: 190 },
-  { key: "midnight-special", name: "Midnight Special", power: 9, traction: 8, consistency: 8, rewardCredits: 300 },
+  { key: "service-road-sleeper", name: "Service Road Sleeper", power: 5, traction: 5, consistency: 6, rewardCredits: 140 },
+  { key: "runway-local", name: "Runway Local Hero", power: 7, traction: 6, consistency: 7, rewardCredits: 230 },
+  { key: "midnight-special", name: "Midnight Special", power: 9, traction: 8, consistency: 8, rewardCredits: 380 },
 ];
 
-export function horsepowerFromStats(power: number, upgrades: Upgrades): number {
-  return Math.round(95 + power * 48 + (upgrades.engine ?? 0) * 58 + (upgrades.fuel ?? 0) * 16);
-}
-
-export function weightFromStats(offRoad: number, upgrades: Upgrades): number {
-  const base = 3300 + offRoad * 105;
-  return Math.max(1800, Math.round(base - (upgrades.bodywork ?? 0) * 70 - (upgrades.sponsor ?? 0) * 25));
-}
-
-export function tractionFromStats(reliability: number, offRoad: number, upgrades: Upgrades): number {
-  return Math.min(10, reliability * 0.35 + offRoad * 0.25 + (upgrades.tyres ?? 0) * 1.2 + (upgrades.suspension ?? 0) * 0.8);
+export function opponentsForVehicle(vehicle?: DragVehicle): DragOpponent[] {
+  if (!vehicle) return DRAG_OPPONENTS;
+  const perf = deriveVehiclePerformance(vehicle, vehicle.upgrades ?? {});
+  const multiplier = perf.tier === "Supercar" ? 1.75 : perf.tier === "Pro" ? 1.35 : perf.tier === "Chaos" ? 1.45 : perf.tier === "Club" ? 1.15 : 1;
+  return DRAG_OPPONENTS.map((opponent, index) => ({
+    ...opponent,
+    rewardCredits: Math.round(opponent.rewardCredits * multiplier),
+    power: Math.min(10, opponent.power + (perf.tier === "Supercar" ? 1 : index === 2 ? 1 : 0)),
+    traction: Math.min(10, opponent.traction + (perf.drivetrain === "Boat" ? -1 : 0) + (perf.tier === "Supercar" ? 1 : 0)),
+  }));
 }
 
 function tuningBonus(tuning: GarageTuning): number {
@@ -66,19 +70,22 @@ function tuningBonus(tuning: GarageTuning): number {
 export function simulateDragRace(input: DragRaceInput): DragRaceResult {
   const upgrades = input.vehicle.upgrades ?? {};
   const tuning = input.vehicle.tuning;
-  const hp = horsepowerFromStats(input.vehicle.power, upgrades);
-  const weight = weightFromStats(input.vehicle.offRoad, upgrades);
-  const traction = tractionFromStats(input.vehicle.reliability, input.vehicle.offRoad, upgrades);
+  const perf = deriveVehiclePerformance(input.vehicle, upgrades);
+  const hp = perf.horsepower;
+  const weight = perf.weight;
+  const traction = perf.traction;
   const launchQuality = Math.max(0, Math.min(1, input.launchScore));
   const shiftQuality = Math.max(0, Math.min(1, input.shiftScore));
   const conditionPenalty = Math.max(0, (100 - input.vehicle.condition) / 100);
   const tune = tuningBonus(tuning);
 
   const powerToWeight = hp / weight;
-  const playerBase = 13.8 - powerToWeight * 17 - traction * 0.12;
-  const skillBonus = launchQuality * 0.72 + shiftQuality * 0.58 + tune * 0.38;
+  const drivetrainLaunch = perf.drivetrain === "AWD" || perf.drivetrain === "4x4" ? 0.22 : perf.drivetrain === "FWD" ? 0.08 : perf.drivetrain === "Boat" ? -0.35 : 0;
+  const playerBase = 14.3 - powerToWeight * 19 - traction * 0.14 - drivetrainLaunch;
+  const skillBonus = launchQuality * 0.82 + shiftQuality * 0.64 + tune * 0.42;
   const reactionPenalty = Math.max(0, input.reactionMs - 180) / 1000;
-  const elapsed = Math.max(7.1, playerBase - skillBonus + conditionPenalty * 1.2 + reactionPenalty);
+  const chaosPenalty = perf.tier === "Chaos" ? 0.45 : 0;
+  const elapsed = Math.max(6.6, playerBase - skillBonus + conditionPenalty * 1.3 + reactionPenalty + chaosPenalty);
 
   const opponentPowerToWeight = (120 + input.opponent.power * 50) / (3300 - input.opponent.power * 45);
   const opponentBase = 13.9 - opponentPowerToWeight * 16 - input.opponent.traction * 0.1;
@@ -86,7 +93,7 @@ export function simulateDragRace(input: DragRaceInput): DragRaceResult {
 
   const elapsedMs = Math.round(elapsed * 1000);
   const opponentElapsedMs = Math.round(opponentElapsed * 1000);
-  const trapSpeed = Math.round(78 + powerToWeight * 420 + shiftQuality * 9 - conditionPenalty * 10);
+  const trapSpeed = Math.round(76 + powerToWeight * 455 + shiftQuality * 10 - conditionPenalty * 11);
   const won = elapsedMs < opponentElapsedMs;
 
   return {
@@ -98,6 +105,8 @@ export function simulateDragRace(input: DragRaceInput): DragRaceResult {
     breakdown: {
       horsepower: hp,
       weight,
+      drivetrain: perf.drivetrain,
+      tier: perf.tier,
       traction: Math.round(traction * 10) / 10,
       launchQuality: Math.round(launchQuality * 100),
       shiftQuality: Math.round(shiftQuality * 100),

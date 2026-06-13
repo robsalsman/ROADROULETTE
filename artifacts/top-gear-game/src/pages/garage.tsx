@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap } from "lucide-react";
+import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +24,7 @@ import {
   type GarageResponse,
   type OwnedVehicle,
 } from "@/services/garageApi";
+import { deriveVehiclePerformance, repairCostForVehicle, saleValueForVehicle } from "@/data/vehiclePerformance";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -110,6 +111,16 @@ export default function Garage() {
     onSuccess: refreshGarage,
   });
 
+  const repairMutation = useMutation({
+    mutationFn: (vehicle: OwnedVehicle) => garageApi.repairVehicle(vehicle.canonicalVehicleKey),
+    onSuccess: refreshGarage,
+  });
+
+  const sellMutation = useMutation({
+    mutationFn: (vehicle: OwnedVehicle) => garageApi.sellVehicle(vehicle.canonicalVehicleKey),
+    onSuccess: refreshGarage,
+  });
+
   const garage = garageQuery.data;
   const vehicles = garage?.vehicles ?? [];
   const activeVehicle = vehicles.find((vehicle) => vehicle.isActive) ?? vehicles[0];
@@ -179,6 +190,41 @@ export default function Garage() {
     }
   };
 
+  const repairCar = async (vehicle: OwnedVehicle) => {
+    const cost = repairCostForVehicle(vehicle);
+    if (!garage || cost <= 0) return;
+    if (cost > garage.profile.credits) {
+      toast({ title: "Not enough credits", description: `Repair needs CR ${cost}.`, variant: "destructive" });
+      return;
+    }
+    setWorking(`${vehicle.canonicalVehicleKey}-repair`);
+    try {
+      await repairMutation.mutateAsync(vehicle);
+      toast({ title: "Vehicle repaired", description: `${vehicle.year} ${vehicle.name} is back at 100% condition.` });
+    } catch {
+      toast({ title: "Repair failed", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  const sellCar = async (vehicle: OwnedVehicle) => {
+    if (vehicles.length <= 1) {
+      toast({ title: "Keep one vehicle", description: "The garage needs at least one car ready to go.", variant: "destructive" });
+      return;
+    }
+    if (!window.confirm(`Sell ${vehicle.year} ${vehicle.name} for CR ${saleValueForVehicle(vehicle)}?`)) return;
+    setWorking(`${vehicle.canonicalVehicleKey}-sell`);
+    try {
+      await sellMutation.mutateAsync(vehicle);
+      toast({ title: "Vehicle sold", description: `CR ${saleValueForVehicle(vehicle)} added to your profile.` });
+    } catch {
+      toast({ title: "Sale failed", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
   return (
     <div className="flex-1 p-6 md:p-12">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -243,6 +289,9 @@ export default function Garage() {
                 const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
                 const key = vehicle.canonicalVehicleKey;
                 const isExpanded = expanded === key;
+                const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+                const repairCost = repairCostForVehicle(vehicle);
+                const saleValue = saleValueForVehicle(vehicle);
 
                 return (
                   <Card key={key} className={cn("flex flex-col border-2", vehicle.isActive ? "border-primary" : "border-transparent")}>
@@ -280,6 +329,21 @@ export default function Garage() {
                           <p className="font-bold uppercase text-muted-foreground">Upgrade Spend</p>
                           <p className="font-mono text-lg font-black">CR {vehicle.upgradeSpend}</p>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
+                        {[
+                          ["HP", performance.horsepower.toLocaleString()],
+                          ["Weight", `${performance.weight.toLocaleString()} lb`],
+                          ["Drive", performance.drivetrain],
+                          ["Tier", performance.tier],
+                          ["Traction", performance.traction.toFixed(1)],
+                          ["Resale", `CR ${saleValue}`],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                            <p className="font-bold uppercase text-muted-foreground">{label}</p>
+                            <p className="font-mono text-sm font-black">{value}</p>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex items-center gap-2">
                         <Paintbrush className="h-4 w-4 text-muted-foreground" />
@@ -364,6 +428,24 @@ export default function Garage() {
                         onClick={() => setActiveCar(vehicle)}
                       >
                         <Settings2 className="mr-2 h-4 w-4" /> Select
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 uppercase font-bold"
+                        disabled={repairCost <= 0 || working === `${vehicle.canonicalVehicleKey}-repair`}
+                        onClick={() => repairCar(vehicle)}
+                        data-testid={`button-repair-${key}`}
+                      >
+                        <Wrench className="mr-2 h-4 w-4" /> {repairCost > 0 ? `Repair CR ${repairCost}` : "Repaired"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 uppercase font-bold"
+                        disabled={vehicles.length <= 1 || working === `${vehicle.canonicalVehicleKey}-sell`}
+                        onClick={() => sellCar(vehicle)}
+                        data-testid={`button-sell-${key}`}
+                      >
+                        <BadgeDollarSign className="mr-2 h-4 w-4" /> Sell CR {saleValue}
                       </Button>
                       <Link href={`/drag-race?vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`}>
                         <Button variant="outline" size="icon" aria-label={`Drag race ${vehicle.name}`}>

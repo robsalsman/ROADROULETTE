@@ -32,6 +32,7 @@ import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
 import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
 import { vehicleTopDownSprite } from "@/data/vehicles";
+import { garageApi } from "@/services/garageApi";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy, Backpack, Clock } from "lucide-react";
 
 // ── Upgrade helpers ───────────────────────────────────────────────────────────
@@ -209,6 +210,12 @@ export default function Game() {
     query: { queryKey: getListMissionsQueryKey(), enabled: !!isSeries },
   });
   const stagesList = [...(missionsList ?? [])].sort((a, b) => a.id - b.id);
+
+  const awardGarageCredits = useCallback((amount: number, reason: string) => {
+    const credits = Math.round(amount);
+    if (credits <= 0) return;
+    void garageApi.awardCredits(credits, reason).catch(() => undefined);
+  }, []);
 
   const findActiveGarageCar = useCallback((): GarageCar | undefined => {
     if (!saveId || !save?.carId) return undefined;
@@ -392,6 +399,7 @@ export default function Game() {
       const cumulative = priorDistRef.current + TRIP_KM;
       recordCompletedEpisode(save.id, save.missionId);
       addPlayerXp(save.id, 100, save.playerName ?? displayName);
+      awardGarageCredits(175 + Math.max(0, save.seriesStageIndex ?? 0) * 5, `Episode ${save.missionId} completed`);
 
       if (next) {
         try {
@@ -434,7 +442,7 @@ export default function Game() {
       });
     } catch { /* silent */ }
     setTimeout(() => setLocation(`/results/${save.id}`), 1500);
-  }, [save, isSeries, stagesList, updateSave, food, parts, setLocation, displayName]);
+  }, [save, isSeries, stagesList, updateSave, food, parts, setLocation, displayName, awardGarageCredits]);
 
   // ── Shared advance resolver (challenge / press on / trivia) ────────────────
   const resolveAdvance = useCallback(async (opts: {
@@ -544,6 +552,7 @@ export default function Game() {
         toast({ title: "Inventory updated", description: inventoryNotes.join(" | ") });
       }
       if (isSeries) recordDrivingChallenge(save.id);
+      if (isSeries) awardGarageCredits(Math.max(30, Math.round(Math.max(0, earnings) * 0.5)), "Driving challenge reward");
       void recordEvent.mutateAsync({
         saveId: save.id,
         data: {
@@ -581,6 +590,7 @@ export default function Game() {
       return;
     }
     if (isSeries && save) recordDrivingChallenge(save.id);
+    if (isSeries) awardGarageCredits(Math.max(25, Math.round(Math.max(0, earnings) * 0.5)), "Driving challenge reward");
     void resolveAdvance({
       earnings,
       condDelta,
@@ -605,10 +615,11 @@ export default function Game() {
         tone: condDelta < 0 ? "mocking" : "impressed",
       },
     });
-  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice, applyInventoryEffects]);
+  }, [adventureDrive, save, recordEvent, resolveAdvance, displayName, isSeries, timeForChoice, applyInventoryEffects, awardGarageCredits]);
 
   const handleSlalomComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
     if (isSeries && save) recordDrivingChallenge(save.id);
+    if (isSeries) awardGarageCredits(Math.max(30, Math.round(Math.max(0, earnings) * 0.5)), "Slalom challenge reward");
     void resolveAdvance({
       earnings,
       condDelta,
@@ -634,7 +645,7 @@ export default function Game() {
         tone: condDelta < -15 ? "mocking" : "impressed",
       },
     });
-  }, [displayName, isSeries, resolveAdvance, save]);
+  }, [displayName, isSeries, resolveAdvance, save, awardGarageCredits]);
 
   // ── Press On: free advance that costs fuel + wear ──────────────────────────
   const handlePressOn = useCallback(() => {
@@ -677,6 +688,7 @@ export default function Game() {
     setTriviaResult(correct ? "correct" : "wrong");
     const km = correct ? 60 : 25;
     const earnings = correct ? 50 : 0;
+    if (correct) awardGarageCredits(isSeries ? 35 : 15, "Trivia reward");
     setTimeout(() => {
       setTrivia(null);
       setTriviaResult(null);
@@ -708,7 +720,7 @@ export default function Game() {
       });
       setTriviaSource("manual");
     }, 1100);
-  }, [trivia, triviaResult, resolveAdvance, displayName, isSeries, save, triviaSource]);
+  }, [trivia, triviaResult, resolveAdvance, displayName, isSeries, save, triviaSource, awardGarageCredits]);
 
   const handleNavigationChoice = useCallback(async (choice: EventChoice) => {
     if (!save || !mission || resolving) return;
