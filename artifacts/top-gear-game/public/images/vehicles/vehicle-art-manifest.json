@@ -3605,8 +3605,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/mitsubishi-lancer-evolution-viii.png",
       "topDownIcon": "/images/vehicles/unique/top/mitsubishi-lancer-evolution-viii.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3629,8 +3629,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/subaru-impreza-wrx-sti.png",
       "topDownIcon": "/images/vehicles/unique/top/subaru-impreza-wrx-sti.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3653,8 +3653,8 @@
       "bodyStyle": "pickup",
       "sideIcon": "/images/vehicles/unique/side/chevrolet-ssr.png",
       "topDownIcon": "/images/vehicles/unique/top/chevrolet-ssr.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3677,8 +3677,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/crosley-cc-convertible.png",
       "topDownIcon": "/images/vehicles/unique/top/crosley-cc-convertible.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3701,8 +3701,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/ford-popular-hot-rod.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-popular-hot-rod.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3725,8 +3725,8 @@
       "bodyStyle": "roadable-aircraft",
       "sideIcon": "/images/vehicles/unique/side/klein-vision-aircar.png",
       "topDownIcon": "/images/vehicles/unique/top/klein-vision-aircar.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [
         "Create both roadable-car and folded-wing cues so it reads as the AirCar."
       ],
@@ -3751,8 +3751,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/mitsuoka-le-seyde.png",
       "topDownIcon": "/images/vehicles/unique/top/mitsuoka-le-seyde.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3775,8 +3775,8 @@
       "bodyStyle": "hypercar",
       "sideIcon": "/images/vehicles/unique/side/praga-bohema.png",
       "topDownIcon": "/images/vehicles/unique/top/praga-bohema.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3799,8 +3799,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/skoda-1100-ohc.png",
       "topDownIcon": "/images/vehicles/unique/top/skoda-1100-ohc.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3823,8 +3823,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/aston-martin-db9-volante.png",
       "topDownIcon": "/images/vehicles/unique/top/aston-martin-db9-volante.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3847,8 +3847,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/jaguar-f-type.png",
       "topDownIcon": "/images/vehicles/unique/top/jaguar-f-type.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3871,8 +3871,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/maserati-grancabrio.png",
       "topDownIcon": "/images/vehicles/unique/top/maserati-grancabrio.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-13-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
