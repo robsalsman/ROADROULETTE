@@ -3895,8 +3895,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/ford-capri-gxl.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-capri-gxl.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3919,8 +3919,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/lancia-beta-coupe.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-beta-coupe.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3943,8 +3943,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/lancia-montecarlo.png",
       "topDownIcon": "/images/vehicles/unique/top/lancia-montecarlo.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3967,8 +3967,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/mercedes-benz-230e.png",
       "topDownIcon": "/images/vehicles/unique/top/mercedes-benz-230e.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3991,8 +3991,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/rover-sd1.png",
       "topDownIcon": "/images/vehicles/unique/top/rover-sd1.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -4015,8 +4015,8 @@
       "bodyStyle": "convertible",
       "sideIcon": "/images/vehicles/unique/side/triumph-stag.png",
       "topDownIcon": "/images/vehicles/unique/top/triumph-stag.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -4039,8 +4039,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/volkswagen-new-beetle.png",
       "topDownIcon": "/images/vehicles/unique/top/volkswagen-new-beetle.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-14-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
