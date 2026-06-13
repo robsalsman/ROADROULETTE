@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign } from "lucide-react";
+import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign, GitCompare, ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -43,6 +43,9 @@ const PAINT_SWATCHES = [
   "#111827",
 ] as const;
 
+type GarageSort = "active" | "power" | "value" | "condition" | "wins" | "name";
+type GarageFilter = "all" | "active" | "upgraded" | "needs-work";
+
 function garageSaveIds(): number[] {
   const ids: number[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -74,6 +77,9 @@ export default function Garage() {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [working, setWorking] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<GarageSort>("active");
+  const [filterMode, setFilterMode] = useState<GarageFilter>("all");
+  const [compareKeys, setCompareKeys] = useState<[string | null, string | null]>([null, null]);
 
   const garageQuery = useQuery({
     queryKey: GARAGE_QUERY_KEY,
@@ -124,13 +130,53 @@ export default function Garage() {
   const garage = garageQuery.data;
   const vehicles = garage?.vehicles ?? [];
   const activeVehicle = vehicles.find((vehicle) => vehicle.isActive) ?? vehicles[0];
+  const raceHistory = garage?.raceHistory ?? [];
 
   const stats = useMemo(() => {
     const totalValue = vehicles.reduce((total, vehicle) => total + Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35)), 0);
     const upgradedCars = vehicles.filter((vehicle) => Object.keys(vehicle.upgrades).length > 0).length;
-    const raceWins = (garage?.raceHistory ?? []).filter((race) => race.won).length;
+    const raceWins = raceHistory.filter((race) => race.won).length;
     return { totalValue, upgradedCars, raceWins };
-  }, [garage?.raceHistory, vehicles]);
+  }, [raceHistory, vehicles]);
+
+  const vehicleRows = useMemo(() => {
+    return vehicles.map((vehicle) => {
+      const garageCar = ownedToGarageCar(vehicle);
+      const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
+      const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+      const vehicleRaces = raceHistory.filter((race) => race.canonicalVehicleKey === vehicle.canonicalVehicleKey);
+      const wins = vehicleRaces.filter((race) => race.won).length;
+      const bestEt = vehicleRaces.length > 0 ? Math.min(...vehicleRaces.map((race) => race.elapsedMs)) : null;
+      const saleValue = saleValueForVehicle(vehicle);
+      const repairCost = repairCostForVehicle(vehicle);
+      return { vehicle, garageCar, adjusted, performance, races: vehicleRaces.length, wins, bestEt, saleValue, repairCost };
+    });
+  }, [raceHistory, vehicles]);
+
+  const visibleRows = useMemo(() => {
+    const filtered = vehicleRows.filter(({ vehicle }) => {
+      if (filterMode === "active") return vehicle.isActive;
+      if (filterMode === "upgraded") return Object.keys(vehicle.upgrades).length > 0;
+      if (filterMode === "needs-work") return vehicle.condition < 85;
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (sortMode === "power") return b.performance.horsepower - a.performance.horsepower;
+      if (sortMode === "value") return b.saleValue - a.saleValue;
+      if (sortMode === "condition") return b.vehicle.condition - a.vehicle.condition;
+      if (sortMode === "wins") return b.wins - a.wins;
+      if (sortMode === "name") return `${a.vehicle.year} ${a.vehicle.name}`.localeCompare(`${b.vehicle.year} ${b.vehicle.name}`);
+      return Number(b.vehicle.isActive) - Number(a.vehicle.isActive) || b.vehicle.updatedAt.localeCompare(a.vehicle.updatedAt);
+    });
+  }, [filterMode, sortMode, vehicleRows]);
+
+  const comparisonRows = useMemo(() => {
+    const firstKey = compareKeys[0] ?? activeVehicle?.canonicalVehicleKey ?? vehicles[0]?.canonicalVehicleKey ?? null;
+    const secondKey = compareKeys[1] ?? vehicles.find((vehicle) => vehicle.canonicalVehicleKey !== firstKey)?.canonicalVehicleKey ?? null;
+    return [firstKey, secondKey]
+      .map((key) => vehicleRows.find((row) => row.vehicle.canonicalVehicleKey === key))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
+  }, [activeVehicle?.canonicalVehicleKey, compareKeys, vehicleRows, vehicles]);
 
   const repaintCar = async (vehicle: OwnedVehicle, paintColor: string) => {
     setWorking(`${vehicle.canonicalVehicleKey}-paint`);
@@ -283,15 +329,96 @@ export default function Garage() {
               ))}
             </div>
 
+            <div className="grid gap-3 rounded-md border border-border bg-card p-4 lg:grid-cols-[1fr_1.4fr]">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ListFilter className="h-5 w-5 text-primary" />
+                  <h3 className="font-black uppercase">Garage Controls</h3>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs font-black uppercase text-muted-foreground">
+                    Sort
+                    <select
+                      value={sortMode}
+                      onChange={(event) => setSortMode(event.target.value as GarageSort)}
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-bold text-foreground"
+                      data-testid="select-garage-sort"
+                    >
+                      <option value="active">Active first</option>
+                      <option value="power">Horsepower</option>
+                      <option value="value">Resale value</option>
+                      <option value="condition">Condition</option>
+                      <option value="wins">Race wins</option>
+                      <option value="name">Name</option>
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-xs font-black uppercase text-muted-foreground">
+                    Filter
+                    <select
+                      value={filterMode}
+                      onChange={(event) => setFilterMode(event.target.value as GarageFilter)}
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-bold text-foreground"
+                      data-testid="select-garage-filter"
+                    >
+                      <option value="all">All vehicles</option>
+                      <option value="active">Active vehicle</option>
+                      <option value="upgraded">Upgraded</option>
+                      <option value="needs-work">Needs work</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <GitCompare className="h-5 w-5 text-primary" />
+                  <h3 className="font-black uppercase">Compare</h3>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {[0, 1].map((index) => (
+                    <select
+                      key={index}
+                      value={comparisonRows[index]?.vehicle.canonicalVehicleKey ?? ""}
+                      onChange={(event) => {
+                        const next: [string | null, string | null] = [...compareKeys];
+                        next[index] = event.target.value || null;
+                        setCompareKeys(next);
+                      }}
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-bold"
+                      data-testid={`select-compare-${index + 1}`}
+                    >
+                      {vehicles.map((vehicle) => (
+                        <option key={vehicle.canonicalVehicleKey} value={vehicle.canonicalVehicleKey}>
+                          {vehicle.year} {vehicle.name}
+                        </option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
+                {comparisonRows.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {comparisonRows.map((row) => (
+                      <div key={row.vehicle.canonicalVehicleKey} className="rounded-md border border-border bg-muted/20 p-2">
+                        <p className="truncate font-black uppercase">{row.vehicle.year} {row.vehicle.name}</p>
+                        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono">
+                          <span>HP {row.performance.horsepower}</span>
+                          <span>{row.performance.drivetrain}</span>
+                          <span>CR {row.saleValue}</span>
+                          <span>{row.vehicle.condition}%</span>
+                          <span>{row.wins}/{row.races} wins</span>
+                          <span>{row.bestEt ? formatTime(row.bestEt) : "no ET"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {vehicles.map((vehicle) => {
-                const garageCar = ownedToGarageCar(vehicle);
-                const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
+              {visibleRows.map(({ vehicle, garageCar, adjusted, performance, races, wins, bestEt, saleValue, repairCost }) => {
                 const key = vehicle.canonicalVehicleKey;
                 const isExpanded = expanded === key;
-                const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
-                const repairCost = repairCostForVehicle(vehicle);
-                const saleValue = saleValueForVehicle(vehicle);
 
                 return (
                   <Card key={key} className={cn("flex flex-col border-2", vehicle.isActive ? "border-primary" : "border-transparent")}>
@@ -328,6 +455,20 @@ export default function Garage() {
                         <div className="rounded-md border border-border bg-muted/20 p-2">
                           <p className="font-bold uppercase text-muted-foreground">Upgrade Spend</p>
                           <p className="font-mono text-lg font-black">CR {vehicle.upgradeSpend}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-bold uppercase text-muted-foreground">Record</p>
+                          <p className="font-mono text-sm font-black">{wins}/{races}</p>
+                        </div>
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-bold uppercase text-muted-foreground">Best ET</p>
+                          <p className="font-mono text-sm font-black">{bestEt ? formatTime(bestEt) : "None"}</p>
+                        </div>
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-bold uppercase text-muted-foreground">Active</p>
+                          <p className="font-mono text-sm font-black">{vehicle.isActive ? "Yes" : "No"}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
