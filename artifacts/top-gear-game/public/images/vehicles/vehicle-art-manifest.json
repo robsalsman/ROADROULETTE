@@ -3317,8 +3317,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/dodge-charger-r-t.png",
       "topDownIcon": "/images/vehicles/unique/top/dodge-charger-r-t.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3341,8 +3341,8 @@
       "bodyStyle": "muscle-car",
       "sideIcon": "/images/vehicles/unique/side/ford-shelby-mustang-gt500.png",
       "topDownIcon": "/images/vehicles/unique/top/ford-shelby-mustang-gt500.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3365,8 +3365,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/lincoln-continental-mark-v.png",
       "topDownIcon": "/images/vehicles/unique/top/lincoln-continental-mark-v.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3389,8 +3389,8 @@
       "bodyStyle": "suv",
       "sideIcon": "/images/vehicles/unique/side/pontiac-aztek.png",
       "topDownIcon": "/images/vehicles/unique/top/pontiac-aztek.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3413,8 +3413,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/citroen-berlingo.png",
       "topDownIcon": "/images/vehicles/unique/top/citroen-berlingo.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3437,8 +3437,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/citroen-cx-safari.png",
       "topDownIcon": "/images/vehicles/unique/top/citroen-cx-safari.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3461,8 +3461,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/citroen-sm.png",
       "topDownIcon": "/images/vehicles/unique/top/citroen-sm.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3485,8 +3485,8 @@
       "bodyStyle": "sports-or-gt",
       "sideIcon": "/images/vehicles/unique/side/matra-murena.png",
       "topDownIcon": "/images/vehicles/unique/top/matra-murena.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3509,8 +3509,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/peugeot-407.png",
       "topDownIcon": "/images/vehicles/unique/top/peugeot-407.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3533,8 +3533,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/renault-avantime.png",
       "topDownIcon": "/images/vehicles/unique/top/renault-avantime.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3557,8 +3557,8 @@
       "bodyStyle": "saloon-or-coupe",
       "sideIcon": "/images/vehicles/unique/side/renault-scenic.png",
       "topDownIcon": "/images/vehicles/unique/top/renault-scenic.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
@@ -3581,8 +3581,8 @@
       "bodyStyle": "rally-or-hot-hatch",
       "sideIcon": "/images/vehicles/unique/side/audi-rs4.png",
       "topDownIcon": "/images/vehicles/unique/top/audi-rs4.png",
-      "referenceStatus": "pending-research",
-      "artStatus": "pending",
+      "referenceStatus": "batch-12-researched",
+      "artStatus": "side-and-top-generated",
       "notes": [],
       "appearances": [
         {
