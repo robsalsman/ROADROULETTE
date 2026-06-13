@@ -73,6 +73,27 @@ const TRIP_KM = 500;
 type GameMode = "loading" | "hub" | "driving" | "slalom" | "gameover";
 type TurnPhase = "navigation" | "road-event" | "advance";
 
+const TURN_PHASES: Array<{ id: TurnPhase; label: string; desc: string }> = [
+  { id: "navigation", label: "Route", desc: "Pick the way forward" },
+  { id: "road-event", label: "Event", desc: "Deal with what happens" },
+  { id: "advance", label: "Payoff", desc: "Minigame, quiz, or press on" },
+];
+
+const TURN_PHASE_COPY: Record<TurnPhase, { title: string; detail: string }> = {
+  navigation: {
+    title: "Route planning",
+    detail: "The trio are proposing different ways forward. Choose one in the group chat; the choice creates the next road event.",
+  },
+  "road-event": {
+    title: "Road event",
+    detail: "Something has happened on the route. Pick how the party handles it, then the consequence lands.",
+  },
+  advance: {
+    title: "Next push",
+    detail: "The immediate trouble is settled. Choose the payoff: playable challenge, pub quiz, or press on to start the next loop.",
+  },
+};
+
 interface MechanicOffer {
   label: string;
   desc: string;
@@ -232,8 +253,22 @@ export default function Game() {
   const syncActiveVehicleCondition = useCallback((nextCondition: number) => {
     const activeCar = findActiveGarageCar();
     if (!activeCar) return;
-    const canonicalKey = canonicalVehicleKey(activeCar.name);
-    void garageApi.patchVehicle(canonicalKey, { condition: Math.max(0, Math.min(100, Math.round(nextCondition))) }).catch(() => undefined);
+    const localKey =
+      (activeCar as GarageCar & { canonicalVehicleKey?: string; canonicalKey?: string }).canonicalVehicleKey ??
+      (activeCar as GarageCar & { canonicalVehicleKey?: string; canonicalKey?: string }).canonicalKey ??
+      canonicalVehicleKey(activeCar.name);
+    const conditionPatch = Math.max(0, Math.min(100, Math.round(nextCondition)));
+    void garageApi.getGarage()
+      .then((garage) => {
+        const owned = garage.vehicles.find((vehicle) =>
+          vehicle.canonicalVehicleKey === localKey ||
+          canonicalVehicleKey(vehicle.name) === localKey ||
+          vehicle.sourceCarId === activeCar.id
+        );
+        if (!owned) return;
+        return garageApi.patchVehicle(owned.canonicalVehicleKey, { condition: conditionPatch });
+      })
+      .catch(() => undefined);
   }, [findActiveGarageCar]);
 
   // Initialise from save data
@@ -324,6 +359,7 @@ export default function Game() {
         ? forwardPrompt
         : pendingEvent
     : pendingEvent;
+  const activeTurnCopy = TURN_PHASE_COPY[turnPhase];
 
   // ── Persist progress to server ─────────────────────────────────────────────
   const persistProgress = useCallback(async (
@@ -1224,6 +1260,7 @@ export default function Game() {
             stats={{ condition, fuel, progressPct }}
             reactTo={chatReact}
             adventureEvent={activeAdventurePrompt}
+            adventurePhase={isSeries ? turnPhase : "road-event"}
             resolvingAdventure={resolving}
             saveId={save.id}
             getAdventureChoiceDisabledReason={getChoiceDisabledReason}
@@ -1260,6 +1297,36 @@ export default function Game() {
               </div>
               <p className="text-[10px] text-muted-foreground">{mission.title}</p>
             </div>
+
+            {isSeries && (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Quest loop</p>
+                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                  {TURN_PHASES.map((phase, index) => {
+                    const active = phase.id === turnPhase;
+                    const complete =
+                      (turnPhase === "road-event" && phase.id === "navigation") ||
+                      (turnPhase === "advance" && phase.id !== "advance");
+                    return (
+                      <div
+                        key={phase.id}
+                        className={`rounded-lg border px-2 py-2 ${
+                          active
+                            ? "border-primary bg-primary/15 text-foreground"
+                            : complete
+                              ? "border-green-500/40 bg-green-500/10 text-green-200"
+                              : "border-border bg-background/40 text-muted-foreground"
+                        }`}
+                      >
+                        <p className="text-[9px] font-mono font-black">{index + 1}</p>
+                        <p className="text-[10px] font-black uppercase leading-tight">{phase.label}</p>
+                        <p className="mt-0.5 text-[9px] leading-tight opacity-80">{phase.desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {lastOutcome && (
               <div className={`rounded-xl border p-3 ${
@@ -1393,10 +1460,10 @@ export default function Game() {
               {isSeries ? (
                 <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {turnPhase === "navigation" ? "Route planning" : turnPhase === "road-event" ? "Road event" : "Next push"}
+                    {activeTurnCopy.title}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    The trio have put the next move in the group chat. Pick one of their proposals to continue the journey.
+                    {activeTurnCopy.detail}
                   </p>
                 </div>
               ) : (

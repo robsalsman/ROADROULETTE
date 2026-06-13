@@ -26,6 +26,7 @@ interface GroupChatProps {
   stats?: ChatStats;
   reactTo?: { id: string; context: string; tone?: string } | null;
   adventureEvent?: RoadEventTemplate | null;
+  adventurePhase?: "navigation" | "road-event" | "advance";
   resolvingAdventure?: boolean;
   saveId?: string | number;
   onAdventureChoice?: (choice: EventChoice) => void;
@@ -102,6 +103,13 @@ function choicePromptFor(event: RoadEventTemplate) {
   return "Handle the road event";
 }
 
+function phaseLabelFor(phase?: GroupChatProps["adventurePhase"]) {
+  if (phase === "navigation") return "Step 1 of 3 - Pick the route";
+  if (phase === "road-event") return "Step 2 of 3 - Handle the trouble";
+  if (phase === "advance") return "Step 3 of 3 - Choose the payoff";
+  return "Quest choice";
+}
+
 const WELCOME: ChatMessage = {
   id: "welcome",
   character: "james",
@@ -150,6 +158,7 @@ export default function GroupChat({
   stats,
   reactTo,
   adventureEvent,
+  adventurePhase,
   resolvingAdventure = false,
   saveId,
   onAdventureChoice,
@@ -359,6 +368,22 @@ export default function GroupChat({
     [streamBanter],
   );
 
+  const chooseAdventure = useCallback((choice: EventChoice) => {
+    if (resolvingAdventure || sending) return;
+    const player = playerCharRef.current;
+    setMessages((prev) => [
+      ...prev.slice(-50),
+      {
+        id: `choice-${choice.id}-${Date.now()}`,
+        character: player,
+        name: playerNameRef.current,
+        text: choice.label,
+        isPlayer: true,
+      },
+    ]);
+    onAdventureChoice?.(choice);
+  }, [onAdventureChoice, resolvingAdventure, sending]);
+
   // Proactive, character-initiated chatter on a timer.
   useEffect(() => {
     const fireChatter = () => {
@@ -449,8 +474,9 @@ export default function GroupChat({
             className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2"
           >
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary">{choicePromptFor(adventureEvent)}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary">{phaseLabelFor(adventurePhase)}</p>
               <h3 className="text-sm font-black uppercase leading-tight">{adventureEvent.title}</h3>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{choicePromptFor(adventureEvent)}</p>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {adventureEvent.choices.map((choice, index) => {
@@ -471,7 +497,7 @@ export default function GroupChat({
                   <button
                     key={choice.id}
                     disabled={resolvingAdventure || sending || !!disabledReason}
-                    onClick={() => onAdventureChoice?.(choice)}
+                    onClick={() => chooseAdventure(choice)}
                     className={`w-full text-left px-3 py-2 rounded-lg border bg-card/70 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed ${RISK_COLORS[choice.risk]}`}
                   >
                     <div className="flex items-start gap-2">

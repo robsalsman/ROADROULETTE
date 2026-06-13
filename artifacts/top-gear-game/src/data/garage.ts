@@ -101,10 +101,13 @@ export function loadUpgradeSpend(saveId: string | number, carId: string | number
 }
 
 export function adjustedCarStats(car: Pick<GarageCar, "reliability" | "power" | "offRoad">, upgrades: Upgrades) {
+  const reliability = Number.isFinite(car.reliability) ? car.reliability : 6;
+  const power = Number.isFinite(car.power) ? car.power : 5;
+  const offRoad = Number.isFinite(car.offRoad) ? car.offRoad : 5;
   return {
-    reliability: Math.min(10, car.reliability + (upgrades.bodywork ?? 0) + Math.floor((upgrades.fuel ?? 0) / 2)),
-    power: Math.min(10, car.power + (upgrades.engine ?? 0) * 2),
-    offRoad: Math.min(10, car.offRoad + (upgrades.suspension ?? 0) + (upgrades.tyres ?? 0)),
+    reliability: Math.min(10, reliability + (upgrades.bodywork ?? 0) + Math.floor((upgrades.fuel ?? 0) / 2)),
+    power: Math.min(10, power + (upgrades.engine ?? 0) * 2),
+    offRoad: Math.min(10, offRoad + (upgrades.suspension ?? 0) + (upgrades.tyres ?? 0)),
   };
 }
 
