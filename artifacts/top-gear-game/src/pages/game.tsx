@@ -31,7 +31,7 @@ import JaguarSkiSlalomGame from "@/components/JaguarSkiSlalomGame";
 import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
 import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
-import { vehicleTopDownSprite } from "@/data/vehicles";
+import { canonicalVehicleKey, vehicleTopDownSprite } from "@/data/vehicles";
 import { garageApi } from "@/services/garageApi";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy, Backpack, Clock } from "lucide-react";
 
@@ -116,6 +116,7 @@ interface OutcomeSummary {
   partsDelta?: number;
   timeHours?: number;
   xpDelta?: number;
+  garageCreditsDelta?: number;
 }
 
 type AdventureDrive = {
@@ -221,6 +222,13 @@ export default function Game() {
     if (!saveId || !save?.carId) return undefined;
     return loadGarage(saveId).cars.find((garageCar) => garageCar.id === save.carId);
   }, [saveId, save?.carId]);
+
+  const syncActiveVehicleCondition = useCallback((nextCondition: number) => {
+    const activeCar = findActiveGarageCar();
+    if (!activeCar) return;
+    const canonicalKey = canonicalVehicleKey(activeCar.name);
+    void garageApi.patchVehicle(canonicalKey, { condition: Math.max(0, Math.min(100, Math.round(nextCondition))) }).catch(() => undefined);
+  }, [findActiveGarageCar]);
 
   // Initialise from save data
   useEffect(() => {
@@ -470,6 +478,7 @@ export default function Game() {
 
     setFunds(newFunds);
     setCondition(newCond);
+    syncActiveVehicleCondition(newCond);
     setDistKm(newDist);
     setFuel(newFuel);
     setCamaraderie(newCam);
@@ -540,19 +549,20 @@ export default function Game() {
     setTab(surfacedEvent ? "chat" : "journey");
     if (opts.result) setTimeout(() => setDriveResult(null), 6000);
     finishBusy();
-  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage, isSeries, advanceClock, finishBusy, displayName]);
+  }, [save, funds, condition, distKm, fuel, camaraderie, pendingEvent, shownEventIds, persistProgress, updateSave, setLocation, finishStage, isSeries, advanceClock, finishBusy, displayName, syncActiveVehicleCondition]);
 
   // ── Driving challenge complete ─────────────────────────────────────────────
   const handleDriveComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
     if (adventureDrive && save) {
       const { event, choice } = adventureDrive;
+      const garageCreditReward = isSeries ? Math.max(30, Math.round(Math.max(0, earnings) * 0.5)) : 0;
       setAdventureDrive(null);
       const inventoryNotes = applyInventoryEffects(choice);
       if (inventoryNotes.length > 0) {
         toast({ title: "Inventory updated", description: inventoryNotes.join(" | ") });
       }
       if (isSeries) recordDrivingChallenge(save.id);
-      if (isSeries) awardGarageCredits(Math.max(30, Math.round(Math.max(0, earnings) * 0.5)), "Driving challenge reward");
+      if (garageCreditReward > 0) awardGarageCredits(garageCreditReward, "Driving challenge reward");
       void recordEvent.mutateAsync({
         saveId: save.id,
         data: {
@@ -581,6 +591,7 @@ export default function Game() {
           distanceDelta: kmEarned + Math.max(0, Math.round(choice.distanceEffect / 2)),
           conditionDelta: condDelta + choice.damageEffect,
           timeHours: timeForChoice(choice),
+          garageCreditsDelta: garageCreditReward || undefined,
         },
         chat: {
           context: `${displayName || "The driver"} chose "${choice.label}", which turned into a full playable road challenge. ${choice.outcome}`,
@@ -590,7 +601,8 @@ export default function Game() {
       return;
     }
     if (isSeries && save) recordDrivingChallenge(save.id);
-    if (isSeries) awardGarageCredits(Math.max(25, Math.round(Math.max(0, earnings) * 0.5)), "Driving challenge reward");
+    const garageCreditReward = isSeries ? Math.max(25, Math.round(Math.max(0, earnings) * 0.5)) : 0;
+    if (garageCreditReward > 0) awardGarageCredits(garageCreditReward, "Driving challenge reward");
     void resolveAdvance({
       earnings,
       condDelta,
@@ -609,6 +621,7 @@ export default function Game() {
         distanceDelta: kmEarned,
         conditionDelta: condDelta,
         timeHours: 2,
+        garageCreditsDelta: garageCreditReward || undefined,
       },
       chat: {
         context: `${displayName || "The driver"} just finished a driving challenge, banking £${earnings} and covering ${kmEarned}km${condDelta < 0 ? ", taking some damage on the way" : " without a scratch"}.`,
@@ -619,7 +632,8 @@ export default function Game() {
 
   const handleSlalomComplete = useCallback((earnings: number, condDelta: number, kmEarned: number) => {
     if (isSeries && save) recordDrivingChallenge(save.id);
-    if (isSeries) awardGarageCredits(Math.max(30, Math.round(Math.max(0, earnings) * 0.5)), "Slalom challenge reward");
+    const garageCreditReward = isSeries ? Math.max(30, Math.round(Math.max(0, earnings) * 0.5)) : 0;
+    if (garageCreditReward > 0) awardGarageCredits(garageCreditReward, "Slalom challenge reward");
     void resolveAdvance({
       earnings,
       condDelta,
@@ -639,6 +653,7 @@ export default function Game() {
         conditionDelta: condDelta,
         fuelDelta: -8,
         timeHours: 2,
+        garageCreditsDelta: garageCreditReward || undefined,
       },
       chat: {
         context: `${displayName || "The driver"} just finished a downhill slalom trial, banking GBP ${earnings} and covering ${kmEarned}km.`,
@@ -688,7 +703,8 @@ export default function Game() {
     setTriviaResult(correct ? "correct" : "wrong");
     const km = correct ? 60 : 25;
     const earnings = correct ? 50 : 0;
-    if (correct) awardGarageCredits(isSeries ? 35 : 15, "Trivia reward");
+    const garageCreditReward = correct ? (isSeries ? 35 : 15) : 0;
+    if (garageCreditReward > 0) awardGarageCredits(garageCreditReward, "Trivia reward");
     setTimeout(() => {
       setTrivia(null);
       setTriviaResult(null);
@@ -710,6 +726,7 @@ export default function Game() {
           distanceDelta: km,
           fuelDelta: -5,
           timeHours: correct ? 1 : 2,
+          garageCreditsDelta: garageCreditReward || undefined,
         },
         chat: {
           context: correct
@@ -740,6 +757,7 @@ export default function Game() {
     setFunds(newFunds);
     setDistKm(newDist);
     setCondition(newCond);
+    syncActiveVehicleCondition(newCond);
     setFuel(newFuel);
     setFood(newFood);
     setCamaraderie(newCam);
@@ -817,7 +835,7 @@ export default function Game() {
     }
     setTab("chat");
     setResolving(false);
-  }, [save, mission, resolving, timeForChoice, funds, distKm, condition, fuel, food, camaraderie, advanceClock, recordEvent, updateSave, parts, displayName, finishStage, setLocation, shownEventIds]);
+  }, [save, mission, resolving, timeForChoice, funds, distKm, condition, fuel, food, camaraderie, advanceClock, recordEvent, updateSave, parts, displayName, finishStage, setLocation, shownEventIds, syncActiveVehicleCondition]);
 
   const handleForwardChoice = useCallback((choice: EventChoice) => {
     if (choice.id.startsWith("drive-")) {
@@ -915,6 +933,7 @@ export default function Game() {
     const inventoryNotes = applyInventoryEffects(choice);
 
     setCondition(newCond);
+    syncActiveVehicleCondition(newCond);
     setFuel(newFuel);
     setFood(newFood);
     setParts(newParts);
@@ -996,14 +1015,18 @@ export default function Game() {
       await updateSave.mutateAsync({ id: save.id, data: { status: "failed", distanceTravelled: priorDistRef.current + Math.round(newDist) } });
       setTimeout(() => setLocation(`/results/${save.id}`), 2500);
     }
-  }, [save, pendingEvent, funds, distKm, condition, fuel, food, parts, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id, timeForChoice, advanceClock, isSeries, setLocation, getChoiceDisabledReason, applyInventoryEffects]);
+  }, [save, pendingEvent, funds, distKm, condition, fuel, food, parts, camaraderie, recordEvent, updateSave, displayName, finishStage, mission?.id, timeForChoice, advanceClock, isSeries, setLocation, getChoiceDisabledReason, applyInventoryEffects, syncActiveVehicleCondition]);
 
   // ── Mechanic purchase ──────────────────────────────────────────────────────
   const handleMechanicPurchase = async (offer: MechanicOffer) => {
     if (!save || funds < offer.cost) { toast({ title: "Not enough funds", variant: "destructive" }); return; }
     const newFunds = funds - offer.cost;
+    const nextCondition = offer.action === "repair" ? Math.min(100, condition + offer.amount) : condition;
     setFunds(newFunds);
-    if (offer.action === "repair") setCondition(c => Math.min(100, c + offer.amount));
+    if (offer.action === "repair") {
+      setCondition(nextCondition);
+      syncActiveVehicleCondition(nextCondition);
+    }
     if (offer.action === "fuel") setFuel(100);
     let newFood = food;
     let newParts = parts;
@@ -1020,10 +1043,12 @@ export default function Game() {
     setLastOutcome({
       id: `mechanic-outcome-${Date.now()}`,
       title: offer.label,
-      detail: "A local stop eats time and money, but the car is better prepared for the next bad idea.",
+      detail: offer.action === "repair"
+        ? "A local stop eats time and money, and the garage condition record has been updated."
+        : "A local stop eats time and money, but the team is better prepared for the next bad idea.",
       tone: "good",
       fundsDelta: -offer.cost,
-      conditionDelta: offer.action === "repair" ? offer.amount : undefined,
+      conditionDelta: offer.action === "repair" ? nextCondition - condition : undefined,
       fuelDelta: offer.action === "fuel" ? 100 - fuel : undefined,
       foodDelta: offer.action === "food" ? newFood - food : undefined,
       partsDelta: offer.action === "parts" ? newParts - parts : undefined,
@@ -1038,15 +1063,17 @@ export default function Game() {
   const handleUsePart = () => {
     if (parts <= 0) { toast({ title: "No spare parts", variant: "destructive" }); return; }
     const newParts = parts - 1;
+    const nextCondition = Math.min(100, condition + 30);
     setParts(newParts);
-    setCondition(c => Math.min(100, c + 30));
+    setCondition(nextCondition);
+    syncActiveVehicleCondition(nextCondition);
     if (save) updateSave.mutate({ id: save.id, data: { parts: newParts } });
     setLastOutcome({
       id: `repair-outcome-${Date.now()}`,
       title: "Roadside repair",
       detail: "A spare part has been sacrificed to keep the journey moving.",
       tone: "good",
-      conditionDelta: 30,
+      conditionDelta: nextCondition - condition,
       partsDelta: -1,
       xpDelta: isSeries ? 8 : undefined,
     });
@@ -1243,6 +1270,7 @@ export default function Game() {
                   {lastOutcome.foodDelta != null && lastOutcome.foodDelta !== 0 && <span>food {lastOutcome.foodDelta > 0 ? "+" : ""}{lastOutcome.foodDelta}</span>}
                   {lastOutcome.partsDelta != null && lastOutcome.partsDelta !== 0 && <span>parts {lastOutcome.partsDelta > 0 ? "+" : ""}{lastOutcome.partsDelta}</span>}
                   {lastOutcome.xpDelta != null && lastOutcome.xpDelta !== 0 && <span>xp +{lastOutcome.xpDelta}</span>}
+                  {lastOutcome.garageCreditsDelta != null && lastOutcome.garageCreditsDelta !== 0 && <span>garage CR +{lastOutcome.garageCreditsDelta}</span>}
                 </div>
               </div>
             )}
