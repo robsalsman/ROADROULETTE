@@ -15,7 +15,7 @@ const GARAGE_QUERY_KEY = ["garage"];
 
 const DRAG_DIFFICULTY = {
   launchNeedleSeconds: 2.6,
-  shiftNeedleSeconds: 2.15,
+  shiftNeedleSeconds: 2.8,
   launchTarget: 0.72,
   shiftTarget: 0.68,
   perfectWindow: 0.07,
@@ -23,10 +23,14 @@ const DRAG_DIFFICULTY = {
   lateWindow: 0.3,
   countdownMs: 2600,
   raceDistanceMeters: 402,
-  maxRaceSeconds: 16,
+  maxRaceSeconds: 32,
   shiftGears: [2, 3, 4],
+  shiftWindowMeters: [52, 145, 255],
+  shiftWindowPaddingMeters: 18,
+  shiftReadyRpm: 6200,
+  redlineRpm: 8200,
   beginnerReactionGraceMs: 260,
-  speedScale: 0.92,
+  speedScale: 1.55,
 };
 
 type RacePhase = "staging" | "countdown" | "launching" | "racing" | "result";
@@ -285,11 +289,16 @@ export default function DragRace() {
         ? shiftScoresRef.current.reduce((total, score) => total + score, 0) / shiftScoresRef.current.length
         : 0.75;
       const next = { ...runtimeRef.current };
+      const nextShiftMeter = DRAG_DIFFICULTY.shiftWindowMeters[next.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
+      const shiftZoneStart = nextShiftMeter - DRAG_DIFFICULTY.shiftWindowPaddingMeters;
+      const shiftZoneEnd = nextShiftMeter + DRAG_DIFFICULTY.shiftWindowPaddingMeters;
+      const shiftZoneProgress = Math.max(0, Math.min(1, (next.playerMeters - shiftZoneStart) / (shiftZoneEnd - shiftZoneStart)));
+      const overRevFactor = next.shiftIndex < DRAG_DIFFICULTY.shiftGears.length && next.playerMeters > shiftZoneEnd ? 0.72 : 1;
       const playerLaunchBoost = 0.72 + launch * 0.56;
       const playerShiftBoost = 0.72 + shiftAverage * 0.36;
       const gearRatio = 1.08 - Math.min(0.34, (next.gear - 1) * 0.1);
       const playerAccel = (8.6 * powerFactor * gripFactor * conditionFactor * playerLaunchBoost * playerShiftBoost * gearRatio)
-        - next.playerSpeed * 0.045;
+        * overRevFactor - next.playerSpeed * 0.045;
       const opponentAccel = (8.25 * opponentPower * opponentGrip * (0.9 + opponent.consistency / 40))
         - next.opponentSpeed * 0.048;
 
@@ -304,8 +313,9 @@ export default function DragRace() {
         if (next.opponentMeters >= DRAG_DIFFICULTY.raceDistanceMeters) next.opponentFinishedMs = elapsedMs;
       }
 
-      const gearProgress = Math.min(1, (next.playerSpeed % 24) / 24);
-      next.rpm = Math.round(3000 + gearProgress * 5200);
+      const rpmBase = 3300 + next.playerSpeed * 35 + shiftZoneProgress * 4700;
+      const overrunPenalty = next.playerMeters > shiftZoneEnd && next.shiftIndex < DRAG_DIFFICULTY.shiftGears.length ? 700 : 0;
+      next.rpm = Math.round(Math.max(2600, Math.min(DRAG_DIFFICULTY.redlineRpm + 450, rpmBase - overrunPenalty)));
       next.elapsedMs = elapsedMs;
       setRuntime(next);
       runtimeRef.current = next;
@@ -364,6 +374,13 @@ export default function DragRace() {
     if (phase !== "racing") return;
     const current = runtimeRef.current;
     if (current.shiftIndex >= DRAG_DIFFICULTY.shiftGears.length) return;
+    const targetMeter = DRAG_DIFFICULTY.shiftWindowMeters[current.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
+    const isReady = current.playerMeters >= targetMeter - DRAG_DIFFICULTY.shiftWindowPaddingMeters
+      || current.rpm >= DRAG_DIFFICULTY.shiftReadyRpm;
+    if (!isReady) {
+      setFeedback("Wait for the revs.");
+      return;
+    }
     const grade = zoneForNeedle(needle, DRAG_DIFFICULTY.shiftTarget);
     const score = timingScore(needle, DRAG_DIFFICULTY.shiftTarget);
     setShiftScores((scores) => [...scores, score]);
@@ -426,17 +443,22 @@ export default function DragRace() {
   const opponentName = opponentSpriteName(opponent);
   const opponentSprite = vehicleTopDownSprite(opponentName, opponent.power, opponent.traction);
   const nextShiftGear = DRAG_DIFFICULTY.shiftGears[runtime.shiftIndex];
-  const canShift = phase === "racing" && nextShiftGear != null && runtime.playerFinishedMs == null;
+  const nextShiftMeter = DRAG_DIFFICULTY.shiftWindowMeters[runtime.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
+  const shiftArmed = runtime.playerMeters >= nextShiftMeter - DRAG_DIFFICULTY.shiftWindowPaddingMeters
+    || runtime.rpm >= DRAG_DIFFICULTY.shiftReadyRpm;
+  const canShift = phase === "racing" && nextShiftGear != null && runtime.playerFinishedMs == null && shiftArmed;
   const speedMph = Math.round(runtime.playerSpeed * 2.237);
   const rewardLabel = `Reward CR ${opponent.rewardCredits}`;
+  const rpmPercent = Math.max(0, Math.min(100, (runtime.rpm / DRAG_DIFFICULTY.redlineRpm) * 100));
+  const shiftDistanceLabel = Math.max(0, Math.round(nextShiftMeter - runtime.playerMeters));
 
   return (
-    <div className="flex-1 bg-background p-3 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+    <div className="flex-1 overflow-hidden bg-background p-2 md:p-3">
+      <div className="mx-auto flex h-[calc(100dvh-1rem)] max-w-7xl flex-col gap-3 overflow-hidden md:h-[calc(100dvh-1.5rem)]">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b pb-2">
           <div>
             <p className="text-xs font-black uppercase tracking-widest text-primary">Race Night</p>
-            <h1 className="text-3xl font-black uppercase tracking-tight md:text-4xl">Drag Strip</h1>
+            <h1 className="text-2xl font-black uppercase tracking-tight md:text-3xl">Drag Strip</h1>
           </div>
           <div className="flex gap-2">
             <Link href="/garage">
@@ -450,16 +472,16 @@ export default function DragRace() {
           </div>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
-          <Card className="overflow-hidden border-2 border-primary/30">
-            <CardHeader className="bg-black/40">
+        <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_290px] xl:grid-cols-[minmax(0,1fr)_320px]">
+          <Card className="flex min-h-0 flex-col overflow-hidden border-2 border-primary/30">
+            <CardHeader className="bg-black/40 p-3">
               <CardTitle className="flex flex-wrap items-center justify-between gap-2 uppercase">
                 <span className="flex items-center gap-2"><Flag className="h-5 w-5 text-primary" /> Quarter Mile</span>
                 <span className="font-mono text-sm text-primary">{Math.round(runtime.playerMeters)}m / {DRAG_DIFFICULTY.raceDistanceMeters}m</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-3 md:p-5">
-              <div className="relative h-[430px] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 sm:h-[500px]">
+            <CardContent className="grid min-h-0 flex-1 grid-rows-[minmax(170px,1fr)_auto_auto_auto] gap-2 p-2 md:grid-rows-[minmax(210px,1fr)_auto_auto_auto] md:p-3">
+              <div className="relative min-h-[170px] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 md:min-h-[210px]">
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
                 <div className="absolute left-[8%] top-0 h-full w-1 bg-white/80" />
                 <div className="absolute right-[8%] top-0 h-full w-2 bg-[repeating-linear-gradient(0deg,#fff_0_10px,#111827_10px_20px)]" />
@@ -503,7 +525,7 @@ export default function DragRace() {
                   style={{ left: `calc(8% + ${playerProgress * 84}% - 32px)` }}
                 >
                   <img src={playerSprite} alt={vehicle.name} className="h-24 w-16 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-28 sm:w-20" draggable={false} />
-                  <p className="mt-1 truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white">{vehicle.name}</p>
+                  <p className="mt-1 hidden truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white sm:block">{vehicle.name}</p>
                 </div>
 
                 <div
@@ -511,26 +533,49 @@ export default function DragRace() {
                   style={{ left: `calc(8% + ${opponentProgress * 84}% - 32px)` }}
                 >
                   <img src={opponentSprite} alt={opponent.name} className="h-24 w-16 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-28 sm:w-20" draggable={false} />
-                  <p className="mt-1 truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white">{opponent.name}</p>
+                  <p className="mt-1 hidden truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white sm:block">{opponent.name}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="grid grid-cols-4 gap-1 text-center md:gap-2">
                 {[
                   ["Speed", `${speedMph} mph`],
                   ["Gear", runtime.gear.toString()],
                   ["RPM", runtime.rpm.toLocaleString()],
                   ["RT", reactionMs == null ? "--" : `${reactionMs}ms`],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                  <div key={label} className="rounded-md border border-border bg-muted/20 p-1.5 md:p-2">
                     <p className="text-[10px] font-black uppercase text-muted-foreground">{label}</p>
-                    <p className="font-mono text-base font-black md:text-xl">{value}</p>
+                    <p className="font-mono text-sm font-black md:text-lg xl:text-xl">{value}</p>
                   </div>
                 ))}
               </div>
 
-              {(phase === "launching" || phase === "racing") && (
-                <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+              <div className="grid gap-2 md:grid-cols-[1fr_1fr]">
+                <div className="space-y-1.5 rounded-md border border-border bg-muted/20 p-2">
+                  <div className="flex items-center justify-between text-xs font-black uppercase">
+                    <span>Tachometer</span>
+                    <span className={cn("rounded border px-2 py-1", runtime.rpm >= DRAG_DIFFICULTY.shiftReadyRpm ? "border-green-400 bg-green-500/20 text-green-100" : "border-zinc-600 text-muted-foreground")}>
+                      {nextShiftGear ? (shiftArmed ? "Shift Ready" : `${shiftDistanceLabel}m`) : "Top Gear"}
+                    </span>
+                  </div>
+                  <div className="relative h-9 overflow-hidden rounded-full bg-zinc-900 md:h-11">
+                    <div className="absolute inset-y-0 left-0 w-[62%] bg-blue-500/15" />
+                    <div className="absolute inset-y-0 left-[62%] w-[18%] bg-green-500/25" />
+                    <div className="absolute inset-y-0 left-[80%] w-[20%] bg-red-500/25" />
+                    <div className="absolute left-[62%] top-0 h-full w-px bg-green-300/80" />
+                    <div className="absolute left-[80%] top-0 h-full w-px bg-red-300/80" />
+                    <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] font-black uppercase text-white/60">
+                      <span>3k</span>
+                      <span>Shift</span>
+                      <span>Redline</span>
+                    </div>
+                    <div className="absolute top-0 h-full w-2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)]" style={{ left: `calc(${rpmPercent}% - 4px)` }} />
+                  </div>
+                </div>
+
+                {(phase === "launching" || phase === "racing") ? (
+                  <div className="space-y-1.5 rounded-md border border-border bg-muted/20 p-2">
                   <div className="flex items-center justify-between text-xs font-black uppercase">
                     <span>{phase === "launching" ? "Launch timing" : nextShiftGear ? `Shift to ${nextShiftGear}` : "Run it out"}</span>
                     <span className={cn("rounded border px-2 py-1", gradeClass(currentGrade))}>{timingLabel(currentGrade)}</span>
@@ -544,34 +589,42 @@ export default function DragRace() {
                     </div>
                     <div className="absolute top-0 h-full w-2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)]" style={{ left: `calc(${needle * 100}% - 4px)` }} />
                   </div>
-                </div>
-              )}
-
-              <div className="rounded-md border border-border bg-card p-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Feedback</p>
-                <p className="text-lg font-black uppercase">{feedback}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-border bg-muted/20 p-2">
+                    <p className="text-xs font-black uppercase text-muted-foreground">Shift plan</p>
+                    <p className="text-sm font-bold">Launch on green, then shift around 52m, 145m, and 255m as the tach enters the green band.</p>
+                  </div>
+                )}
               </div>
 
-              {phase === "staging" && (
-                <Button size="lg" className="h-16 w-full text-xl font-black uppercase" onClick={startRace} data-testid="button-start-drag-race">
-                  <Zap className="mr-2 h-6 w-6" /> Stage Race
-                </Button>
-              )}
-              {phase === "countdown" && (
-                <Button size="lg" className="h-16 w-full text-xl font-black uppercase" disabled>
-                  Watch The Tree
-                </Button>
-              )}
-              {phase === "launching" && (
-                <Button size="lg" className="h-20 w-full text-2xl font-black uppercase" onClick={launch} data-testid="button-launch-drag-race">
-                  Launch
-                </Button>
-              )}
-              {phase === "racing" && (
-                <Button size="lg" className="h-20 w-full text-2xl font-black uppercase" onClick={shift} disabled={!canShift} data-testid="button-shift-drag-race">
-                  {canShift ? `Shift To ${nextShiftGear}` : "Flat Out"}
-                </Button>
-              )}
+              <div className="grid gap-2 md:grid-cols-[1fr_1.2fr]">
+                <div className="rounded-md border border-border bg-card p-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Feedback</p>
+                  <p className="text-sm font-black uppercase md:text-base">{feedback}</p>
+                </div>
+
+                {phase === "staging" && (
+                  <Button size="lg" className="h-14 w-full text-xl font-black uppercase md:h-16" onClick={startRace} data-testid="button-start-drag-race">
+                    <Zap className="mr-2 h-6 w-6" /> Stage Race
+                  </Button>
+                )}
+                {phase === "countdown" && (
+                  <Button size="lg" className="h-14 w-full text-xl font-black uppercase md:h-16" disabled>
+                    Watch The Tree
+                  </Button>
+                )}
+                {phase === "launching" && (
+                  <Button size="lg" className="h-14 w-full text-2xl font-black uppercase md:h-16" onClick={launch} data-testid="button-launch-drag-race">
+                    Launch
+                  </Button>
+                )}
+                {phase === "racing" && (
+                  <Button size="lg" className="h-14 w-full text-2xl font-black uppercase md:h-16" onClick={shift} disabled={!canShift} data-testid="button-shift-drag-race">
+                    {nextShiftGear ? (canShift ? `Shift To ${nextShiftGear}` : "Build Revs") : "Flat Out"}
+                  </Button>
+                )}
+              </div>
               {phase === "result" && result && (
                 <div className={cn("rounded-md border p-5", result.won ? "border-green-500/50 bg-green-500/10" : "border-red-500/50 bg-red-500/10")}>
                   <div className="flex items-center justify-between gap-3">
@@ -596,14 +649,14 @@ export default function DragRace() {
             </CardContent>
           </Card>
 
-          <div className="space-y-5">
+          <div className="min-h-0 space-y-3 overflow-y-auto pr-1">
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3">
                 <CardTitle className="flex items-center gap-2 uppercase">
                   <Gauge className="h-5 w-5 text-primary" /> Staged Cars
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 p-3 pt-0">
                 <div className="rounded-md border border-border bg-muted/20 p-3">
                   <p className="text-xs font-black uppercase text-muted-foreground">You</p>
                   <p className="font-black uppercase">{vehicle.year} {vehicle.name}</p>
@@ -618,12 +671,12 @@ export default function DragRace() {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3">
                 <CardTitle className="flex items-center gap-2 uppercase">
                   <Settings2 className="h-5 w-5 text-primary" /> Tuning
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 p-3 pt-0">
                 {[
                   ["launchRpm", "Launch RPM", 2500, 7200],
                   ["shiftRpm", "Shift RPM", 3500, 8500],
@@ -650,12 +703,12 @@ export default function DragRace() {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3">
                 <CardTitle className="flex items-center gap-2 uppercase">
                   <Zap className="h-5 w-5 text-primary" /> Opponent
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 p-3 pt-0">
                 {opponents.map((item) => (
                   <button
                     key={item.key}
