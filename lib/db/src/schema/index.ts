@@ -23,3 +23,4 @@ export * from "./characters";
 export * from "./missions";
 export * from "./game_saves";
 export * from "./leaderboard";
+export * from "./garage";

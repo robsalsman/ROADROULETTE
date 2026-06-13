@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Backpack, Car, Gamepad2, Globe2, Medal, MessageCircle, Save, Trophy, UserRound, Wrench } from "lucide-react";
+import { Backpack, Car, Gamepad2, Gauge, Globe2, Medal, MessageCircle, Save, Trophy, UserRound, Wrench } from "lucide-react";
 
 export default function Home() {
   return (
@@ -76,6 +76,11 @@ export default function Home() {
           <Link href="/mini-games" className="w-full">
             <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-mini-games">
               <Wrench className="mr-2 h-5 w-5" /> Mini Games
+            </Button>
+          </Link>
+          <Link href="/drag-race" className="w-full">
+            <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-drag-race-menu">
+              <Gauge className="mr-2 h-5 w-5" /> Drag Race
             </Button>
           </Link>
           <Link href="/saves" className="w-full">

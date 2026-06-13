@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge, Settings2, Mountain, PoundSterling, Trophy, Warehouse, Wrench, BadgePoundSterling } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import VehicleSprite from "@/components/VehicleSprite";
 import {
   adjustedCarStats,
@@ -20,6 +21,8 @@ import {
   type GarageCar,
   type GarageState,
 } from "@/data/garage";
+import { canonicalVehicleKey } from "@/data/vehicles";
+import { carToBuyInput, garageApi } from "@/services/garageApi";
 
 type MissionCar = {
   id: number;
@@ -56,6 +59,10 @@ export default function MissionDetail() {
   const createSave = useCreateSave();
   const updateSave = useUpdateSave();
   const allowSeriesSkip = import.meta.env.VITE_ALLOW_SERIES_SKIP === "1";
+  const { data: persistentGarage, refetch: refetchPersistentGarage } = useQuery({
+    queryKey: ["garage"],
+    queryFn: garageApi.getGarage,
+  });
 
   useEffect(() => {
     if (!isSeries || !querySaveId) return;
@@ -146,14 +153,27 @@ export default function MissionDetail() {
       if (!existingSave) return;
       const selectedCar = mission.availableCars.find((car) => car.id === carId);
       if (!selectedCar) return;
-      const alreadyOwned = garage.cars.some((car) => car.id === carId);
+      const canonicalKey = canonicalVehicleKey(selectedCar.name);
+      const alreadyOwned = garage.cars.some((car) => canonicalVehicleKey(car.name) === canonicalKey)
+        || persistentGarage?.vehicles.some((car) => car.canonicalVehicleKey === canonicalKey);
       if (alreadyOwned) {
-        await selectGarageCar(carId);
+        const nextGarage = garage.cars.some((car) => canonicalVehicleKey(car.name) === canonicalKey)
+          ? { ...garage, activeCarId: carId }
+          : { activeCarId: carId, cars: [...garage.cars, toGarageCar(selectedCar)] };
+        saveGarageState(nextGarage);
+        await updateSave.mutateAsync({
+          id: existingSave.id,
+          data: { carId, status: "on_road" },
+        });
+        toast({ title: "Already Owned", description: `${selectedCar.name} is already in your garage.` });
+        setLocation(`/upgrade-shop/${existingSave.id}`);
         return;
       }
       if (spendable < price) return;
       setCreating(true);
       try {
+        await garageApi.buyVehicle(carToBuyInput(toGarageCar(selectedCar)));
+        await refetchPersistentGarage();
         saveGarageState({ activeCarId: carId, cars: [...garage.cars, toGarageCar(selectedCar)] });
         await updateSave.mutateAsync({
           id: existingSave.id,
@@ -175,6 +195,19 @@ export default function MissionDetail() {
       const save = await createSave.mutateAsync({
         data: { characterId: Number(characterId), missionId: mission.id }
       });
+
+      const selectedCar = mission.availableCars.find((car) => car.id === carId);
+      if (selectedCar) {
+        await garageApi.buyVehicle(carToBuyInput({
+          ...selectedCar,
+          missionId: mission.id,
+        })).catch((error: Error & { status?: number }) => {
+          if (error.status !== 409) throw error;
+          toast({ title: "Already Owned", description: `${selectedCar.name} is already in your persistent garage.` });
+        });
+        await refetchPersistentGarage();
+        saveGarage(save.id, { activeCarId: carId, cars: [toGarageCar(selectedCar)] });
+      }
 
       // 2. Buy car
       await updateSave.mutateAsync({
@@ -200,7 +233,10 @@ export default function MissionDetail() {
 
   if (!mission) return <div className="p-12 text-center">Mission not found</div>;
 
-  const ownedIds = new Set(garage.cars.map((car) => car.id));
+  const ownedKeys = new Set([
+    ...garage.cars.map((car) => canonicalVehicleKey(car.name)),
+    ...(persistentGarage?.vehicles.map((car) => car.canonicalVehicleKey) ?? []),
+  ]);
 
   return (
     <div className="flex-1 p-6 md:p-12">
@@ -324,7 +360,7 @@ export default function MissionDetail() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mission.availableCars.map((car) => {
-              const owned = ownedIds.has(car.id);
+              const owned = ownedKeys.has(canonicalVehicleKey(car.name));
               return (
                 <Card key={car.id} className="flex flex-col border-2 border-transparent hover:border-primary transition-colors">
                   <CardHeader>

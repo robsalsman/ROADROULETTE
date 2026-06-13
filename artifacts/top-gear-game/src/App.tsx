@@ -16,6 +16,7 @@ import Game from "@/pages/game";
 import Challenge from "@/pages/challenge";
 import MiniGames from "@/pages/mini-games";
 import Garage from "@/pages/garage";
+import DragRace from "@/pages/drag-race";
 import WorldMap from "@/pages/world-map";
 import Inventory from "@/pages/inventory";
 import Character from "@/pages/character";
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/mini-games" component={MiniGames} />
       <Route path="/mini-games/jaguar-ski-slalom" component={MiniGames} />
       <Route path="/garage" component={Garage} />
+      <Route path="/drag-race" component={DragRace} />
       <Route path="/world-map" component={WorldMap} />
       <Route path="/inventory" component={Inventory} />
       <Route path="/character" component={Character} />

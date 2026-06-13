@@ -13,6 +13,8 @@ import {
   type UpgradeCat,
   type Upgrades,
 } from "@/data/garage";
+import { canonicalVehicleKey } from "@/data/vehicles";
+import { garageApi } from "@/services/garageApi";
 
 export interface UpgradeDef {
   cat: UpgradeCat;
@@ -148,6 +150,9 @@ export default function UpgradeShop() {
 
   const buyTier = async (cat: UpgradeCat, tier: 1 | 2 | 3) => {
     if (!save || !saveId || !activeCarId) return;
+    const activeGarageCar = loadGarage(saveId).cars.find((garageCar) => garageCar.id === activeCarId)
+      ?? mission?.availableCars?.find((missionCar: { id: number }) => missionCar.id === activeCarId);
+    const persistentKey = activeGarageCar ? canonicalVehicleKey(activeGarageCar.name) : null;
     const def = DEFS.find(d => d.cat === cat)!;
     const currentTier = upgrades[cat] ?? 0;
     const targetTierIdx = tier - 1;
@@ -166,6 +171,9 @@ export default function UpgradeShop() {
       setRemainingFunds(nextFunds);
       saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
       await updateSave.mutateAsync({ id: save.id, data: { funds: nextFunds } });
+      if (persistentKey) {
+        await garageApi.saveUpgrades(persistentKey, newUpgrades, newSpent, baseCost).catch(() => undefined);
+      }
       return;
     }
     if (tier < (upgrades[cat] ?? 0)) return; // can't downgrade
@@ -179,6 +187,9 @@ export default function UpgradeShop() {
     setRemainingFunds(nextFunds);
     saveUpgrades(saveId!, activeCarId!, newUpgrades, newSpent);
     await updateSave.mutateAsync({ id: save.id, data: { funds: nextFunds } });
+    if (persistentKey) {
+      await garageApi.saveUpgrades(persistentKey, newUpgrades, newSpent, -diffCost).catch(() => undefined);
+    }
   };
 
   const handleStart = () => {

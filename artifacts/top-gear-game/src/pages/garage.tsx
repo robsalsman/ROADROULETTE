@@ -1,13 +1,7 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Car, Paintbrush, Play, Settings2, Trophy, Wrench } from "lucide-react";
-import {
-  getListSavesQueryKey,
-  useListSaves,
-  useUpdateSave,
-  type GameSave,
-} from "@workspace/api-client-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -17,18 +11,24 @@ import {
   loadGarage,
   loadUpgradeSpend,
   loadUpgrades,
-  saveGarage,
-  saveUpgrades,
-  sellValue,
-  type GarageCar,
-  type GarageState,
+  saveUpgrades as saveLocalUpgrades,
   type UpgradeCat,
   type Upgrades,
-  updateGarageCar,
 } from "@/data/garage";
+import { canonicalVehicleKey } from "@/data/vehicles";
 import { DEFS, EFFECTS } from "@/pages/upgrade-shop";
+import {
+  garageApi,
+  carToBuyInput,
+  ownedToGarageCar,
+  type GarageResponse,
+  type OwnedVehicle,
+} from "@/services/garageApi";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+
+const GARAGE_QUERY_KEY = ["garage"];
+const MIGRATION_FLAG = "tgrr-persistent-garage-migrated-v1";
 
 const PAINT_SWATCHES = [
   "#ef4444",
@@ -42,15 +42,6 @@ const PAINT_SWATCHES = [
   "#111827",
 ] as const;
 
-type GarageEntry = {
-  saveId: number;
-  save?: GameSave;
-  garage: GarageState;
-  car: GarageCar;
-  upgrades: Upgrades;
-  spent: number;
-};
-
 function garageSaveIds(): number[] {
   const ids: number[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -61,118 +52,126 @@ function garageSaveIds(): number[] {
   return ids.sort((a, b) => a - b);
 }
 
-function garageEntries(saves: GameSave[] | undefined): GarageEntry[] {
-  const savesById = new Map((saves ?? []).map((save) => [save.id, save]));
-  return garageSaveIds().flatMap((saveId) => {
+function localGarageMigrationPayload() {
+  const byCanonicalKey = new Map<string, ReturnType<typeof carToBuyInput>>();
+  for (const saveId of garageSaveIds()) {
     const garage = loadGarage(saveId);
-    return garage.cars.map((car) => ({
-      saveId,
-      save: savesById.get(saveId),
-      garage,
-      car,
-      upgrades: loadUpgrades(saveId, car.id),
-      spent: loadUpgradeSpend(saveId, car.id),
-    }));
-  });
+    for (const car of garage.cars) {
+      const key = canonicalVehicleKey(car.name);
+      if (byCanonicalKey.has(key)) continue;
+      byCanonicalKey.set(key, carToBuyInput(car));
+    }
+  }
+  return [...byCanonicalKey.values()];
 }
 
-function saveRoute(save?: GameSave): string {
-  if (!save) return "/";
-  const storedRoute = localStorage.getItem(`tgrr-resume-route-${save.id}`);
-  if (storedRoute) return storedRoute;
-  if (save.status === "completed" || save.status === "failed") return `/results/${save.id}`;
-  if (save.status === "challenge") return `/challenge/${save.id}`;
-  if (save.mode === "series" && (save.status === "car_selection" || !save.carId)) {
-    return `/mission/${save.missionId}?saveId=${save.id}&series=1`;
-  }
-  return `/game/${save.id}`;
+function formatTime(ms: number): string {
+  return `${(ms / 1000).toFixed(3)}s`;
 }
 
 export default function Garage() {
   const queryClient = useQueryClient();
-  const updateSave = useUpdateSave();
-  const { data: saves, isLoading } = useListSaves({
-    query: { queryKey: getListSavesQueryKey() },
-  });
-
-  const [entries, setEntries] = useState<GarageEntry[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [working, setWorking] = useState<string | null>(null);
 
-  const refresh = () => setEntries(garageEntries(saves));
+  const garageQuery = useQuery({
+    queryKey: GARAGE_QUERY_KEY,
+    queryFn: garageApi.getGarage,
+  });
+
+  const refreshGarage = async () => {
+    await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+  };
 
   useEffect(() => {
-    refresh();
-  }, [saves]);
+    if (localStorage.getItem(MIGRATION_FLAG)) return;
+    const vehicles = localGarageMigrationPayload();
+    localStorage.setItem(MIGRATION_FLAG, "1");
+    if (vehicles.length === 0) return;
+    garageApi.migrateGarage(vehicles)
+      .then(() => refreshGarage())
+      .then(() => toast({ title: "Garage migrated", description: `${vehicles.length} local vehicle${vehicles.length !== 1 ? "s" : ""} added to the persistent garage.` }))
+      .catch(() => localStorage.removeItem(MIGRATION_FLAG));
+  }, []);
 
-  const grouped = useMemo(() => {
-    const map = new Map<number, GarageEntry[]>();
-    for (const entry of entries) {
-      map.set(entry.saveId, [...(map.get(entry.saveId) ?? []), entry]);
-    }
-    return [...map.entries()].sort(([a], [b]) => b - a);
-  }, [entries]);
+  const patchMutation = useMutation({
+    mutationFn: ({ key, paintColor }: { key: string; paintColor: string }) => garageApi.patchVehicle(key, { paintColor }),
+    onSuccess: refreshGarage,
+  });
 
-  const garageStats = useMemo(() => {
-    const totalValue = entries.reduce((total, entry) => total + sellValue(entry.car, entry.spent), 0);
-    const upgradedCars = entries.filter((entry) => Object.keys(entry.upgrades).length > 0).length;
-    const activeCars = entries.filter((entry) => entry.garage.activeCarId === entry.car.id || entry.save?.carId === entry.car.id).length;
-    return { totalValue, upgradedCars, activeCars };
-  }, [entries]);
+  const activeMutation = useMutation({
+    mutationFn: (key: string) => garageApi.setActive(key),
+    onSuccess: refreshGarage,
+  });
 
-  const setActiveCar = async (entry: GarageEntry) => {
-    if (!entry.save) return;
-    const token = `${entry.saveId}-${entry.car.id}-active`;
-    setWorking(token);
+  const upgradeMutation = useMutation({
+    mutationFn: ({ vehicle, upgrades, spent, creditsDelta }: { vehicle: OwnedVehicle; upgrades: Upgrades; spent: number; creditsDelta: number }) =>
+      garageApi.saveUpgrades(vehicle.canonicalVehicleKey, upgrades, spent, creditsDelta),
+    onSuccess: refreshGarage,
+  });
+
+  const garage = garageQuery.data;
+  const vehicles = garage?.vehicles ?? [];
+  const activeVehicle = vehicles.find((vehicle) => vehicle.isActive) ?? vehicles[0];
+
+  const stats = useMemo(() => {
+    const totalValue = vehicles.reduce((total, vehicle) => total + Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35)), 0);
+    const upgradedCars = vehicles.filter((vehicle) => Object.keys(vehicle.upgrades).length > 0).length;
+    const raceWins = (garage?.raceHistory ?? []).filter((race) => race.won).length;
+    return { totalValue, upgradedCars, raceWins };
+  }, [garage?.raceHistory, vehicles]);
+
+  const repaintCar = async (vehicle: OwnedVehicle, paintColor: string) => {
+    setWorking(`${vehicle.canonicalVehicleKey}-paint`);
     try {
-      saveGarage(entry.saveId, { ...entry.garage, activeCarId: entry.car.id });
-      await updateSave.mutateAsync({
-        id: entry.save.id,
-        data: { carId: entry.car.id, status: "on_road" },
-      });
-      await queryClient.invalidateQueries({ queryKey: getListSavesQueryKey() });
-      refresh();
-      toast({ title: "Garage updated", description: `${entry.car.year} ${entry.car.name} is now selected.` });
+      await patchMutation.mutateAsync({ key: vehicle.canonicalVehicleKey, paintColor });
     } catch {
-      toast({ title: "Failed to select car", variant: "destructive" });
+      toast({ title: "Paint failed", variant: "destructive" });
     } finally {
       setWorking(null);
     }
   };
 
-  const repaintCar = (entry: GarageEntry, paintColor: string) => {
-    updateGarageCar(entry.saveId, entry.car.id, { paintColor });
-    refresh();
+  const setActiveCar = async (vehicle: OwnedVehicle) => {
+    setWorking(`${vehicle.canonicalVehicleKey}-active`);
+    try {
+      await activeMutation.mutateAsync(vehicle.canonicalVehicleKey);
+      toast({ title: "Active vehicle selected", description: `${vehicle.year} ${vehicle.name} is staged for garage races.` });
+    } catch {
+      toast({ title: "Failed to select vehicle", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
   };
 
-  const buyTier = async (entry: GarageEntry, cat: UpgradeCat, tier: 1 | 2 | 3) => {
-    if (!entry.save) return;
+  const buyTier = async (vehicle: OwnedVehicle, cat: UpgradeCat, tier: 1 | 2 | 3) => {
     const def = DEFS.find((item) => item.cat === cat);
-    if (!def) return;
-
-    const token = `${entry.saveId}-${entry.car.id}-${cat}-${tier}`;
-    const currentTier = entry.upgrades[cat] ?? 0;
+    if (!def || !garage) return;
+    const token = `${vehicle.canonicalVehicleKey}-${cat}-${tier}`;
+    const currentTier = vehicle.upgrades[cat] ?? 0;
     const targetCost = def.tiers[tier - 1].cost;
     const previousCost = currentTier > 0 ? def.tiers[currentTier - 1].cost : 0;
     const diffCost = targetCost - previousCost;
-    const budget = entry.save.funds ?? 0;
 
     if (tier < currentTier) return;
     setWorking(token);
     try {
       if (currentTier === tier) {
-        const nextUpgrades = { ...entry.upgrades };
+        const nextUpgrades = { ...vehicle.upgrades };
         delete nextUpgrades[cat];
-        saveUpgrades(entry.saveId, entry.car.id, nextUpgrades, Math.max(0, entry.spent - targetCost));
-        await updateSave.mutateAsync({ id: entry.save.id, data: { funds: budget + targetCost } });
+        const nextSpent = Math.max(0, vehicle.upgradeSpend - targetCost);
+        await upgradeMutation.mutateAsync({ vehicle, upgrades: nextUpgrades, spent: nextSpent, creditsDelta: targetCost });
+        if (vehicle.sourceCarId != null) saveLocalUpgrades(vehicle.sourceMissionId ?? "garage", vehicle.sourceCarId, nextUpgrades, nextSpent);
       } else {
-        if (diffCost > budget) return;
-        const nextUpgrades = { ...entry.upgrades, [cat]: tier };
-        saveUpgrades(entry.saveId, entry.car.id, nextUpgrades, entry.spent + diffCost);
-        await updateSave.mutateAsync({ id: entry.save.id, data: { funds: budget - diffCost } });
+        if (diffCost > garage.profile.credits) {
+          toast({ title: "Not enough credits", variant: "destructive" });
+          return;
+        }
+        const nextUpgrades = { ...vehicle.upgrades, [cat]: tier };
+        const nextSpent = vehicle.upgradeSpend + diffCost;
+        await upgradeMutation.mutateAsync({ vehicle, upgrades: nextUpgrades, spent: nextSpent, creditsDelta: -diffCost });
+        if (vehicle.sourceCarId != null) saveLocalUpgrades(vehicle.sourceMissionId ?? "garage", vehicle.sourceCarId, nextUpgrades, nextSpent);
       }
-      await queryClient.invalidateQueries({ queryKey: getListSavesQueryKey() });
-      refresh();
     } catch {
       toast({ title: "Upgrade failed", variant: "destructive" });
     } finally {
@@ -190,23 +189,32 @@ export default function Garage() {
               <h2 className="text-3xl font-bold uppercase tracking-wide">Garage</h2>
             </div>
             <p className="text-muted-foreground">
-              Inspect, repaint, upgrade, and select the cars saved across your series garages.
+              Persistent profile garage, credits, upgrades, tuning, and race history.
             </p>
           </div>
-          <Link href="/">
-            <Button variant="outline" className="uppercase" data-testid="button-garage-back">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {activeVehicle && (
+              <Link href={`/drag-race?vehicle=${encodeURIComponent(activeVehicle.canonicalVehicleKey)}`}>
+                <Button className="uppercase font-bold" data-testid="button-drag-race">
+                  <Zap className="mr-2 h-4 w-4" /> Drag Race
+                </Button>
+              </Link>
+            )}
+            <Link href="/">
+              <Button variant="outline" className="uppercase" data-testid="button-garage-back">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {isLoading ? (
+        {garageQuery.isLoading ? (
           <div className="rounded-md border border-border bg-card p-8 text-muted-foreground">Loading garage...</div>
-        ) : entries.length === 0 ? (
+        ) : !garage || vehicles.length === 0 ? (
           <div className="rounded-md border border-dashed border-border bg-muted/20 p-10 text-center">
             <p className="mb-4 text-lg font-bold uppercase">No garage cars yet</p>
             <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
-              Buy cars in Series Mode and they will appear here for comparison, repainting, and upgrades.
+              Buy cars in Series Mode or Arcade Mode. They will appear here as one persistent collection.
             </p>
             <Link href="/series-start">
               <Button className="uppercase font-bold">Start Series Mode</Button>
@@ -214,12 +222,13 @@ export default function Garage() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
               {[
-                ["Cars", entries.length.toLocaleString()],
-                ["Active", garageStats.activeCars.toLocaleString()],
-                ["Upgraded", garageStats.upgradedCars.toLocaleString()],
-                ["Garage Value", `GBP ${garageStats.totalValue.toLocaleString()}`],
+                ["Credits", `CR ${garage.profile.credits.toLocaleString()}`],
+                ["Cars", vehicles.length.toLocaleString()],
+                ["Upgraded", stats.upgradedCars.toLocaleString()],
+                ["Wins", stats.raceWins.toLocaleString()],
+                ["Garage Value", `CR ${stats.totalValue.toLocaleString()}`],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-border bg-card p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</p>
@@ -228,159 +237,166 @@ export default function Garage() {
               ))}
             </div>
 
-            {grouped.map(([saveId, saveEntries]) => {
-              const save = saveEntries[0]?.save;
-              return (
-                <section key={saveId} className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-xl font-black uppercase">Save #{saveId}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {save
-                          ? `${save.mode.toUpperCase()} · Stage ${(save.seriesStageIndex ?? 0) + 1} · Funds GBP ${(save.funds ?? 0).toLocaleString()}`
-                          : "Local garage data without an active save record"}
-                      </p>
-                    </div>
-                    {save && (
-                      <Link href={saveRoute(save)}>
-                        <Button variant="secondary" className="uppercase font-bold">
-                          <Play className="mr-2 h-4 w-4" /> Continue Save
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {vehicles.map((vehicle) => {
+                const garageCar = ownedToGarageCar(vehicle);
+                const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
+                const key = vehicle.canonicalVehicleKey;
+                const isExpanded = expanded === key;
+
+                return (
+                  <Card key={key} className={cn("flex flex-col border-2", vehicle.isActive ? "border-primary" : "border-transparent")}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <CardTitle className="uppercase">{vehicle.year} {vehicle.name}</CardTitle>
+                          <p className="text-xs text-muted-foreground">Garage key: {vehicle.canonicalVehicleKey}</p>
+                        </div>
+                        {vehicle.isActive && <span className="rounded bg-primary/20 px-2 py-1 text-xs font-black uppercase text-primary">Active</span>}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 space-y-4">
+                      <VehicleSprite vehicle={garageCar} className="h-32 w-full" />
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        {[
+                          ["Reliability", adjusted.reliability],
+                          ["Power", adjusted.power],
+                          ["Off-road", adjusted.offRoad],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
+                            <p className="font-bold uppercase text-muted-foreground">{label}</p>
+                            <p className="font-mono text-lg font-black">{value}/10</p>
+                            <Progress value={Number(value) * 10} className="h-1.5" />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-bold uppercase text-muted-foreground">Condition</p>
+                          <p className="font-mono text-lg font-black">{vehicle.condition}%</p>
+                          <Progress value={vehicle.condition} className="h-1.5" />
+                        </div>
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-bold uppercase text-muted-foreground">Upgrade Spend</p>
+                          <p className="font-mono text-lg font-black">CR {vehicle.upgradeSpend}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Paintbrush className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex flex-wrap gap-1.5">
+                          {PAINT_SWATCHES.map((paint) => (
+                            <button
+                              key={paint}
+                              type="button"
+                              aria-label={`Paint ${vehicle.name} ${paint}`}
+                              className={cn(
+                                "h-6 w-6 rounded-full border-2",
+                                vehicle.paintColor === paint ? "border-primary" : "border-white/30",
+                              )}
+                              style={{ backgroundColor: paint }}
+                              disabled={working === `${vehicle.canonicalVehicleKey}-paint`}
+                              onClick={() => repaintCar(vehicle, paint)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+                          {DEFS.map((def) => {
+                            const currentTier = vehicle.upgrades[def.cat] ?? 0;
+                            return (
+                              <div key={def.cat} className="space-y-2">
+                                <div className="flex items-center gap-2 text-xs font-black uppercase">
+                                  {def.icon}
+                                  <span>{def.label}</span>
+                                  {currentTier > 0 && <span className="ml-auto text-primary">Tier {currentTier}</span>}
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {def.tiers.map((tier, idx) => {
+                                    const tierNum = (idx + 1) as 1 | 2 | 3;
+                                    const previousCost = currentTier > 0 ? def.tiers[currentTier - 1].cost : 0;
+                                    const diffCost = tier.cost - previousCost;
+                                    const owned = currentTier === tierNum;
+                                    const locked = tierNum < currentTier;
+                                    const affordable = owned || diffCost <= garage.profile.credits;
+                                    return (
+                                      <button
+                                        key={tier.name}
+                                        type="button"
+                                        disabled={locked || !affordable || working === `${vehicle.canonicalVehicleKey}-${def.cat}-${tierNum}`}
+                                        onClick={() => buyTier(vehicle, def.cat, tierNum)}
+                                        className={cn(
+                                          "rounded-md border px-2 py-2 text-left text-[11px] transition-colors",
+                                          owned
+                                            ? "border-primary bg-primary/10 text-primary"
+                                            : locked || !affordable
+                                              ? "border-border text-muted-foreground opacity-45"
+                                              : "border-border hover:border-primary hover:bg-primary/5",
+                                        )}
+                                      >
+                                        <span className="block font-black uppercase">{tier.name}</span>
+                                        <span className="block text-muted-foreground">{EFFECTS[def.cat][idx]}</span>
+                                        <span className="block font-mono font-bold">
+                                          {owned ? "Sell" : `CR ${currentTier > 0 ? diffCost : tier.cost}`}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex-wrap gap-2">
+                      <Button
+                        variant={isExpanded ? "secondary" : "outline"}
+                        className="flex-1 uppercase font-bold"
+                        onClick={() => setExpanded(isExpanded ? null : key)}
+                      >
+                        <Wrench className="mr-2 h-4 w-4" /> Manage
+                      </Button>
+                      <Button
+                        className="flex-1 uppercase font-bold"
+                        disabled={vehicle.isActive || working === `${vehicle.canonicalVehicleKey}-active`}
+                        onClick={() => setActiveCar(vehicle)}
+                      >
+                        <Settings2 className="mr-2 h-4 w-4" /> Select
+                      </Button>
+                      <Link href={`/drag-race?vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`}>
+                        <Button variant="outline" size="icon" aria-label={`Drag race ${vehicle.name}`}>
+                          <Gauge className="h-4 w-4" />
                         </Button>
                       </Link>
-                    )}
-                  </div>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
 
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {saveEntries.map((entry) => {
-                      const stats = adjustedCarStats(entry.car, entry.upgrades);
-                      const key = `${entry.saveId}-${entry.car.id}`;
-                      const isExpanded = expanded === key;
-                      const isActive = entry.garage.activeCarId === entry.car.id || entry.save?.carId === entry.car.id;
-
-                      return (
-                        <Card key={key} className={cn("flex flex-col border-2", isActive ? "border-primary" : "border-transparent")}>
-                          <CardHeader>
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <CardTitle className="uppercase">{entry.car.year} {entry.car.name}</CardTitle>
-                                <p className="text-xs text-muted-foreground">Bought in mission {entry.car.missionId}</p>
-                              </div>
-                              {isActive && <span className="rounded bg-primary/20 px-2 py-1 text-xs font-black uppercase text-primary">Active</span>}
-                            </div>
-                          </CardHeader>
-                          <CardContent className="flex-1 space-y-4">
-                            <VehicleSprite vehicle={entry.car} className="h-32 w-full" />
-                            <div className="grid grid-cols-3 gap-2 text-xs">
-                              {[
-                                ["Reliability", stats.reliability],
-                                ["Power", stats.power],
-                                ["Off-road", stats.offRoad],
-                              ].map(([label, value]) => (
-                                <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
-                                  <p className="font-bold uppercase text-muted-foreground">{label}</p>
-                                  <p className="font-mono text-lg font-black">{value}/10</p>
-                                  <Progress value={Number(value) * 10} className="h-1.5" />
-                                </div>
-                              ))}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Paintbrush className="h-4 w-4 text-muted-foreground" />
-                              <div className="flex flex-wrap gap-1.5">
-                                {PAINT_SWATCHES.map((paint) => (
-                                  <button
-                                    key={paint}
-                                    type="button"
-                                    aria-label={`Paint ${entry.car.name} ${paint}`}
-                                    className={cn(
-                                      "h-6 w-6 rounded-full border-2",
-                                      entry.car.paintColor === paint ? "border-primary" : "border-white/30",
-                                    )}
-                                    style={{ backgroundColor: paint }}
-                                    onClick={() => repaintCar(entry, paint)}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-
-                            {isExpanded && (
-                              <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
-                                {DEFS.map((def) => {
-                                  const currentTier = entry.upgrades[def.cat] ?? 0;
-                                  return (
-                                    <div key={def.cat} className="space-y-2">
-                                      <div className="flex items-center gap-2 text-xs font-black uppercase">
-                                        {def.icon}
-                                        <span>{def.label}</span>
-                                        {currentTier > 0 && <span className="ml-auto text-primary">Tier {currentTier}</span>}
-                                      </div>
-                                      <div className="grid grid-cols-3 gap-2">
-                                        {def.tiers.map((tier, idx) => {
-                                          const tierNum = (idx + 1) as 1 | 2 | 3;
-                                          const previousCost = currentTier > 0 ? def.tiers[currentTier - 1].cost : 0;
-                                          const diffCost = tier.cost - previousCost;
-                                          const owned = currentTier === tierNum;
-                                          const locked = tierNum < currentTier;
-                                          const affordable = owned || diffCost <= (entry.save?.funds ?? 0);
-                                          return (
-                                            <button
-                                              key={tier.name}
-                                              type="button"
-                                              disabled={locked || !affordable || working === `${entry.saveId}-${entry.car.id}-${def.cat}-${tierNum}`}
-                                              onClick={() => buyTier(entry, def.cat, tierNum)}
-                                              className={cn(
-                                                "rounded-md border px-2 py-2 text-left text-[11px] transition-colors",
-                                                owned
-                                                  ? "border-primary bg-primary/10 text-primary"
-                                                  : locked || !affordable
-                                                    ? "border-border text-muted-foreground opacity-45"
-                                                    : "border-border hover:border-primary hover:bg-primary/5",
-                                              )}
-                                            >
-                                              <span className="block font-black uppercase">{tier.name}</span>
-                                              <span className="block text-muted-foreground">{EFFECTS[def.cat][idx]}</span>
-                                              <span className="block font-mono font-bold">
-                                                {owned ? "Sell" : `GBP ${currentTier > 0 ? diffCost : tier.cost}`}
-                                              </span>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </CardContent>
-                          <CardFooter className="gap-2">
-                            <Button
-                              variant={isExpanded ? "secondary" : "outline"}
-                              className="flex-1 uppercase font-bold"
-                              onClick={() => setExpanded(isExpanded ? null : key)}
-                            >
-                              <Wrench className="mr-2 h-4 w-4" /> Manage
-                            </Button>
-                            <Button
-                              className="flex-1 uppercase font-bold"
-                              disabled={!entry.save || working === `${entry.saveId}-${entry.car.id}-active`}
-                              onClick={() => setActiveCar(entry)}
-                            >
-                              <Settings2 className="mr-2 h-4 w-4" /> Select
-                            </Button>
-                            {entry.save && (
-                              <Link href={`/series-progress/${entry.save.id}`}>
-                                <Button variant="outline" size="icon" aria-label="Campaign progress">
-                                  <Trophy className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                            )}
-                          </CardFooter>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })}
+            {garage.raceHistory.length > 0 && (
+              <div className="rounded-md border border-border bg-card p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <h3 className="font-black uppercase">Race History</h3>
+                </div>
+                <div className="grid gap-2 md:grid-cols-2">
+                  {garage.raceHistory.slice(0, 6).map((race) => (
+                    <div key={race.id} className="rounded-md border border-border bg-muted/20 p-3 text-sm">
+                      <div className="flex justify-between gap-3 font-bold">
+                        <span>{race.opponentName}</span>
+                        <span className={race.won ? "text-green-400" : "text-red-400"}>{race.won ? "Won" : "Lost"}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        ET {formatTime(race.elapsedMs)} vs {formatTime(race.opponentElapsedMs)} · {race.trapSpeed} mph · CR +{race.rewardCredits}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

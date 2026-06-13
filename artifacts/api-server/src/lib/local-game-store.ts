@@ -185,6 +185,8 @@ export const localGameStore = {
   character: (id: number) => characters.find((character) => character.id === id),
   missions: () => missions,
   mission: (id: number) => missions.find((mission) => mission.id === id),
+  cars: () => cars,
+  car: (id: number) => cars.find((car) => car.id === id),
   missionDetail: (id: number) => {
     const mission = missions.find((item) => item.id === id);
     if (!mission) return undefined;

@@ -55,7 +55,7 @@ type VehicleArtEntry = {
 
 const UNIQUE_ART_STATUS = "side-and-top-generated";
 
-function normalizeVehicleKey(value: string): string {
+export function canonicalVehicleKey(value: string): string {
   return value
     .toLowerCase()
     .replace(/&/g, " and ")
@@ -67,12 +67,12 @@ const VEHICLE_ART_BY_KEY = new Map<string, VehicleArtEntry>();
 
 for (const vehicle of (vehicleArtManifest.vehicles as VehicleArtEntry[])) {
   if (vehicle.artStatus !== UNIQUE_ART_STATUS) continue;
-  VEHICLE_ART_BY_KEY.set(normalizeVehicleKey(vehicle.id), vehicle);
-  VEHICLE_ART_BY_KEY.set(normalizeVehicleKey(vehicle.displayName), vehicle);
+  VEHICLE_ART_BY_KEY.set(canonicalVehicleKey(vehicle.id), vehicle);
+  VEHICLE_ART_BY_KEY.set(canonicalVehicleKey(vehicle.displayName), vehicle);
 }
 
 function uniqueVehicleArt(name: string): VehicleArtEntry | undefined {
-  const key = normalizeVehicleKey(name);
+  const key = canonicalVehicleKey(name);
   return VEHICLE_ART_BY_KEY.get(key);
 }
 

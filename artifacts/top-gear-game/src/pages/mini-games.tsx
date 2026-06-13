@@ -20,6 +20,13 @@ const trials = [
     status: "In Arcade",
   },
   {
+    title: "Garage Drag Race",
+    description: "Stage your persistent garage car, tune it, launch it, shift it, and bank credits.",
+    href: "/drag-race",
+    icon: Gauge,
+    status: "Playable",
+  },
+  {
     title: "Final Timing Challenge",
     description: "Sweet-spot launch timing used by the older final challenge flow.",
     href: "/missions",
