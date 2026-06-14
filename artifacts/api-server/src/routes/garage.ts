@@ -7,6 +7,12 @@ import {
   ownedVehiclesTable,
   garageRaceHistoryTable,
 } from "@workspace/db";
+import {
+  ECONOMY,
+  repairCost as economyRepairCost,
+  saleValue as economySaleValue,
+  vehiclePrice,
+} from "@workspace/economy";
 import { localGarageStore, defaultGarageTuning, type GarageTuning } from "../lib/local-garage-store";
 
 const router: IRouter = Router();
@@ -67,13 +73,11 @@ const creditsSchema = z.object({
 });
 
 function saleValue(vehicle: typeof ownedVehiclesTable.$inferSelect): number {
-  return Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35 + vehicle.condition * 1.5));
+  return economySaleValue(normalizedPurchasePrice(vehicle), normalizedUpgradeSpend(vehicle), vehicle.condition);
 }
 
 function repairCost(vehicle: typeof ownedVehiclesTable.$inferSelect): number {
-  const missingCondition = Math.max(0, 100 - vehicle.condition);
-  if (missingCondition === 0) return 0;
-  return Math.max(25, Math.ceil(missingCondition * (6 + vehicle.power * 0.7)));
+  return economyRepairCost(vehicle.condition, vehicle.power);
 }
 
 function toBool(value: number | boolean): boolean {
@@ -98,6 +102,22 @@ function normalizeTuning(value: unknown): GarageTuning {
   return tuningSchema.catch(defaultGarageTuning).parse(value);
 }
 
+function normalizedPurchasePrice(vehicle: Pick<typeof ownedVehiclesTable.$inferSelect, "name" | "reliability" | "power" | "offRoad" | "purchasePrice">): number {
+  const normalized = vehiclePrice({
+    name: vehicle.name,
+    reliability: vehicle.reliability,
+    power: vehicle.power,
+    offRoad: vehicle.offRoad,
+  });
+  return vehicle.purchasePrice < 2_000 ? normalized : vehicle.purchasePrice;
+}
+
+function normalizedUpgradeSpend(vehicle: Pick<typeof ownedVehiclesTable.$inferSelect, "purchasePrice" | "upgradeSpend">): number {
+  return vehicle.purchasePrice < 2_000 && vehicle.upgradeSpend > 0 && vehicle.upgradeSpend < 3_000
+    ? vehicle.upgradeSpend * ECONOMY.dragRewardMultiplier
+    : vehicle.upgradeSpend;
+}
+
 function formatVehicle(vehicle: typeof ownedVehiclesTable.$inferSelect) {
   return {
     id: vehicle.id,
@@ -107,7 +127,7 @@ function formatVehicle(vehicle: typeof ownedVehiclesTable.$inferSelect) {
     sourceMissionId: vehicle.sourceMissionId,
     name: vehicle.name,
     year: vehicle.year,
-    purchasePrice: vehicle.purchasePrice,
+    purchasePrice: normalizedPurchasePrice(vehicle),
     reliability: vehicle.reliability,
     power: vehicle.power,
     offRoad: vehicle.offRoad,
@@ -116,7 +136,7 @@ function formatVehicle(vehicle: typeof ownedVehiclesTable.$inferSelect) {
     paintColor: vehicle.paintColor,
     isActive: toBool(vehicle.isActive),
     upgrades: normalizeUpgrades(vehicle.upgradesJson),
-    upgradeSpend: vehicle.upgradeSpend,
+    upgradeSpend: normalizedUpgradeSpend(vehicle),
     tuning: normalizeTuning(vehicle.tuningJson),
     acquiredAt: vehicle.acquiredAt.toISOString(),
     updatedAt: vehicle.updatedAt.toISOString(),
@@ -143,10 +163,20 @@ function formatRace(race: typeof garageRaceHistoryTable.$inferSelect) {
 
 async function ensureProfile() {
   const [existing] = await db.select().from(playerProfilesTable).where(eq(playerProfilesTable.id, DEFAULT_PROFILE_ID));
-  if (existing) return existing;
+  if (existing) {
+    if (existing.credits > 0 && existing.credits < 10_000) {
+      const [updated] = await db
+        .update(playerProfilesTable)
+        .set({ credits: existing.credits * ECONOMY.dragRewardMultiplier })
+        .where(eq(playerProfilesTable.id, existing.id))
+        .returning();
+      return updated;
+    }
+    return existing;
+  }
   const [created] = await db
     .insert(playerProfilesTable)
-    .values({ id: DEFAULT_PROFILE_ID, name: "Road Roulette Driver", credits: 1500 })
+    .values({ id: DEFAULT_PROFILE_ID, name: "Road Roulette Driver", credits: ECONOMY.defaultProfileCredits })
     .returning();
   return created;
 }
@@ -404,7 +434,7 @@ router.delete("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    const creditGain = Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35 + vehicle.condition * 1.5));
+    const creditGain = economySaleValue(vehicle.purchasePrice, vehicle.upgradeSpend, vehicle.condition);
     const result = localGarageStore.sellVehicle(canonicalVehicleKey, creditGain);
     res.json({ sold: vehicle, saleCredits: creditGain, profile: result?.profile, garage: localGarageStore.garage() });
   }
@@ -449,8 +479,7 @@ router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Pr
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    const missingCondition = Math.max(0, 100 - vehicle.condition);
-    const cost = missingCondition === 0 ? 0 : Math.max(25, Math.ceil(missingCondition * (6 + vehicle.power * 0.7)));
+    const cost = economyRepairCost(vehicle.condition, vehicle.power);
     const result = localGarageStore.repairVehicle(canonicalVehicleKey, cost);
     if (!result) {
       res.status(404).json({ error: "Vehicle not found" });

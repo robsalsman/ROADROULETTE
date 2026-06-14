@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, missionsTable, carsTable, challengesTable } from "@workspace/db";
+import { missionBudget, vehiclePrice, type EconomyVehicleInput } from "@workspace/economy";
 import { localGameStore } from "../lib/local-game-store";
 import {
   GetMissionParams,
@@ -11,10 +12,33 @@ import { GRAND_TOUR_EPISODE_COUNT } from "../data/grand-tour-episode-stages";
 
 const router: IRouter = Router();
 
+function formatMission(mission: typeof missionsTable.$inferSelect) {
+  return {
+    ...mission,
+    budget: missionBudget(mission.id),
+  };
+}
+
+function normalizedCarPrice(
+  car: typeof carsTable.$inferSelect,
+  mission: Pick<typeof missionsTable.$inferSelect, "id" | "difficulty">,
+  optionIndex: number,
+): number {
+  return vehiclePrice({
+    name: car.name,
+    reliability: car.reliability,
+    power: car.power,
+    offRoad: car.offRoad,
+    difficulty: mission.difficulty as EconomyVehicleInput["difficulty"],
+    episodeNumber: mission.id,
+    optionIndex,
+  });
+}
+
 router.get("/missions", async (_req, res): Promise<void> => {
   try {
     const missions = await db.select().from(missionsTable).orderBy(missionsTable.id);
-    res.json(ListMissionsResponse.parse(missions.length >= GRAND_TOUR_EPISODE_COUNT ? missions : localGameStore.missions()));
+    res.json(ListMissionsResponse.parse(missions.length >= GRAND_TOUR_EPISODE_COUNT ? missions.map(formatMission) : localGameStore.missions()));
   } catch {
     res.json(ListMissionsResponse.parse(localGameStore.missions()));
   }
@@ -55,11 +79,11 @@ router.get("/missions/:id", async (req, res): Promise<void> => {
     const availableCars = await db.select().from(carsTable).where(eq(carsTable.missionId, id));
     const challenges = await db.select().from(challengesTable).where(eq(challengesTable.missionId, id));
 
-    const formattedCars = availableCars.map((c) => ({
+    const formattedCars = availableCars.map((c, index) => ({
       id: c.id,
       name: c.name,
       year: c.year,
-      price: c.price,
+      price: normalizedCarPrice(c, mission, index),
       reliability: c.reliability,
       power: c.power,
       offRoad: c.offRoad,
@@ -68,7 +92,7 @@ router.get("/missions/:id", async (req, res): Promise<void> => {
 
     res.json(
       GetMissionResponse.parse({
-        ...mission,
+        ...formatMission(mission),
         availableCars: formattedCars,
         challenges: challenges.map((ch) => ({
           id: ch.id,

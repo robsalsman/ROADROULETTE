@@ -112,5 +112,5 @@ export function adjustedCarStats(car: Pick<GarageCar, "reliability" | "power" | 
 }
 
 export function sellValue(car: Pick<GarageCar, "price">, upgradeSpend: number): number {
-  return Math.max(50, Math.floor(car.price * 0.65 + upgradeSpend * 0.35));
+  return Math.max(500, Math.floor(car.price * 0.65 + upgradeSpend * 0.35));
 }

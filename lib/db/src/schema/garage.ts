@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const playerProfilesTable = pgTable("player_profiles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().default("Road Roulette Driver"),
-  credits: integer("credits").notNull().default(1500),
+  credits: integer("credits").notNull().default(240000),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

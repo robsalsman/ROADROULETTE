@@ -218,7 +218,8 @@ export default function MissionDetail() {
       if (spendable < price) return;
       setCreating(true);
       try {
-        await garageApi.buyVehicle(carToBuyInput(toGarageCar(selectedCar)));
+        await garageApi.migrateGarage([carToBuyInput(toGarageCar(selectedCar))]);
+        await garageApi.setActive(canonicalKey).catch(() => undefined);
         await refetchPersistentGarage();
         saveGarageState({ activeCarId: carId, cars: [...garage.cars, toGarageCar(selectedCar)] });
         await updateSave.mutateAsync({
@@ -244,13 +245,12 @@ export default function MissionDetail() {
 
       const selectedCar = mission.availableCars.find((car) => car.id === carId);
       if (selectedCar) {
-        await garageApi.buyVehicle(carToBuyInput({
+        const buyInput = carToBuyInput({
           ...selectedCar,
           missionId: mission.id,
-        })).catch((error: Error & { status?: number }) => {
-          if (error.status !== 409) throw error;
-          toast({ title: "Already Owned", description: `${selectedCar.name} is already in your persistent garage.` });
         });
+        await garageApi.migrateGarage([buyInput]);
+        await garageApi.setActive(buyInput.canonicalVehicleKey).catch(() => undefined);
         await refetchPersistentGarage();
         saveGarage(save.id, { activeCarId: carId, cars: [toGarageCar(selectedCar)] });
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useGetSave, getGetSaveQueryKey, useGetMission, getGetMissionQueryKey, useGetCharacter, getGetCharacterQueryKey, useUpdateSave } from "@workspace/api-client-react";
+import { upgradeCost } from "@workspace/economy";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Zap, Settings, Fuel, Shield, Circle, Megaphone, Clover } from "lucide-react";
@@ -31,9 +32,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Zap className="w-5 h-5" />,
     color: "border-orange-500/60 bg-orange-500/10 text-orange-400",
     tiers: [
-      { name: "Carburettor Clean", cost: 60, desc: "Minor power improvement. Gets you there slightly faster and angrier." },
-      { name: "Turbo Kit", cost: 120, desc: "Substantial boost. Jeremy will approve, at volume." },
-      { name: "Racing Engine", cost: 220, desc: "Full engine rebuild. Probably inappropriate for this vehicle." },
+      { name: "Carburettor Clean", cost: upgradeCost(60), desc: "Minor power improvement. Gets you there slightly faster and angrier." },
+      { name: "Turbo Kit", cost: upgradeCost(120), desc: "Substantial boost. Jeremy will approve, at volume." },
+      { name: "Racing Engine", cost: upgradeCost(220), desc: "Full engine rebuild. Probably inappropriate for this vehicle." },
     ],
   },
   {
@@ -42,9 +43,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Settings className="w-5 h-5" />,
     color: "border-blue-500/60 bg-blue-500/10 text-blue-400",
     tiers: [
-      { name: "Shock Absorbers", cost: 50, desc: "Basic replacement shocks. No longer bottoms out on speed bumps." },
-      { name: "Sport Suspension", cost: 110, desc: "Vastly improved handling. Lane changes become satisfying." },
-      { name: "Racing Suspension", cost: 200, desc: "Track-spec setup. Possibly wasted on this road." },
+      { name: "Shock Absorbers", cost: upgradeCost(50), desc: "Basic replacement shocks. No longer bottoms out on speed bumps." },
+      { name: "Sport Suspension", cost: upgradeCost(110), desc: "Vastly improved handling. Lane changes become satisfying." },
+      { name: "Racing Suspension", cost: upgradeCost(200), desc: "Track-spec setup. Possibly wasted on this road." },
     ],
   },
   {
@@ -53,9 +54,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Fuel className="w-5 h-5" />,
     color: "border-green-500/60 bg-green-500/10 text-green-400",
     tiers: [
-      { name: "Fuel Filter", cost: 40, desc: "Cleaner fuel delivery. Measurably better economy." },
-      { name: "High-Flow Injectors", cost: 90, desc: "Significant efficiency gain. Range nearly doubled." },
-      { name: "Long-Range Tank", cost: 170, desc: "Extra capacity. James considers this the only sensible upgrade." },
+      { name: "Fuel Filter", cost: upgradeCost(40), desc: "Cleaner fuel delivery. Measurably better economy." },
+      { name: "High-Flow Injectors", cost: upgradeCost(90), desc: "Significant efficiency gain. Range nearly doubled." },
+      { name: "Long-Range Tank", cost: upgradeCost(170), desc: "Extra capacity. James considers this the only sensible upgrade." },
     ],
   },
   {
@@ -64,9 +65,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Shield className="w-5 h-5" />,
     color: "border-red-500/60 bg-red-500/10 text-red-400",
     tiers: [
-      { name: "Bash Plates", cost: 55, desc: "Basic underbody protection. Slightly reassuring." },
-      { name: "Roll Cage", cost: 115, desc: "Structural reinforcement. Hammond asks if this is necessary." },
-      { name: "Full Armour", cost: 210, desc: "Comprehensive protection. May attract attention from customs." },
+      { name: "Bash Plates", cost: upgradeCost(55), desc: "Basic underbody protection. Slightly reassuring." },
+      { name: "Roll Cage", cost: upgradeCost(115), desc: "Structural reinforcement. Hammond asks if this is necessary." },
+      { name: "Full Armour", cost: upgradeCost(210), desc: "Comprehensive protection. May attract attention from customs." },
     ],
   },
   {
@@ -75,9 +76,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Circle className="w-5 h-5" />,
     color: "border-purple-500/60 bg-purple-500/10 text-purple-400",
     tiers: [
-      { name: "All-Season Tyres", cost: 65, desc: "Decent grip in most conditions. Wider pickup radius." },
-      { name: "Performance Tyres", cost: 130, desc: "Excellent grip. Collectibles practically leap into the car." },
-      { name: "Slicks", cost: 190, desc: "Maximum grip. Questionable for unpaved roads, but impressive." },
+      { name: "All-Season Tyres", cost: upgradeCost(65), desc: "Decent grip in most conditions. Wider pickup radius." },
+      { name: "Performance Tyres", cost: upgradeCost(130), desc: "Excellent grip. Collectibles practically leap into the car." },
+      { name: "Slicks", cost: upgradeCost(190), desc: "Maximum grip. Questionable for unpaved roads, but impressive." },
     ],
   },
   {
@@ -86,9 +87,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Megaphone className="w-5 h-5" />,
     color: "border-pink-500/60 bg-pink-500/10 text-pink-400",
     tiers: [
-      { name: "Local Garage Decal", cost: 70, desc: "A small sticker. A small percentage. It all adds up." },
-      { name: "Energy Drink Livery", cost: 150, desc: "Garish, loud, lucrative. Every pound earned is worth more." },
-      { name: "Full Works Team", cost: 260, desc: "Plastered in logos. The accountants are delighted." },
+      { name: "Local Garage Decal", cost: upgradeCost(70), desc: "A small sticker. A small percentage. It all adds up." },
+      { name: "Energy Drink Livery", cost: upgradeCost(150), desc: "Garish, loud, lucrative. Every pound earned is worth more." },
+      { name: "Full Works Team", cost: upgradeCost(260), desc: "Plastered in logos. The accountants are delighted." },
     ],
   },
   {
@@ -97,9 +98,9 @@ export const DEFS: UpgradeDef[] = [
     icon: <Clover className="w-5 h-5" />,
     color: "border-emerald-500/60 bg-emerald-500/10 text-emerald-400",
     tiers: [
-      { name: "Fuzzy Dice", cost: 45, desc: "Purely decorative. Definitely improves your final tally." },
-      { name: "St. Christopher", cost: 95, desc: "Patron saint of travellers. And of bigger bonuses." },
-      { name: "Golden Spanner", cost: 175, desc: "A talisman of pure mechanical fortune. A hefty score bonus." },
+      { name: "Fuzzy Dice", cost: upgradeCost(45), desc: "Purely decorative. Definitely improves your final tally." },
+      { name: "St. Christopher", cost: upgradeCost(95), desc: "Patron saint of travellers. And of bigger bonuses." },
+      { name: "Golden Spanner", cost: upgradeCost(175), desc: "A talisman of pure mechanical fortune. A hefty score bonus." },
     ],
   },
 ];

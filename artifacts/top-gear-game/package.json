@@ -51,6 +51,7 @@
     "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "catalog:",
     "@workspace/api-client-react": "workspace:*",
+    "@workspace/economy": "workspace:*",
     "@workspace/integrations-openai-ai-react": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",

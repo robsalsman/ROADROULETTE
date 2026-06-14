@@ -93,6 +93,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
+      '@workspace/economy':
+        specifier: workspace:*
+        version: link:../../lib/economy
       '@workspace/integrations-openai-ai-server':
         specifier: workspace:*
         version: link:../../lib/integrations-openai-ai-server
@@ -461,6 +464,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/economy':
+        specifier: workspace:*
+        version: link:../../lib/economy
       '@workspace/integrations-openai-ai-react':
         specifier: workspace:*
         version: link:../../lib/integrations-openai-ai-react
@@ -579,6 +585,8 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
+
+  lib/economy: {}
 
   lib/integrations-openai-ai-react:
     devDependencies:

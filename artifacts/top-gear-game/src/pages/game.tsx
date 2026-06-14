@@ -6,6 +6,7 @@ import {
   useGetMission, getGetMissionQueryKey,
   useListMissions, getListMissionsQueryKey,
 } from "@workspace/api-client-react";
+import { ECONOMY } from "@workspace/economy";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
@@ -63,7 +64,7 @@ function upgradeStats(u: Upgrades) {
     laneSpeedBonus:     (u.suspension ?? 0) * 2,
     collectRadiusBonus: (u.tyres ?? 0) * 8,
     scoreMultiplier:    [0, 0.15, 0.3, 0.5][u.sponsor ?? 0],
-    scoreBonus:         [0, 75, 175, 350][u.charm ?? 0],
+    scoreBonus:         [0, 750, 1750, 3500][u.charm ?? 0],
   };
 }
 
@@ -104,16 +105,16 @@ interface MechanicOffer {
 }
 
 const MECHANIC_OFFERS: MechanicOffer[] = [
-  { label: "Full Service",  desc: "Restore condition by 40%",   cost: 150, action: "repair", amount: 40 },
-  { label: "Patch & Pray",  desc: "Quick repair, +20% condition", cost: 60, action: "repair", amount: 20 },
-  { label: "Jerry Cans",   desc: "Refill fuel to 100%",          cost: 80, action: "fuel",   amount: 100 },
-  { label: "Packed Lunch", desc: "5 food rations for the crew",  cost: 40, action: "food",   amount: 5 },
-  { label: "Spare Parts",  desc: "3 spare parts for the road",   cost: 55, action: "parts",  amount: 3 },
-  { label: "Snow Chains", desc: "Campaign kit for icy passes", cost: 90, action: "item", amount: 1, itemId: "snow-chains" },
-  { label: "Sand Ladders", desc: "Campaign kit for beaches and desert", cost: 120, action: "item", amount: 1, itemId: "sand-ladders" },
-  { label: "River Permit", desc: "Campaign kit for ferry and river trouble", cost: 75, action: "item", amount: 1, itemId: "river-permit" },
-  { label: "Emergency Envelope", desc: "Campaign kit for suspicious tolls", cost: 85, action: "item", amount: 1, itemId: "bribe-envelope" },
-  { label: "Tyre Compressor", desc: "Campaign kit for rough-road punctures", cost: 70, action: "item", amount: 1, itemId: "portable-compressor" },
+  { label: "Full Service",  desc: "Restore condition by 40%",   cost: 1500, action: "repair", amount: 40 },
+  { label: "Patch & Pray",  desc: "Quick repair, +20% condition", cost: 600, action: "repair", amount: 20 },
+  { label: "Jerry Cans",   desc: "Refill fuel to 100%",          cost: 800, action: "fuel",   amount: 100 },
+  { label: "Packed Lunch", desc: "5 food rations for the crew",  cost: 400, action: "food",   amount: 5 },
+  { label: "Spare Parts",  desc: "3 spare parts for the road",   cost: 550, action: "parts",  amount: 3 },
+  { label: "Snow Chains", desc: "Campaign kit for icy passes", cost: 900, action: "item", amount: 1, itemId: "snow-chains" },
+  { label: "Sand Ladders", desc: "Campaign kit for beaches and desert", cost: 1200, action: "item", amount: 1, itemId: "sand-ladders" },
+  { label: "River Permit", desc: "Campaign kit for ferry and river trouble", cost: 750, action: "item", amount: 1, itemId: "river-permit" },
+  { label: "Emergency Envelope", desc: "Campaign kit for suspicious tolls", cost: 850, action: "item", amount: 1, itemId: "bribe-envelope" },
+  { label: "Tyre Compressor", desc: "Campaign kit for rough-road punctures", cost: 700, action: "item", amount: 1, itemId: "portable-compressor" },
 ];
 
 const RISK_COLORS: Record<string, string> = {
@@ -240,7 +241,7 @@ export default function Game() {
   const stagesList = [...(missionsList ?? [])].sort((a, b) => a.id - b.id);
 
   const awardGarageCredits = useCallback((amount: number, reason: string) => {
-    const credits = Math.round(amount);
+    const credits = Math.round(amount * ECONOMY.dragRewardMultiplier);
     if (credits <= 0) return;
     void garageApi.awardCredits(credits, reason).catch(() => undefined);
   }, []);

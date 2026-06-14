@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, gameSavesTable, roadEventsTable, charactersTable, missionsTable } from "@workspace/db";
+import { characterBudget } from "@workspace/economy";
 import { localGameStore } from "../lib/local-game-store";
 import {
   CreateSaveBody,
@@ -64,11 +65,11 @@ router.post("/saves", async (req, res): Promise<void> => {
 
   try {
     // Look up starting budget from character (arcade). Series players have no preset character.
-    let budget = 1500;
+    let budget = characterBudget();
     if (parsed.data.characterId != null) {
       const [char] = await db.select().from(charactersTable).where(eq(charactersTable.id, parsed.data.characterId));
-      const stats = (char?.statsJson ?? { budget: 1500 }) as { budget: number };
-      budget = stats.budget ?? 1500;
+      const stats = (char?.statsJson ?? { budget }) as { budget: number };
+      budget = stats.budget && stats.budget > 10_000 ? stats.budget : characterBudget();
     }
 
     const [save] = await db

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
+import { ECONOMY } from "@workspace/economy";
 import { ArrowLeft, Brain, CheckCircle2, Shuffle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_TRIVIA, triviaByType, type TriviaQuestion } from "@/data/trivia";
@@ -45,7 +46,7 @@ export default function TriviaMode() {
   const answer = (index: number) => {
     if (answered) return;
     if (index === question.answer) {
-      void garageApi.awardCredits(15, "Standalone trivia reward").catch(() => undefined);
+      void garageApi.awardCredits(15 * ECONOMY.dragRewardMultiplier, "Standalone trivia reward").catch(() => undefined);
     }
     setSelected(index);
     setScore((prev) => ({

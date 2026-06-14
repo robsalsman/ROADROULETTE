@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { characterBudget, missionBudget, vehiclePrice } from "@workspace/economy";
 import { GRAND_TOUR_EPISODE_STAGES } from "../data/grand-tour-episode-stages";
 
 type Character = {
@@ -98,7 +99,7 @@ const characters: Character[] = [
     name: "Jeremy Clarkson",
     tagline: "Power, noise, and absolute certainty.",
     personality: "Bombastic, brave, impatient, and somehow usually facing the wrong way.",
-    stats: { confidence: 10, mechanical: 3, navigation: 4, budget: 1800 },
+    stats: { confidence: 10, mechanical: 3, navigation: 4, budget: characterBudget("jeremy") },
   },
   {
     id: 2,
@@ -106,7 +107,7 @@ const characters: Character[] = [
     name: "Richard Hammond",
     tagline: "Optimism with a roll cage.",
     personality: "Cheerful, fearless, very attached to terrible muscle cars.",
-    stats: { confidence: 8, mechanical: 6, navigation: 5, budget: 1600 },
+    stats: { confidence: 8, mechanical: 6, navigation: 5, budget: characterBudget("richard") },
   },
   {
     id: 3,
@@ -114,7 +115,7 @@ const characters: Character[] = [
     name: "James May",
     tagline: "Measured, methodical, late.",
     personality: "Careful, mechanically sympathetic, and quietly competitive.",
-    stats: { confidence: 6, mechanical: 9, navigation: 8, budget: 1500 },
+    stats: { confidence: 6, mechanical: 9, navigation: 8, budget: characterBudget("james") },
   },
 ];
 
@@ -124,7 +125,7 @@ const missions: Mission[] = GRAND_TOUR_EPISODE_STAGES.map((episode) => ({
   location: episode.locationTheme,
   terrain: episode.terrain,
   description: `Series ${episode.series}, episode ${episode.episodeInSeries} (${episode.releaseDate}). ${episode.challengeInspiration}`,
-  budget: 1500 + Math.min(800, episode.episodeNumber * 20),
+  budget: missionBudget(episode.episodeNumber),
   difficulty: episode.difficulty,
 }));
 
@@ -139,17 +140,22 @@ function displayYear(name: string, releaseDate: string): number {
 }
 
 const cars: Car[] = GRAND_TOUR_EPISODE_STAGES.flatMap((episode) =>
-  episode.featuredVehicles.slice(0, 3).map((name, index) => ({
-    id: episode.id * 10 + index + 1,
-    missionId: episode.id,
-    name,
-    year: displayYear(name, episode.releaseDate),
-    price: 450 + index * 180 + (episode.difficulty === "insane" ? 200 : episode.difficulty === "hard" ? 120 : 0),
-    reliability: statFromName(name, 7 + index),
-    power: statFromName(name, 19 + index),
-    offRoad: episode.terrain === "desert" || episode.terrain === "jungle" || episode.terrain === "snow" ? statFromName(name, 31 + index, 3) : statFromName(name, 31 + index),
-    description: `Featured in episode ${episode.episodeNumber}, ${episode.title}. Chosen for the ${episode.locationTheme} stage.`,
-  }))
+  episode.featuredVehicles.slice(0, 3).map((name, index) => {
+    const reliability = statFromName(name, 7 + index);
+    const power = statFromName(name, 19 + index);
+    const offRoad = episode.terrain === "desert" || episode.terrain === "jungle" || episode.terrain === "snow" ? statFromName(name, 31 + index, 3) : statFromName(name, 31 + index);
+    return {
+      id: episode.id * 10 + index + 1,
+      missionId: episode.id,
+      name,
+      year: displayYear(name, episode.releaseDate),
+      price: vehiclePrice({ name, reliability, power, offRoad, difficulty: episode.difficulty, episodeNumber: episode.episodeNumber, optionIndex: index }),
+      reliability,
+      power,
+      offRoad,
+      description: `Featured in episode ${episode.episodeNumber}, ${episode.title}. Chosen for the ${episode.locationTheme} stage.`,
+    };
+  })
 );
 
 const challenges: Challenge[] = GRAND_TOUR_EPISODE_STAGES.map((episode) => ({
@@ -209,7 +215,7 @@ export const localGameStore = {
       mode: input.mode ?? "arcade",
       playerName: input.playerName ?? null,
       seriesStageIndex: input.seriesStageIndex ?? 0,
-      funds: character?.stats.budget ?? 1500,
+      funds: character?.stats.budget ?? characterBudget(),
       carId: null,
       food: 3,
       parts: 2,

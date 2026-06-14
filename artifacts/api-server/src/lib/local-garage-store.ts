@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { ECONOMY, vehiclePrice } from "@workspace/economy";
 
 export type GarageUpgrades = Record<string, number>;
 export type GarageTuning = {
@@ -98,7 +99,7 @@ function emptyStore(): Store {
     profile: {
       id: 1,
       name: "Road Roulette Driver",
-      credits: 1500,
+      credits: ECONOMY.defaultProfileCredits,
       createdAt,
       updatedAt: createdAt,
     },
@@ -110,7 +111,11 @@ function emptyStore(): Store {
 function loadStore(): Store {
   try {
     if (!existsSync(storePath)) return emptyStore();
-    return { ...emptyStore(), ...JSON.parse(readFileSync(storePath, "utf8")) } as Store;
+    const store = { ...emptyStore(), ...JSON.parse(readFileSync(storePath, "utf8")) } as Store;
+    if (store.profile.credits > 0 && store.profile.credits < 10_000) {
+      store.profile = { ...store.profile, credits: store.profile.credits * ECONOMY.dragRewardMultiplier };
+    }
+    return store;
   } catch {
     return emptyStore();
   }
@@ -122,8 +127,18 @@ function saveStore(store: Store): void {
 }
 
 function normalizeVehicle(vehicle: GarageVehicle): GarageVehicle {
+  const normalizedPrice = vehiclePrice({
+    name: vehicle.name,
+    reliability: vehicle.reliability,
+    power: vehicle.power,
+    offRoad: vehicle.offRoad,
+  });
   return {
     ...vehicle,
+    purchasePrice: vehicle.purchasePrice < 2_000 ? normalizedPrice : vehicle.purchasePrice,
+    upgradeSpend: vehicle.purchasePrice < 2_000 && vehicle.upgradeSpend > 0 && vehicle.upgradeSpend < 3_000
+      ? vehicle.upgradeSpend * ECONOMY.dragRewardMultiplier
+      : vehicle.upgradeSpend,
     isActive: Boolean(vehicle.isActive),
     upgrades: vehicle.upgrades ?? {},
     tuning: { ...defaultGarageTuning, ...(vehicle.tuning ?? {}) },

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign, GitCompare, ListFilter } from "lucide-react";
+import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign, GitCompare, ListFilter, LockKeyhole, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -46,6 +46,24 @@ const PAINT_SWATCHES = [
 type GarageSort = "active" | "power" | "value" | "condition" | "wins" | "name";
 type GarageFilter = "all" | "active" | "upgraded" | "needs-work";
 
+type ShowroomMission = {
+  id: number;
+  title: string;
+};
+
+type ShowroomCar = {
+  id: number;
+  missionId: number;
+  missionTitle: string;
+  name: string;
+  year: number;
+  price: number;
+  reliability: number;
+  power: number;
+  offRoad: number;
+  description: string;
+};
+
 function garageSaveIds(): number[] {
   const ids: number[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -73,6 +91,38 @@ function formatTime(ms: number): string {
   return `${(ms / 1000).toFixed(3)}s`;
 }
 
+function highestUnlockedEpisode(): number {
+  let highestCompleted = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith("tgrr-campaign-")) continue;
+    try {
+      const state = JSON.parse(localStorage.getItem(key) ?? "{}") as { completedEpisodes?: number[] };
+      for (const episodeId of state.completedEpisodes ?? []) highestCompleted = Math.max(highestCompleted, episodeId);
+    } catch { /* ignore */ }
+  }
+  return Math.max(1, highestCompleted + 1);
+}
+
+async function fetchShowroomCars(): Promise<ShowroomCar[]> {
+  const missionsResponse = await fetch("/api/missions");
+  if (!missionsResponse.ok) throw new Error("Failed to load missions");
+  const missions = await missionsResponse.json() as ShowroomMission[];
+  const details = await Promise.all(
+    missions.map(async (mission) => {
+      const detailResponse = await fetch(`/api/missions/${mission.id}`);
+      if (!detailResponse.ok) throw new Error("Failed to load mission detail");
+      const detail = await detailResponse.json() as ShowroomMission & { availableCars?: Array<Omit<ShowroomCar, "missionId" | "missionTitle">> };
+      return (detail.availableCars ?? []).map((car) => ({
+        ...car,
+        missionId: detail.id,
+        missionTitle: detail.title,
+      }));
+    }),
+  );
+  return details.flat();
+}
+
 export default function Garage() {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -84,6 +134,11 @@ export default function Garage() {
   const garageQuery = useQuery({
     queryKey: GARAGE_QUERY_KEY,
     queryFn: garageApi.getGarage,
+  });
+
+  const showroomQuery = useQuery({
+    queryKey: ["garage-showroom"],
+    queryFn: fetchShowroomCars,
   });
 
   const refreshGarage = async () => {
@@ -127,13 +182,21 @@ export default function Garage() {
     onSuccess: refreshGarage,
   });
 
+  const buyMutation = useMutation({
+    mutationFn: (vehicle: ShowroomCar) => garageApi.buyVehicle(carToBuyInput(vehicle)),
+    onSuccess: refreshGarage,
+  });
+
   const garage = garageQuery.data;
   const vehicles = garage?.vehicles ?? [];
   const activeVehicle = vehicles.find((vehicle) => vehicle.isActive) ?? vehicles[0];
   const raceHistory = garage?.raceHistory ?? [];
+  const unlockedEpisode = useMemo(() => highestUnlockedEpisode(), []);
+  const ownedKeys = useMemo(() => new Set(vehicles.map((vehicle) => vehicle.canonicalVehicleKey)), [vehicles]);
+  const showroomCars = showroomQuery.data ?? [];
 
   const stats = useMemo(() => {
-    const totalValue = vehicles.reduce((total, vehicle) => total + Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35)), 0);
+    const totalValue = vehicles.reduce((total, vehicle) => total + saleValueForVehicle(vehicle), 0);
     const upgradedCars = vehicles.filter((vehicle) => Object.keys(vehicle.upgrades).length > 0).length;
     const raceWins = raceHistory.filter((race) => race.won).length;
     return { totalValue, upgradedCars, raceWins };
@@ -266,6 +329,22 @@ export default function Garage() {
       toast({ title: "Vehicle sold", description: `CR ${saleValueForVehicle(vehicle)} added to your profile.` });
     } catch {
       toast({ title: "Sale failed", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  const buyShowroomCar = async (vehicle: ShowroomCar) => {
+    if (!garage) return;
+    const canonicalKey = canonicalVehicleKey(vehicle.name);
+    if (vehicle.missionId > unlockedEpisode || ownedKeys.has(canonicalKey) || garage.profile.credits < vehicle.price) return;
+    setWorking(`buy-${canonicalKey}`);
+    try {
+      await buyMutation.mutateAsync(vehicle);
+      toast({ title: "Vehicle purchased", description: `${vehicle.year} ${vehicle.name} added to your garage.` });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Purchase failed";
+      toast({ title: "Purchase failed", description: message, variant: "destructive" });
     } finally {
       setWorking(null);
     }
@@ -597,6 +676,86 @@ export default function Garage() {
                   </Card>
                 );
               })}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+                <div>
+                  <div className="flex items-center gap-2 text-primary">
+                    <ShoppingCart className="h-5 w-5" />
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Vehicle Showroom</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Campaign cars appear here before you own them. Future episode cars stay locked until reached.</p>
+                </div>
+                <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs font-black uppercase text-muted-foreground">
+                  Unlocked through episode {unlockedEpisode}
+                </div>
+              </div>
+
+              {showroomQuery.isLoading ? (
+                <div className="rounded-md border border-border bg-card p-6 text-muted-foreground">Loading showroom...</div>
+              ) : showroomCars.length === 0 ? (
+                <div className="rounded-md border border-border bg-card p-6 text-muted-foreground">No showroom cars available.</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {showroomCars.map((car) => {
+                    const canonicalKey = canonicalVehicleKey(car.name);
+                    const owned = ownedKeys.has(canonicalKey);
+                    const locked = car.missionId > unlockedEpisode;
+                    const affordable = Boolean(garage) && garage.profile.credits >= car.price;
+                    const disabled = owned || locked || !affordable || working === `buy-${canonicalKey}`;
+                    return (
+                      <Card key={`${car.missionId}-${car.id}-${canonicalKey}`} className={cn("flex flex-col", locked && "opacity-70")}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <CardTitle className="uppercase">{car.year} {car.name}</CardTitle>
+                              <p className="text-xs text-muted-foreground">{car.missionTitle}</p>
+                            </div>
+                            {locked ? (
+                              <span className="inline-flex items-center gap-1 rounded bg-muted px-2 py-1 text-xs font-black uppercase text-muted-foreground">
+                                <LockKeyhole className="h-3 w-3" /> Locked
+                              </span>
+                            ) : owned ? (
+                              <span className="rounded bg-primary/20 px-2 py-1 text-xs font-black uppercase text-primary">Owned</span>
+                            ) : null}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="flex-1 space-y-4">
+                          <VehicleSprite vehicle={car} className="h-28 w-full" />
+                          <p className="min-h-[3rem] text-sm text-muted-foreground">{car.description}</p>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {[
+                              ["Reliability", car.reliability],
+                              ["Power", car.power],
+                              ["Off-road", car.offRoad],
+                            ].map(([label, value]) => (
+                              <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
+                                <p className="font-bold uppercase text-muted-foreground">{label}</p>
+                                <p className="font-mono text-lg font-black">{value}/10</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="rounded-md border border-border bg-muted/20 p-3">
+                            <p className="text-xs font-black uppercase text-muted-foreground">Price</p>
+                            <p className="font-mono text-xl font-black">CR {car.price.toLocaleString()}</p>
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button
+                            className="w-full uppercase font-bold"
+                            disabled={disabled}
+                            onClick={() => buyShowroomCar(car)}
+                            data-testid={`button-showroom-buy-${canonicalKey}`}
+                          >
+                            {owned ? "Owned" : locked ? `Unlock Episode ${car.missionId}` : !affordable ? "Not Enough Credits" : "Buy Car"}
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {garage.raceHistory.length > 0 && (

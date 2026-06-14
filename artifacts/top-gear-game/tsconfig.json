@@ -18,6 +18,9 @@
   },
   "references": [
     {
+      "path": "../../lib/economy"
+    },
+    {
       "path": "../../lib/api-client-react"
     },
     {

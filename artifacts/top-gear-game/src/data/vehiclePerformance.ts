@@ -1,4 +1,5 @@
 import { canonicalVehicleKey } from "@/data/vehicles";
+import { repairCost, saleValue } from "@workspace/economy";
 import type { OwnedVehicle } from "@/services/garageApi";
 import type { Upgrades } from "@/data/garage";
 
@@ -53,10 +54,9 @@ export function deriveVehiclePerformance(
 }
 
 export function repairCostForVehicle(vehicle: Pick<OwnedVehicle, "condition" | "power">): number {
-  const missingCondition = Math.max(0, 100 - vehicle.condition);
-  return missingCondition === 0 ? 0 : Math.max(25, Math.ceil(missingCondition * (6 + vehicle.power * 0.7)));
+  return repairCost(vehicle.condition, vehicle.power);
 }
 
 export function saleValueForVehicle(vehicle: Pick<OwnedVehicle, "purchasePrice" | "upgradeSpend" | "condition">): number {
-  return Math.max(50, Math.floor(vehicle.purchasePrice * 0.65 + vehicle.upgradeSpend * 0.35 + vehicle.condition * 1.5));
+  return saleValue(vehicle.purchasePrice, vehicle.upgradeSpend, vehicle.condition);
 }

@@ -1,6 +1,7 @@
 import type { GarageTuning, OwnedVehicle } from "@/services/garageApi";
 import type { Upgrades } from "@/data/garage";
 import { deriveVehiclePerformance, type VehiclePerformance } from "@/data/vehiclePerformance";
+import { dragReward } from "@workspace/economy";
 
 type DragVehicle = Pick<OwnedVehicle, "canonicalVehicleKey" | "name" | "reliability" | "power" | "offRoad" | "condition" | "purchasePrice" | "upgrades" | "tuning">;
 
@@ -53,7 +54,7 @@ export function opponentsForVehicle(vehicle?: DragVehicle): DragOpponent[] {
   const multiplier = perf.tier === "Supercar" ? 1.75 : perf.tier === "Pro" ? 1.35 : perf.tier === "Chaos" ? 1.45 : perf.tier === "Club" ? 1.15 : 1;
   return DRAG_OPPONENTS.map((opponent, index) => ({
     ...opponent,
-    rewardCredits: Math.round(opponent.rewardCredits * multiplier),
+    rewardCredits: dragReward(opponent.rewardCredits, multiplier),
     power: Math.min(10, opponent.power + (perf.tier === "Supercar" ? 1 : index === 2 ? 1 : 0)),
     traction: Math.min(10, opponent.traction + (perf.drivetrain === "Boat" ? -1 : 0) + (perf.tier === "Supercar" ? 1 : 0)),
   }));
