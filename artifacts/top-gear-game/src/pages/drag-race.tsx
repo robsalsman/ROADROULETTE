@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Car, Flag, Gauge, MessageSquare, RotateCcw, Settings2, Zap } from "lucide-react";
 import { getListSavesQueryKey, useListSaves } from "@workspace/api-client-react";
@@ -323,6 +323,7 @@ export default function DragRace() {
   const nitrousHeldRef = useRef(false);
   const vehicleConditionRef = useRef(vehicle?.condition ?? 100);
   const redLightProcessingRef = useRef(false);
+  const throttlePointerIdRef = useRef<number | null>(null);
 
   const saveTuningMutation = useMutation({
     mutationFn: ({ selected, nextTuning }: { selected: OwnedVehicle; nextTuning: GarageTuning }) =>
@@ -900,6 +901,38 @@ export default function DragRace() {
     });
   };
 
+  const pressThrottle = (event: PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+    if (throttlePointerIdRef.current !== null) return;
+    throttlePointerIdRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setThrottleActive(true);
+  };
+
+  const releaseThrottle = (event: PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+    if (throttlePointerIdRef.current !== event.pointerId) return;
+    throttlePointerIdRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    setThrottleActive(false);
+  };
+
+  const cancelThrottle = (event: PointerEvent<HTMLElement>) => {
+    if (throttlePointerIdRef.current !== event.pointerId) return;
+    throttlePointerIdRef.current = null;
+    setThrottleActive(false);
+  };
+
+  const tapShift = (event: PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+    shift();
+  };
+
+  const tapNitrous = (event: PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+    setNitrousActive(true);
+  };
+
   const updateTuning = (key: keyof GarageTuning, value: number) => {
     setTuning((current) => {
       const nextTuning = { ...current, [key]: value };
@@ -1357,45 +1390,53 @@ export default function DragRace() {
                 </div>
 
                 {phase !== "staging" && phase !== "result" && (
-                  <div className="grid gap-1.5 md:col-span-3 md:grid-cols-[1.1fr_0.85fr_0.85fr_0.9fr]">
-                      <Button
-                        size="lg"
-                        variant={throttleHeld ? "default" : "outline"}
-                        className="h-10 w-full text-sm font-black uppercase md:h-11"
-                        onPointerDown={(event) => {
-                          event.preventDefault();
-                          setThrottleActive(true);
-                        }}
-                        onPointerUp={(event) => {
-                          event.preventDefault();
-                          setThrottleActive(false);
-                        }}
-                        onPointerCancel={() => setThrottleActive(false)}
-                        onPointerLeave={() => setThrottleActive(false)}
-                        onContextMenu={(event) => event.preventDefault()}
-                        data-testid="button-throttle-drag-race"
-                      >
-                        {throttleHeld ? "Pedal Down" : "Throttle Pedal"}
-                      </Button>
-                    <Button size="lg" variant="outline" className="h-10 w-full text-sm font-black uppercase md:h-11" onClick={shift} disabled={!canShift} data-testid="button-shift-drag-race">
-                      {transmission === "automatic" ? "Auto Shift" : nextShiftGear ? "Shift Knob" : "Top Gear"}
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant={nitrousHeld ? "default" : "outline"}
-                      className="h-10 w-full text-sm font-black uppercase md:h-11"
-                      disabled={!hasNitrous || phase !== "racing" || runtime.nitrousShots <= 0 || runtime.nitrousBoostMs > 0}
-                      onPointerDown={(event) => {
-                        event.preventDefault();
-                        setNitrousActive(true);
-                      }}
-                      onPointerUp={(event) => event.preventDefault()}
-                      onPointerCancel={() => undefined}
-                      onPointerLeave={() => undefined}
+                  <div className="grid touch-none select-none gap-1.5 md:col-span-3 md:grid-cols-[1.1fr_0.85fr_0.85fr_0.9fr]" style={{ touchAction: "none" }}>
+                    <button
+                      type="button"
+                      className={cn(
+                        "h-16 w-full rounded-md border text-sm font-black uppercase transition-colors md:h-12",
+                        throttleHeld
+                          ? "border-primary bg-primary text-primary-foreground shadow-[0_0_18px_rgba(251,191,36,0.35)]"
+                          : "border-zinc-600 bg-zinc-950/80 text-zinc-200 active:border-primary active:text-primary",
+                      )}
+                      onPointerDown={pressThrottle}
+                      onPointerUp={releaseThrottle}
+                      onPointerCancel={cancelThrottle}
+                      onLostPointerCapture={cancelThrottle}
+                      onContextMenu={(event) => event.preventDefault()}
+                      data-testid="button-throttle-drag-race"
+                    >
+                      {throttleHeld ? "Pedal Down" : "Throttle"}
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        "h-16 w-full rounded-md border border-zinc-600 bg-zinc-950/80 text-sm font-black uppercase text-zinc-200 transition-colors active:border-primary active:text-primary md:h-12",
+                        transmission === "automatic" && "opacity-55",
+                      )}
+                      onPointerDown={tapShift}
+                      onContextMenu={(event) => event.preventDefault()}
+                      aria-disabled={transmission === "automatic"}
+                      data-testid="button-shift-drag-race"
+                    >
+                      {transmission === "automatic" ? "Auto Shift" : nextShiftGear ? "Shift" : "Top Gear"}
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        "h-16 w-full rounded-md border text-sm font-black uppercase transition-colors md:h-12",
+                        nitrousHeld
+                          ? "border-cyan-300 bg-cyan-300 text-black shadow-[0_0_18px_rgba(103,232,249,0.35)]"
+                          : "border-zinc-600 bg-zinc-950/80 text-zinc-200 active:border-cyan-300 active:text-cyan-200",
+                        (!hasNitrous || phase !== "racing" || runtime.nitrousShots <= 0 || runtime.nitrousBoostMs > 0) && "opacity-55",
+                      )}
+                      onPointerDown={tapNitrous}
+                      onContextMenu={(event) => event.preventDefault()}
+                      aria-disabled={!hasNitrous || phase !== "racing" || runtime.nitrousShots <= 0 || runtime.nitrousBoostMs > 0}
                       data-testid="button-nitrous-drag-race"
                     >
                       {hasNitrous ? "Nitrous" : "No Nitrous"}
-                    </Button>
+                    </button>
                     <div className="rounded-md border border-zinc-700 bg-black/50 p-2">
                       <p className="text-[10px] font-black uppercase text-zinc-500">RT / Target</p>
                       <p className="font-mono text-lg font-black">{reactionMs == null ? "--" : `${reactionMs}ms`}</p>
