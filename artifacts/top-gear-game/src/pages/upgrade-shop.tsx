@@ -13,6 +13,7 @@ import {
   saveUpgrades,
   adjustedCarStats,
   type UpgradeCat,
+  type UpgradeTier,
   type Upgrades,
 } from "@/data/garage";
 import { canonicalVehicleKey } from "@/data/vehicles";
@@ -33,9 +34,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Zap className="w-5 h-5" />,
     color: "border-orange-500/60 bg-orange-500/10 text-orange-400",
     tiers: [
-      { name: "Carburettor Clean", cost: upgradeCost(60), desc: "Minor power improvement. Gets you there slightly faster and angrier." },
-      { name: "Turbo Kit", cost: upgradeCost(120), desc: "Substantial boost. Jeremy will approve, at volume." },
-      { name: "Racing Engine", cost: upgradeCost(220), desc: "Full engine rebuild. Probably inappropriate for this vehicle." },
+      { name: "Tune-Up", cost: upgradeCost(180), desc: "Fresh plugs, belts, and timing. A small but honest power gain." },
+      { name: "Intake & Exhaust", cost: upgradeCost(450), desc: "The car breathes properly. So does Jeremy, briefly." },
+      { name: "Fast Road Cam", cost: upgradeCost(900), desc: "Sharper throttle response with a lumpier idle." },
+      { name: "Forged Internals", cost: upgradeCost(1500), desc: "Built to survive proper boost and repeated abuse." },
+      { name: "Race Head", cost: upgradeCost(2400), desc: "Serious flow work. Not cheap, not subtle." },
+      { name: "Full Race Engine", cost: upgradeCost(3600), desc: "A top-tier rebuild for cars earning their place." },
     ],
   },
   {
@@ -44,9 +48,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Zap className="w-5 h-5" />,
     color: "border-sky-500/60 bg-sky-500/10 text-sky-300",
     tiers: [
-      { name: "Junkyard Turbo", cost: upgradeCost(110), desc: "Cheap boost. Laggy, loud, and exactly the point." },
-      { name: "Ball Bearing Turbo", cost: upgradeCost(230), desc: "Fast spool and serious top-end pull." },
-      { name: "Twin Turbo Setup", cost: upgradeCost(420), desc: "Expensive forced induction for cars with something to prove." },
+      { name: "Low-Boost Kit", cost: upgradeCost(220), desc: "A cautious turbo setup with manageable lag." },
+      { name: "Intercooler", cost: upgradeCost(520), desc: "Cooler charge air, safer pulls, less heroic smoke." },
+      { name: "Ball Bearing Turbo", cost: upgradeCost(980), desc: "Fast spool and serious midrange punch." },
+      { name: "Boost Controller", cost: upgradeCost(1650), desc: "More precise pressure, more precise trouble." },
+      { name: "Hybrid Turbo", cost: upgradeCost(2800), desc: "A large step toward genuinely frightening pace." },
+      { name: "Twin Turbo Setup", cost: upgradeCost(4200), desc: "Expensive forced induction for cars with something to prove." },
     ],
   },
   {
@@ -55,9 +62,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Gauge className="w-5 h-5" />,
     color: "border-violet-500/60 bg-violet-500/10 text-violet-300",
     tiers: [
-      { name: "Roots Blower", cost: upgradeCost(125), desc: "Instant torque. Subtle as a brick through a window." },
-      { name: "Twin-Screw Charger", cost: upgradeCost(260), desc: "Hard launch power with less waiting around." },
-      { name: "Race Supercharger", cost: upgradeCost(460), desc: "Massive shove off the line, if the tyres agree." },
+      { name: "Street Pulley", cost: upgradeCost(240), desc: "A mild pulley change for instant low-end shove." },
+      { name: "Roots Blower", cost: upgradeCost(560), desc: "Instant torque. Subtle as a brick through a window." },
+      { name: "Charge Cooler", cost: upgradeCost(1050), desc: "Keeps the shove from cooking itself." },
+      { name: "Twin-Screw Charger", cost: upgradeCost(1800), desc: "Hard launch power with less waiting around." },
+      { name: "Race Pulley Set", cost: upgradeCost(3000), desc: "More boost, more belt whine, more tyre bills." },
+      { name: "Race Supercharger", cost: upgradeCost(4400), desc: "Massive shove off the line, if the tyres agree." },
     ],
   },
   {
@@ -66,9 +76,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Settings className="w-5 h-5" />,
     color: "border-blue-500/60 bg-blue-500/10 text-blue-400",
     tiers: [
-      { name: "Shock Absorbers", cost: upgradeCost(50), desc: "Basic replacement shocks. No longer bottoms out on speed bumps." },
-      { name: "Sport Suspension", cost: upgradeCost(110), desc: "Vastly improved handling. Lane changes become satisfying." },
-      { name: "Racing Suspension", cost: upgradeCost(200), desc: "Track-spec setup. Possibly wasted on this road." },
+      { name: "Fresh Dampers", cost: upgradeCost(120), desc: "Basic replacement dampers. No longer bottoms out on speed bumps." },
+      { name: "Lowering Springs", cost: upgradeCost(260), desc: "A firmer stance and better launch control." },
+      { name: "Sport Suspension", cost: upgradeCost(520), desc: "Better weight transfer and cleaner lane changes." },
+      { name: "Adjustable Coilovers", cost: upgradeCost(900), desc: "Proper tuning range for grip and stability." },
+      { name: "Corner Balance", cost: upgradeCost(1450), desc: "Gets the chassis working instead of guessing." },
+      { name: "Racing Suspension", cost: upgradeCost(2200), desc: "Track-spec setup. Possibly wasted on this road." },
     ],
   },
   {
@@ -77,9 +90,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Fuel className="w-5 h-5" />,
     color: "border-green-500/60 bg-green-500/10 text-green-400",
     tiers: [
-      { name: "Fuel Filter", cost: upgradeCost(40), desc: "Cleaner fuel delivery. Measurably better economy." },
-      { name: "High-Flow Injectors", cost: upgradeCost(90), desc: "Significant efficiency gain. Range nearly doubled." },
-      { name: "Long-Range Tank", cost: upgradeCost(170), desc: "Extra capacity. James considers this the only sensible upgrade." },
+      { name: "Fuel Filter", cost: upgradeCost(95), desc: "Cleaner fuel delivery. Measurably better economy." },
+      { name: "Uprated Pump", cost: upgradeCost(210), desc: "Feeds modest power without drama." },
+      { name: "High-Flow Injectors", cost: upgradeCost(430), desc: "Supports harder pulls and cleaner fueling." },
+      { name: "Fuel Rail", cost: upgradeCost(760), desc: "More stable pressure for upgraded engines." },
+      { name: "Race ECU Map", cost: upgradeCost(1200), desc: "Squeezes power without guessing at the mixture." },
+      { name: "Long-Range Race Tank", cost: upgradeCost(1800), desc: "Extra capacity. James considers this the only sensible upgrade." },
     ],
   },
   {
@@ -88,9 +104,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Shield className="w-5 h-5" />,
     color: "border-red-500/60 bg-red-500/10 text-red-400",
     tiers: [
-      { name: "Bash Plates", cost: upgradeCost(55), desc: "Basic underbody protection. Slightly reassuring." },
-      { name: "Roll Cage", cost: upgradeCost(115), desc: "Structural reinforcement. Hammond asks if this is necessary." },
-      { name: "Full Armour", cost: upgradeCost(210), desc: "Comprehensive protection. May attract attention from customs." },
+      { name: "Panel Repair", cost: upgradeCost(110), desc: "Straightens the important bits and saves weight where possible." },
+      { name: "Bash Plates", cost: upgradeCost(240), desc: "Basic underbody protection. Slightly reassuring." },
+      { name: "Strut Bracing", cost: upgradeCost(480), desc: "Tightens the shell without building a tank." },
+      { name: "Roll Cage", cost: upgradeCost(820), desc: "Structural reinforcement. Hammond asks if this is necessary." },
+      { name: "Lightweight Panels", cost: upgradeCost(1350), desc: "Less mass, more expense, better acceleration." },
+      { name: "Full Race Shell", cost: upgradeCost(2100), desc: "Comprehensive preparation. May attract attention from customs." },
     ],
   },
   {
@@ -99,9 +118,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Circle className="w-5 h-5" />,
     color: "border-purple-500/60 bg-purple-500/10 text-purple-400",
     tiers: [
-      { name: "All-Season Tyres", cost: upgradeCost(65), desc: "Decent grip in most conditions. Wider pickup radius." },
-      { name: "Performance Tyres", cost: upgradeCost(130), desc: "Excellent grip. Collectibles practically leap into the car." },
-      { name: "Slicks", cost: upgradeCost(190), desc: "Maximum grip. Questionable for unpaved roads, but impressive." },
+      { name: "Fresh Road Tyres", cost: upgradeCost(130), desc: "Decent grip in most conditions." },
+      { name: "Sport Compound", cost: upgradeCost(300), desc: "Noticeably better launch and braking feel." },
+      { name: "Performance Tyres", cost: upgradeCost(580), desc: "Excellent grip. Collectibles practically leap into the car." },
+      { name: "Drag Radials", cost: upgradeCost(950), desc: "A proper quarter-mile tyre, not a fashion statement." },
+      { name: "Semi-Slicks", cost: upgradeCost(1450), desc: "Maximum dry grip with some road manners left." },
+      { name: "Slicks", cost: upgradeCost(2100), desc: "Maximum grip. Questionable for unpaved roads, but impressive." },
     ],
   },
   {
@@ -110,9 +132,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Gauge className="w-5 h-5" />,
     color: "border-cyan-500/60 bg-cyan-500/10 text-cyan-300",
     tiers: [
-      { name: "Dry Shot", cost: upgradeCost(95), desc: "A small bottle and cautious jets. Enough to embarrass pricier cars." },
-      { name: "Wet Kit", cost: upgradeCost(180), desc: "More fuel, more oxygen, more trouble. Serious drag-race shove." },
-      { name: "Direct Port Nitrous", cost: upgradeCost(320), desc: "Cylinder-by-cylinder lunacy. Supercar bait if the tyres can take it." },
+      { name: "Bottle Mount", cost: upgradeCost(180), desc: "The hardware to start loading small shots." },
+      { name: "Dry Shot", cost: upgradeCost(420), desc: "A cautious jet. Enough to wake up a cheap car." },
+      { name: "Wet Kit", cost: upgradeCost(820), desc: "More fuel, more oxygen, more trouble." },
+      { name: "Progressive Controller", cost: upgradeCost(1350), desc: "Feeds the hit in without instantly vaporising traction." },
+      { name: "Direct Port Nitrous", cost: upgradeCost(2100), desc: "Cylinder-by-cylinder lunacy. Supercar bait if the tyres can take it." },
+      { name: "Competition Bottle System", cost: upgradeCost(3100), desc: "Big-shot hardware for cars built to take it." },
     ],
   },
   {
@@ -121,9 +146,12 @@ export const DEFS: UpgradeDef[] = [
     icon: <Megaphone className="w-5 h-5" />,
     color: "border-pink-500/60 bg-pink-500/10 text-pink-400",
     tiers: [
-      { name: "Local Garage Decal", cost: upgradeCost(70), desc: "A small sticker. A small percentage. It all adds up." },
-      { name: "Energy Drink Livery", cost: upgradeCost(150), desc: "Garish, loud, lucrative. Every pound earned is worth more." },
-      { name: "Full Works Team", cost: upgradeCost(260), desc: "Plastered in logos. The accountants are delighted." },
+      { name: "Local Garage Decal", cost: upgradeCost(120), desc: "A small sticker. A small percentage. It all adds up." },
+      { name: "Parts Shop Deal", cost: upgradeCost(280), desc: "Discounts, favours, and one suspicious invoice." },
+      { name: "Energy Drink Livery", cost: upgradeCost(560), desc: "Garish, loud, lucrative. Every pound earned is worth more." },
+      { name: "Regional Sponsor", cost: upgradeCost(950), desc: "A proper backer with expectations." },
+      { name: "Factory Support", cost: upgradeCost(1500), desc: "The accountants begin to smile." },
+      { name: "Full Works Team", cost: upgradeCost(2300), desc: "Plastered in logos. The accountants are delighted." },
     ],
   },
   {
@@ -132,24 +160,27 @@ export const DEFS: UpgradeDef[] = [
     icon: <Clover className="w-5 h-5" />,
     color: "border-emerald-500/60 bg-emerald-500/10 text-emerald-400",
     tiers: [
-      { name: "Fuzzy Dice", cost: upgradeCost(45), desc: "Purely decorative. Definitely improves your final tally." },
-      { name: "St. Christopher", cost: upgradeCost(95), desc: "Patron saint of travellers. And of bigger bonuses." },
-      { name: "Golden Spanner", cost: upgradeCost(175), desc: "A talisman of pure mechanical fortune. A hefty score bonus." },
+      { name: "Fuzzy Dice", cost: upgradeCost(90), desc: "Purely decorative. Definitely improves your final tally." },
+      { name: "Lucky Keyring", cost: upgradeCost(190), desc: "Small charm, small bonus, large superstition." },
+      { name: "St. Christopher", cost: upgradeCost(390), desc: "Patron saint of travellers. And of bigger bonuses." },
+      { name: "Signed Haynes Manual", cost: upgradeCost(680), desc: "Nobody reads it, but it radiates competence." },
+      { name: "Golden Spanner", cost: upgradeCost(1100), desc: "A talisman of pure mechanical fortune." },
+      { name: "Blessed Toolbox", cost: upgradeCost(1700), desc: "A hefty score bonus with ceremonial nonsense included." },
     ],
   },
 ];
 
 export const EFFECTS: Record<UpgradeCat, string[]> = {
-  engine:    ["Distance per second +15%", "Distance per second +30%", "Distance per second +50%"],
-  turbo:     ["High-rpm boost +18%", "High-rpm boost +34%", "High-rpm boost +55%"],
-  supercharger:["Launch torque +16%", "Launch torque +32%", "Launch torque +50%"],
-  suspension:["Lane switch speed +2", "Lane switch speed +4", "Lane switch speed +6"],
-  fuel:      ["Fuel drain −15%", "Fuel drain −30%", "Fuel drain −50%"],
-  bodywork:  ["Collision damage −20%", "Collision damage −40%", "Collision damage −60%"],
-  tyres:     ["Collectible radius +8px", "Collectible radius +16px", "Collectible radius +24px"],
-  nitrous:   ["Drag nitrous shot +35%", "Drag nitrous shot +55%", "Drag nitrous shot +75%"],
-  sponsor:   ["Final score +15%", "Final score +30%", "Final score +50%"],
-  charm:     ["Final score +£75 per drive", "Final score +£175 per drive", "Final score +£350 per drive"],
+  engine:    ["Distance per second +7%", "Distance per second +15%", "Distance per second +22%", "Distance per second +30%", "Distance per second +40%", "Distance per second +50%"],
+  turbo:     ["High-rpm boost +9%", "High-rpm boost +18%", "High-rpm boost +26%", "High-rpm boost +34%", "High-rpm boost +45%", "High-rpm boost +55%"],
+  supercharger:["Launch torque +8%", "Launch torque +16%", "Launch torque +24%", "Launch torque +32%", "Launch torque +41%", "Launch torque +50%"],
+  suspension:["Lane switch speed +1", "Lane switch speed +2", "Lane switch speed +3", "Lane switch speed +4", "Lane switch speed +5", "Lane switch speed +6"],
+  fuel:      ["Fuel drain -8%", "Fuel drain -15%", "Fuel drain -22%", "Fuel drain -30%", "Fuel drain -40%", "Fuel drain -50%"],
+  bodywork:  ["Collision damage -10%", "Collision damage -20%", "Collision damage -30%", "Collision damage -40%", "Collision damage -50%", "Collision damage -60%"],
+  tyres:     ["Collectible radius +4px", "Collectible radius +8px", "Collectible radius +12px", "Collectible radius +16px", "Collectible radius +20px", "Collectible radius +24px"],
+  nitrous:   ["Drag nitrous shot +18%", "Drag nitrous shot +35%", "Drag nitrous shot +45%", "Drag nitrous shot +55%", "Drag nitrous shot +65%", "Drag nitrous shot +75%"],
+  sponsor:   ["Final score +7%", "Final score +15%", "Final score +22%", "Final score +30%", "Final score +40%", "Final score +50%"],
+  charm:     ["Final score +GBP 35 per drive", "Final score +GBP 75 per drive", "Final score +GBP 125 per drive", "Final score +GBP 175 per drive", "Final score +GBP 260 per drive", "Final score +GBP 350 per drive"],
 };
 
 export default function UpgradeShop() {
@@ -186,7 +217,7 @@ export default function UpgradeShop() {
 
   const budget = remainingFunds ?? save?.funds ?? 0;
 
-  const buyTier = async (cat: UpgradeCat, tier: 1 | 2 | 3) => {
+  const buyTier = async (cat: UpgradeCat, tier: UpgradeTier) => {
     if (!save || !saveId || !activeCarId) return;
     const activeGarageCar = loadGarage(saveId).cars.find((garageCar) => garageCar.id === activeCarId)
       ?? mission?.availableCars?.find((missionCar: { id: number }) => missionCar.id === activeCarId);
@@ -344,7 +375,7 @@ export default function UpgradeShop() {
                 </div>
                 <div className="divide-y divide-border">
                   {def.tiers.map((tier, idx) => {
-                    const tierNum = (idx + 1) as 1 | 2 | 3;
+                    const tierNum = (idx + 1) as UpgradeTier;
                     const isOwned = currentTier === tierNum;
                     const isUpgrade = tierNum > currentTier;
                     const tierCostRaw = tier.cost;

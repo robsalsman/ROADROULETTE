@@ -986,7 +986,7 @@ export default function DragRace() {
       <div className="flex-1 p-6 md:p-12">
         <div className="mx-auto max-w-3xl rounded-md border border-dashed border-border bg-muted/20 p-10 text-center">
           <p className="mb-4 text-xl font-black uppercase">No Garage Vehicle</p>
-          <p className="mb-6 text-muted-foreground">Quick Drag onboarding and starter vehicle selection are pending the economy approval step.</p>
+          <p className="mb-6 text-muted-foreground">Open the garage and buy an unlocked starter car from the showroom before entering Quick Drag.</p>
           <Link href="/garage">
             <Button className="uppercase font-bold">Open Garage</Button>
           </Link>

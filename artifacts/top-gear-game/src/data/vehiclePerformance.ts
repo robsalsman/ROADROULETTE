@@ -68,6 +68,10 @@ function nameDrivenOverrides(name: string): Partial<VehiclePerformance> {
   return {};
 }
 
+function upgradeEffect(tier = 0): number {
+  return tier / 2;
+}
+
 export function deriveVehiclePerformance(
   vehicle: Pick<OwnedVehicle, "canonicalVehicleKey" | "name" | "power" | "offRoad" | "reliability" | "purchasePrice" | "condition">,
   upgrades: Upgrades = {},
@@ -75,16 +79,24 @@ export function deriveVehiclePerformance(
   const key = vehicle.canonicalVehicleKey || canonicalVehicleKey(vehicle.name);
   const override = nameDrivenOverrides(vehicle.name);
   const baseHp = override.horsepower ?? Math.round(85 + vehicle.power * 52);
-  const hp = Math.round(baseHp + (upgrades.engine ?? 0) * 68 + (upgrades.turbo ?? 0) * 72 + (upgrades.supercharger ?? 0) * 64 + (upgrades.fuel ?? 0) * 22 + (upgrades.nitrous ?? 0) * 26);
-  const weight = override.weight ?? Math.max(1650, Math.round(2850 + vehicle.offRoad * 130 - vehicle.power * 35 - (upgrades.bodywork ?? 0) * 90));
+  const engine = upgradeEffect(upgrades.engine);
+  const turbo = upgradeEffect(upgrades.turbo);
+  const supercharger = upgradeEffect(upgrades.supercharger);
+  const fuel = upgradeEffect(upgrades.fuel);
+  const nitrous = upgradeEffect(upgrades.nitrous);
+  const bodywork = upgradeEffect(upgrades.bodywork);
+  const tyres = upgradeEffect(upgrades.tyres);
+  const suspension = upgradeEffect(upgrades.suspension);
+  const hp = Math.round(baseHp + engine * 68 + turbo * 72 + supercharger * 64 + fuel * 22 + nitrous * 26);
+  const weight = override.weight ?? Math.max(1650, Math.round(2850 + vehicle.offRoad * 130 - vehicle.power * 35 - bodywork * 90));
   const drivetrain = override.drivetrain ?? (/porsche|audi|subaru|mitsubishi|range rover|land rover|jeep|ford focus/i.test(vehicle.name) ? "AWD" : vehicle.power > 7 ? "RWD" : "FWD");
-  const tractionBase = vehicle.reliability * 0.38 + vehicle.offRoad * 0.28 + (upgrades.tyres ?? 0) * 1.35 + (upgrades.suspension ?? 0) * 0.85;
+  const tractionBase = vehicle.reliability * 0.38 + vehicle.offRoad * 0.28 + tyres * 1.35 + suspension * 0.85;
   const drivetrainBonus = drivetrain === "AWD" || drivetrain === "4x4" ? 1.1 : drivetrain === "FWD" ? 0.35 : drivetrain === "Boat" ? -1.4 : 0;
   const traction = Math.max(1, Math.min(10, tractionBase + drivetrainBonus - Math.max(0, 100 - vehicle.condition) / 35));
   const powerToWeight = hp / weight;
   const powerRating = Math.round(Math.max(1, Math.min(100, 18 + Math.sqrt(hp / 80) * 21 + powerToWeight * 55)));
   const handlingRating = Math.round(Math.max(1, Math.min(100, traction * 8.5 + (drivetrain === "AWD" || drivetrain === "4x4" ? 5 : drivetrain === "FWD" ? 2 : 0) - Math.max(0, weight - 3200) / 190)));
-  const reliabilityRating = Math.round(Math.max(1, Math.min(100, vehicle.condition * 0.66 + vehicle.reliability * 3.4 - (upgrades.turbo ?? 0) * 1.8 - (upgrades.supercharger ?? 0) * 1.4 + (upgrades.fuel ?? 0) * 1.2)));
+  const reliabilityRating = Math.round(Math.max(1, Math.min(100, vehicle.condition * 0.66 + vehicle.reliability * 3.4 - turbo * 1.8 - supercharger * 1.4 + fuel * 1.2)));
   const tier = override.tier ?? (powerToWeight > 0.18 ? "Supercar" : powerToWeight > 0.13 ? "Pro" : powerToWeight > 0.09 ? "Club" : "Local");
   const valueCredits = Math.max(100, Math.round(vehicle.purchasePrice * 1.15 + hp * 0.9 + traction * 22));
   return { canonicalVehicleKey: key, horsepower: hp, weight, drivetrain, traction: Math.round(traction * 10) / 10, powerRating, handlingRating, reliabilityRating, tier, valueCredits };

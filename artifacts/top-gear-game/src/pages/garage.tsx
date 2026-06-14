@@ -12,6 +12,7 @@ import {
   loadUpgrades,
   saveUpgrades as saveLocalUpgrades,
   type UpgradeCat,
+  type UpgradeTier,
   type Upgrades,
 } from "@/data/garage";
 import { canonicalVehicleKey } from "@/data/vehicles";
@@ -38,6 +39,7 @@ import {
 } from "@/data/vehicleFiles";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { economyTierForVehicle, type EconomyTier } from "@workspace/economy";
 
 const GARAGE_QUERY_KEY = ["garage"];
 const MIGRATION_FLAG = "tgrr-persistent-garage-migrated-v1";
@@ -103,7 +105,7 @@ function formatTime(ms: number): string {
   return `${(ms / 1000).toFixed(3)}s`;
 }
 
-function highestUnlockedEpisode(): number {
+function highestCompletedEpisode(): number {
   let highestCompleted = 0;
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -113,7 +115,21 @@ function highestUnlockedEpisode(): number {
       for (const episodeId of state.completedEpisodes ?? []) highestCompleted = Math.max(highestCompleted, episodeId);
     } catch { /* ignore */ }
   }
-  return Math.max(1, highestCompleted + 1);
+  return highestCompleted;
+}
+
+function showroomTier(car: ShowroomCar): EconomyTier {
+  return economyTierForVehicle({
+    name: car.name,
+    reliability: car.reliability,
+    power: car.power,
+    offRoad: car.offRoad,
+    episodeNumber: car.missionId,
+  });
+}
+
+function isShowroomUnlocked(car: ShowroomCar, completedEpisode: number): boolean {
+  return showroomTier(car) === "starter" || car.missionId <= completedEpisode;
 }
 
 async function fetchShowroomCars(): Promise<ShowroomCar[]> {
@@ -232,7 +248,7 @@ export default function Garage() {
   const vehicles = garage?.vehicles ?? [];
   const activeVehicle = vehicles.find((vehicle) => vehicle.isActive) ?? vehicles[0];
   const raceHistory = garage?.raceHistory ?? [];
-  const unlockedEpisode = useMemo(() => highestUnlockedEpisode(), []);
+  const completedEpisode = useMemo(() => highestCompletedEpisode(), []);
   const ownedKeys = useMemo(() => new Set(vehicles.map((vehicle) => vehicle.canonicalVehicleKey)), [vehicles]);
   const showroomCars = showroomQuery.data ?? [];
 
@@ -306,7 +322,7 @@ export default function Garage() {
     }
   };
 
-  const buyTier = async (vehicle: OwnedVehicle, cat: UpgradeCat, tier: 1 | 2 | 3) => {
+  const buyTier = async (vehicle: OwnedVehicle, cat: UpgradeCat, tier: UpgradeTier) => {
     const def = DEFS.find((item) => item.cat === cat);
     if (!def || !garage) return;
     const token = `${vehicle.canonicalVehicleKey}-${cat}-${tier}`;
@@ -477,7 +493,7 @@ export default function Garage() {
   const buyShowroomCar = async (vehicle: ShowroomCar) => {
     if (!garage) return;
     const canonicalKey = canonicalVehicleKey(vehicle.name);
-    if (vehicle.missionId > unlockedEpisode || ownedKeys.has(canonicalKey) || garage.profile.credits < vehicle.price) return;
+    if (!isShowroomUnlocked(vehicle, completedEpisode) || ownedKeys.has(canonicalKey) || garage.profile.credits < vehicle.price) return;
     setWorking(`buy-${canonicalKey}`);
     try {
       await buyMutation.mutateAsync(vehicle);
@@ -523,15 +539,12 @@ export default function Garage() {
 
         {garageQuery.isLoading ? (
           <div className="rounded-md border border-border bg-card p-8 text-muted-foreground">Loading garage...</div>
-        ) : !garage || vehicles.length === 0 ? (
+        ) : !garage ? (
           <div className="rounded-md border border-dashed border-border bg-muted/20 p-10 text-center">
-            <p className="mb-4 text-lg font-bold uppercase">No garage cars yet</p>
-            <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
-              Buy cars in Series Mode or Arcade Mode. They will appear here as one persistent collection.
+            <p className="mb-4 text-lg font-bold uppercase">Garage unavailable</p>
+            <p className="mx-auto max-w-xl text-muted-foreground">
+              The persistent garage did not load. Refresh and try again.
             </p>
-            <Link href="/series-start">
-              <Button className="uppercase font-bold">Start Series Mode</Button>
-            </Link>
           </div>
         ) : (
           <div className="space-y-8">
@@ -638,7 +651,16 @@ export default function Garage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {vehicles.length === 0 ? (
+              <div className="rounded-md border border-dashed border-border bg-muted/20 p-8">
+                <p className="text-lg font-black uppercase">Choose a starter car</p>
+                <p className="mt-2 max-w-2xl text-muted-foreground">
+                  Your garage is empty. Buy an unlocked starter from the showroom below before entering drag races.
+                  Episode and elite cars unlock after career progress, so the first run starts grounded.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleRows.map(({ vehicle, garageCar, performance, projection, vehicleFileSummary, races, wins, bestEt, saleValue, repairCost }) => {
                 const key = vehicle.canonicalVehicleKey;
                 const isExpanded = expanded === key;
@@ -903,9 +925,9 @@ export default function Garage() {
                                   <span>{def.label}</span>
                                   {currentTier > 0 && <span className="ml-auto text-primary">Tier {currentTier}</span>}
                                 </div>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
                                   {def.tiers.map((tier, idx) => {
-                                    const tierNum = (idx + 1) as 1 | 2 | 3;
+                                    const tierNum = (idx + 1) as UpgradeTier;
                                     const previousCost = currentTier > 0 ? def.tiers[currentTier - 1].cost : 0;
                                     const diffCost = tier.cost - previousCost;
                                     const owned = currentTier === tierNum;
@@ -932,7 +954,7 @@ export default function Garage() {
                                         <span className="block text-muted-foreground">{EFFECTS[def.cat][idx]}</span>
                                         <span className="block text-muted-foreground">HP {previewPerformance.horsepower} / Grip {previewPerformance.traction.toFixed(1)}</span>
                                         <span className="block font-mono font-bold">
-                                          {owned ? "Sell" : `GBP ${currentTier > 0 ? diffCost : tier.cost}`}
+                                          {owned ? "Sell" : locked ? "Installed below" : `GBP ${currentTier > 0 ? diffCost : tier.cost}`}
                                         </span>
                                       </button>
                                     );
@@ -986,7 +1008,8 @@ export default function Garage() {
                   </Card>
                 );
               })}
-            </div>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
@@ -998,7 +1021,7 @@ export default function Garage() {
                   <p className="text-sm text-muted-foreground">Campaign cars appear here before you own them. Future episode cars stay locked until reached.</p>
                 </div>
                 <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs font-black uppercase text-muted-foreground">
-                  Unlocked through episode {unlockedEpisode}
+                  Starter cars now - completed through episode {completedEpisode}
                 </div>
               </div>
 
@@ -1011,7 +1034,8 @@ export default function Garage() {
                   {showroomCars.map((car) => {
                     const canonicalKey = canonicalVehicleKey(car.name);
                     const owned = ownedKeys.has(canonicalKey);
-                    const locked = car.missionId > unlockedEpisode;
+                    const tier = showroomTier(car);
+                    const locked = !isShowroomUnlocked(car, completedEpisode);
                     const affordable = Boolean(garage) && garage.profile.credits >= car.price;
                     const disabled = owned || locked || !affordable || working === `buy-${canonicalKey}`;
                     return (
@@ -1028,7 +1052,9 @@ export default function Garage() {
                               </span>
                             ) : owned ? (
                               <span className="rounded bg-primary/20 px-2 py-1 text-xs font-black uppercase text-primary">Owned</span>
-                            ) : null}
+                            ) : (
+                              <span className="rounded bg-amber-500/20 px-2 py-1 text-xs font-black uppercase text-amber-200">{tier}</span>
+                            )}
                           </div>
                         </CardHeader>
                         <CardContent className="flex-1 space-y-4">
@@ -1058,7 +1084,7 @@ export default function Garage() {
                             onClick={() => buyShowroomCar(car)}
                             data-testid={`button-showroom-buy-${canonicalKey}`}
                           >
-                            {owned ? "Owned" : locked ? `Unlock Episode ${car.missionId}` : !affordable ? "Not Enough Garage GBP" : "Buy Car"}
+                            {owned ? "Owned" : locked ? `Complete Episode ${car.missionId}` : !affordable ? "Not Enough Garage GBP" : "Buy Car"}
                           </Button>
                         </CardFooter>
                       </Card>

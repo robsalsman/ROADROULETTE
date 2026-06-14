@@ -1,7 +1,7 @@
 import { recordGarageCount } from "@/data/campaign";
 
 export type UpgradeCat = "engine" | "turbo" | "supercharger" | "suspension" | "fuel" | "bodywork" | "tyres" | "nitrous" | "sponsor" | "charm";
-export type UpgradeTier = 1 | 2 | 3;
+export type UpgradeTier = 1 | 2 | 3 | 4 | 5 | 6;
 export type Upgrades = Partial<Record<UpgradeCat, UpgradeTier>>;
 
 export interface GarageCar {
@@ -104,10 +104,11 @@ export function adjustedCarStats(car: Pick<GarageCar, "reliability" | "power" | 
   const reliability = Number.isFinite(car.reliability) ? car.reliability : 6;
   const power = Number.isFinite(car.power) ? car.power : 5;
   const offRoad = Number.isFinite(car.offRoad) ? car.offRoad : 5;
+  const tierEffect = (tier = 0) => tier / 2;
   return {
-    reliability: Math.min(10, reliability + (upgrades.bodywork ?? 0) + Math.floor((upgrades.fuel ?? 0) / 2)),
-    power: Math.min(10, power + (upgrades.engine ?? 0) * 2 + (upgrades.turbo ?? 0) + (upgrades.supercharger ?? 0) + (upgrades.nitrous ?? 0)),
-    offRoad: Math.min(10, offRoad + (upgrades.suspension ?? 0) + (upgrades.tyres ?? 0)),
+    reliability: Math.min(10, reliability + tierEffect(upgrades.bodywork) + Math.floor(tierEffect(upgrades.fuel) / 2)),
+    power: Math.min(10, power + tierEffect(upgrades.engine) * 2 + tierEffect(upgrades.turbo) + tierEffect(upgrades.supercharger) + tierEffect(upgrades.nitrous)),
+    offRoad: Math.min(10, offRoad + tierEffect(upgrades.suspension) + tierEffect(upgrades.tyres)),
   };
 }
 

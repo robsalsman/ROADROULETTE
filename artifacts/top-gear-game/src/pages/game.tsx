@@ -31,23 +31,13 @@ import DrivingGame from "@/components/DrivingGame";
 import JaguarSkiSlalomGame from "@/components/JaguarSkiSlalomGame";
 import GroupChat from "@/components/GroupChat";
 import { getVehicleSprite } from "@/components/VehicleSprite";
-import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar } from "@/data/garage";
+import { adjustedCarStats, loadGarage, loadUpgrades as loadCarUpgrades, type GarageCar, type Upgrades } from "@/data/garage";
 import { canonicalVehicleKey, vehicleTopDownSprite } from "@/data/vehicles";
 import { garageApi } from "@/services/garageApi";
 import { Wrench, AlertTriangle, MapPin, Flag, Car, Footprints, Brain, HeartHandshake, Trophy, Backpack, Clock } from "lucide-react";
 
 // ── Upgrade helpers ───────────────────────────────────────────────────────────
 const UPGRADE_KEY = (id: string | number) => `tgrr-upgrades-${id}`;
-
-interface Upgrades {
-  engine?: 1 | 2 | 3;
-  suspension?: 1 | 2 | 3;
-  fuel?: 1 | 2 | 3;
-  bodywork?: 1 | 2 | 3;
-  tyres?: 1 | 2 | 3;
-  sponsor?: 1 | 2 | 3;
-  charm?: 1 | 2 | 3;
-}
 
 function loadUpgrades(saveId: string | number): Upgrades {
   try {
@@ -58,13 +48,14 @@ function loadUpgrades(saveId: string | number): Upgrades {
 }
 
 function upgradeStats(u: Upgrades) {
+  const tierEffect = (tier = 0) => tier / 2;
   return {
-    damageResist:       (u.bodywork ?? 0) * 0.2,
-    fuelEfficiency:     1 - (u.fuel ?? 0) * 0.15,
-    laneSpeedBonus:     (u.suspension ?? 0) * 2,
-    collectRadiusBonus: (u.tyres ?? 0) * 8,
-    scoreMultiplier:    [0, 0.15, 0.3, 0.5][u.sponsor ?? 0],
-    scoreBonus:         [0, 750, 1750, 3500][u.charm ?? 0],
+    damageResist:       tierEffect(u.bodywork) * 0.2,
+    fuelEfficiency:     1 - tierEffect(u.fuel) * 0.15,
+    laneSpeedBonus:     tierEffect(u.suspension) * 2,
+    collectRadiusBonus: tierEffect(u.tyres) * 8,
+    scoreMultiplier:    [0, 0.07, 0.15, 0.22, 0.3, 0.4, 0.5][u.sponsor ?? 0],
+    scoreBonus:         [0, 350, 750, 1250, 1750, 2600, 3500][u.charm ?? 0],
   };
 }
 
