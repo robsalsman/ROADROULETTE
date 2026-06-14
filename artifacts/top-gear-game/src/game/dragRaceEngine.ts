@@ -16,6 +16,13 @@ export type DragRaceInput = {
 export type DragOpponent = {
   key: string;
   name: string;
+  vehicleName: string;
+  presenter: "Jeremy" | "Richard" | "James";
+  episode: string;
+  tier: "Starter" | "Mid" | "High" | "Elite";
+  intro: string;
+  winLine: string;
+  loseLine: string;
   power: number;
   traction: number;
   consistency: number;
@@ -39,13 +46,107 @@ export type DragRaceResult = {
     reactionMs: number;
     conditionPenalty: number;
     tuningBonus: number;
+    overRevMs?: number;
+    mechanicalDamage?: number;
+    nitrousUsed?: number;
+    entryFee?: number;
+    potCredits?: number;
+    redLightStrikes?: number;
+    fault?: "false-start" | "engine-risk" | "missed-shifts";
   };
 };
 
 export const DRAG_OPPONENTS: DragOpponent[] = [
-  { key: "service-road-sleeper", name: "Service Road Sleeper", power: 5, traction: 5, consistency: 6, rewardCredits: 140 },
-  { key: "runway-local", name: "Runway Local Hero", power: 7, traction: 6, consistency: 7, rewardCredits: 230 },
-  { key: "midnight-special", name: "Midnight Special", power: 9, traction: 8, consistency: 8, rewardCredits: 380 },
+  {
+    key: "captain-slow-miata",
+    name: "Precision Roadster",
+    vehicleName: "Mazda MX-5",
+    presenter: "James",
+    episode: "Starter Club",
+    tier: "Starter",
+    power: 3,
+    traction: 6,
+    consistency: 8,
+    rewardCredits: 90,
+    intro: "I have selected something light, balanced, and therefore correct. Try not to ruin the launch.",
+    winLine: "There we are. Precision, patience, and a complete absence of shouting.",
+    loseLine: "Oh cock. I appear to have been beaten by enthusiasm.",
+  },
+  {
+    key: "hamster-hot-hatch",
+    name: "Hot Hatch Scrapper",
+    vehicleName: "Volkswagen Golf GTI",
+    presenter: "Richard",
+    episode: "Runabout Rumble",
+    tier: "Starter",
+    power: 5,
+    traction: 6,
+    consistency: 6,
+    rewardCredits: 140,
+    intro: "Small car, big attitude. Come on then, let's see if your garage queen can actually move.",
+    winLine: "Ha! Tiny car, massive victory. That is science.",
+    loseLine: "Right. Fine. I was giving it character, not speed.",
+  },
+  {
+    key: "service-road-sleeper",
+    name: "Service Road Sleeper",
+    vehicleName: "Audi S8 Plus",
+    presenter: "Jeremy",
+    episode: "Operation Desert Stumble",
+    tier: "Mid",
+    power: 6,
+    traction: 6,
+    consistency: 6,
+    rewardCredits: 245,
+    intro: "This is a sensible executive saloon with a large engine. Sensible, obviously, means fast.",
+    winLine: "Power has solved the problem, as it always does.",
+    loseLine: "Clearly the road surface was wrong. Or the air. Probably the air.",
+  },
+  {
+    key: "runway-local",
+    name: "Runway Local Hero",
+    vehicleName: "Ford Mustang GT",
+    presenter: "Richard",
+    episode: "Runway Local Hero",
+    tier: "High",
+    power: 8,
+    traction: 7,
+    consistency: 7,
+    rewardCredits: 405,
+    intro: "Proper noise, proper drama, and hopefully less spinning than last time.",
+    winLine: "Yes! That is what a launch is supposed to feel like.",
+    loseLine: "I had wheelspin. Heroic wheelspin, but wheelspin.",
+  },
+  {
+    key: "midnight-special",
+    name: "Midnight Special",
+    vehicleName: "Dodge Challenger SRT Demon",
+    presenter: "Jeremy",
+    episode: "Midnight Special",
+    tier: "Elite",
+    power: 10,
+    traction: 9,
+    consistency: 8,
+    rewardCredits: 665,
+    intro: "This has enough torque to rotate the planet. You may now be afraid.",
+    winLine: "And that is why the answer is displacement.",
+    loseLine: "I shall be filing a formal complaint against physics.",
+  },
+  {
+    key: "captain-slow-hypercar",
+    name: "Hypercar Thesis",
+    vehicleName: "Porsche 918 Spyder",
+    presenter: "James",
+    episode: "Holy Trinity",
+    tier: "Elite",
+    power: 10,
+    traction: 10,
+    consistency: 9,
+    rewardCredits: 950,
+    intro: "Hybrid torque vectoring, four driven wheels, and absolutely no need for childishness.",
+    winLine: "A pleasing demonstration of engineering. I enjoyed that quietly.",
+    loseLine: "I may have overestimated the calming influence of technology.",
+  },
 ];
 
 export function opponentsForVehicle(vehicle?: DragVehicle): DragOpponent[] {
@@ -64,8 +165,10 @@ function tuningBonus(tuning: GarageTuning): number {
   const launchFit = 1 - Math.min(1, Math.abs(tuning.launchRpm - 4300) / 2500);
   const shiftFit = 1 - Math.min(1, Math.abs(tuning.shiftRpm - 6500) / 3000);
   const gearingFit = 1 - Math.min(1, Math.abs(tuning.gearing - 58) / 58);
-  const tireFit = 1 - Math.min(1, Math.abs(tuning.tireSetup - 64) / 64);
-  return (launchFit + shiftFit + gearingFit + tireFit) / 4;
+  const tireFit = 1 - Math.min(1, Math.abs((tuning.tirePressure ?? 32) - 28) / 18);
+  const suspensionFit = 1 - Math.min(1, Math.abs((tuning.suspension ?? 50) - 42) / 58);
+  const downforceFit = 1 - Math.min(1, Math.abs((tuning.downforce ?? 35) - 25) / 75);
+  return (launchFit + shiftFit + gearingFit + tireFit + suspensionFit + downforceFit) / 6;
 }
 
 export function simulateDragRace(input: DragRaceInput): DragRaceResult {

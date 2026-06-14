@@ -4,6 +4,7 @@ import { ECONOMY } from "@workspace/economy";
 import { ArrowLeft, Brain, CheckCircle2, Shuffle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_TRIVIA, triviaByType, type TriviaQuestion } from "@/data/trivia";
+import { recordStandaloneTriviaResult } from "@/data/driverStats";
 import { garageApi } from "@/services/garageApi";
 import { cn } from "@/lib/utils";
 
@@ -45,12 +46,15 @@ export default function TriviaMode() {
 
   const answer = (index: number) => {
     if (answered) return;
+    const isCorrect = index === question.answer;
+    const reward = 15 * ECONOMY.dragRewardMultiplier;
     if (index === question.answer) {
-      void garageApi.awardCredits(15 * ECONOMY.dragRewardMultiplier, "Standalone trivia reward").catch(() => undefined);
+      void garageApi.awardCredits(reward, "Standalone trivia reward").catch(() => undefined);
     }
+    recordStandaloneTriviaResult(question.id, isCorrect, reward);
     setSelected(index);
     setScore((prev) => ({
-      right: prev.right + (index === question.answer ? 1 : 0),
+      right: prev.right + (isCorrect ? 1 : 0),
       total: prev.total + 1,
     }));
   };

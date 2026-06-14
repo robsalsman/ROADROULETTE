@@ -1,26 +1,21 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Flag, Gauge, RotateCcw, Settings2, Trophy, Zap } from "lucide-react";
+import { ArrowLeft, Car, Flag, Gauge, MessageSquare, RotateCcw, Settings2, Trophy, Zap } from "lucide-react";
+import { getListSavesQueryKey, useListSaves } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { garageApi, defaultGarageTuning, type GarageTuning, type OwnedVehicle } from "@/services/garageApi";
-import { opponentsForVehicle, simulateDragRace, timingScore, type DragOpponent, type DragRaceResult } from "@/game/dragRaceEngine";
-import { deriveVehiclePerformance } from "@/data/vehiclePerformance";
+import { opponentsForVehicle, simulateDragRace, type DragOpponent, type DragRaceResult } from "@/game/dragRaceEngine";
+import { deriveVehiclePerformance, tuningProjection } from "@/data/vehiclePerformance";
 import { vehicleTopDownSprite } from "@/data/vehicles";
+import { latestActiveSeriesSave, recordCareerDragRace } from "@/data/activeCareer";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 const GARAGE_QUERY_KEY = ["garage"];
 
 const DRAG_DIFFICULTY = {
-  launchNeedleSeconds: 2.6,
-  shiftNeedleSeconds: 2.8,
-  launchTarget: 0.72,
-  shiftTarget: 0.68,
-  perfectWindow: 0.07,
-  goodWindow: 0.18,
-  lateWindow: 0.3,
   countdownMs: 2600,
   raceDistanceMeters: 402,
   maxRaceSeconds: 32,
@@ -29,9 +24,15 @@ const DRAG_DIFFICULTY = {
   shiftWindowPaddingMeters: 18,
   shiftReadyRpm: 6200,
   redlineRpm: 8200,
+  dangerRpm: 8050,
   beginnerReactionGraceMs: 260,
   speedScale: 1.55,
+  idleRpm: 1100,
+  stagedRpm: 2800,
 };
+
+const RED_LIGHT_LIMIT = 3;
+const RED_LIGHT_DAMAGE = 2;
 
 type RacePhase = "staging" | "countdown" | "launching" | "racing" | "result";
 type TimingGrade = "too-early" | "good" | "perfect" | "late" | "missed";
@@ -47,6 +48,11 @@ type RaceRuntime = {
   elapsedMs: number;
   playerFinishedMs: number | null;
   opponentFinishedMs: number | null;
+  overRevMs: number;
+  badShiftCount: number;
+  nitrousShots: number;
+  nitrousBoostMs: number;
+  nitrousMs: number;
 };
 
 const initialRuntime: RaceRuntime = {
@@ -60,6 +66,11 @@ const initialRuntime: RaceRuntime = {
   elapsedMs: 0,
   playerFinishedMs: null,
   opponentFinishedMs: null,
+  overRevMs: 0,
+  badShiftCount: 0,
+  nitrousShots: 0,
+  nitrousBoostMs: 0,
+  nitrousMs: 0,
 };
 
 function formatTime(ms: number): string {
@@ -72,21 +83,11 @@ function selectVehicle(vehicles: OwnedVehicle[], key: string | null): OwnedVehic
     ?? vehicles[0];
 }
 
-function zoneForNeedle(value: number, target: number): TimingGrade {
-  const delta = value - target;
-  const abs = Math.abs(delta);
-  if (abs <= DRAG_DIFFICULTY.perfectWindow) return "perfect";
-  if (abs <= DRAG_DIFFICULTY.goodWindow) return "good";
-  if (delta < 0) return "too-early";
-  if (abs <= DRAG_DIFFICULTY.lateWindow) return "late";
-  return "missed";
-}
-
 function feedbackFor(kind: "launch" | "shift", grade: TimingGrade): string {
   if (kind === "launch") {
     if (grade === "perfect") return "Perfect launch";
-    if (grade === "too-early") return "Wheelspin";
-    if (grade === "late" || grade === "missed") return "Bogged launch";
+    if (grade === "too-early") return "Bogged launch";
+    if (grade === "late" || grade === "missed") return "Wheelspin";
     return "Clean launch";
   }
   if (grade === "perfect") return "Perfect shift";
@@ -102,6 +103,20 @@ function timingLabel(grade: TimingGrade): string {
   return "Missed";
 }
 
+function scoreForRpm(rpm: number, target: number): number {
+  return Math.max(0, 1 - Math.abs(rpm - target) / 2600);
+}
+
+function gradeForRpm(rpm: number, target: number): TimingGrade {
+  const delta = rpm - target;
+  const abs = Math.abs(delta);
+  if (abs <= 260) return "perfect";
+  if (abs <= 900) return "good";
+  if (delta < 0) return "too-early";
+  if (abs <= 1500) return "late";
+  return "missed";
+}
+
 function gradeClass(grade: TimingGrade): string {
   if (grade === "perfect") return "border-green-400 bg-green-500/20 text-green-100";
   if (grade === "good") return "border-amber-400 bg-amber-500/20 text-amber-100";
@@ -110,29 +125,112 @@ function gradeClass(grade: TimingGrade): string {
 }
 
 function opponentSpriteName(opponent: DragOpponent): string {
+  if (opponent.vehicleName) return opponent.vehicleName;
   if (opponent.key.includes("midnight")) return "Dodge Challenger SRT Demon";
   if (opponent.key.includes("runway")) return "Ford Mustang GT";
   return "Volkswagen Golf GTI";
 }
 
+function transmissionMode(name: string): "automatic" | "manual" {
+  return /audi|mclaren|p1|laferrari|ferrari|porsche 918|chiron|veyron|rimac|lamborghini|tesla|lexus|mercedes|amg|range rover|rolls|bentley/i.test(name)
+    ? "automatic"
+    : "manual";
+}
+
+function mechanicalDamageFor(runtime: RaceRuntime, launchScore: number, shiftScores: number[]): number {
+  const launchDamage = launchScore < 0.18 ? 4 : launchScore < 0.35 ? 2 : 0;
+  const shiftDamage = shiftScores.filter((score) => score < 0.3).length * 3 + runtime.badShiftCount * 2;
+  const overRevDamage = Math.floor(runtime.overRevMs / 550) * 2;
+  const nitrousDamage = Math.floor(runtime.nitrousMs / 1400);
+  return Math.min(34, launchDamage + shiftDamage + overRevDamage + nitrousDamage);
+}
+
+function faultFor(result: DragRaceResult): string | null {
+  if (result.breakdown.fault === "false-start") return `Third red light. You lose the pot after ${result.breakdown.redLightStrikes ?? RED_LIGHT_LIMIT} strikes.`;
+  if (result.breakdown.fault === "engine-risk") return "Engine damage from holding it near redline.";
+  if (result.breakdown.fault === "missed-shifts") return "Missed shifts cost time and hurt the driveline.";
+  return null;
+}
+
+function gaugeNeedleRotation(value: number, max: number): number {
+  return -132 + Math.max(0, Math.min(1, value / max)) * 264;
+}
+
+function AnalogGauge({ label, value, max, unit, marks, redFrom }: {
+  label: string;
+  value: number;
+  max: number;
+  unit: string;
+  marks: number[];
+  redFrom?: number;
+}) {
+  const rotation = gaugeNeedleRotation(value, max);
+  return (
+    <div className="relative mx-auto h-[clamp(104px,17dvh,185px)] w-[clamp(104px,17dvh,185px)] shrink-0 rounded-full border border-zinc-600 bg-[radial-gradient(circle_at_50%_42%,#303744_0%,#13161d_48%,#050608_100%)] shadow-[inset_0_0_24px_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.45)]">
+      <svg viewBox="0 0 160 160" className="absolute inset-0 h-full w-full">
+        <defs>
+          <linearGradient id={`${label}-chrome`} x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="#d7dde8" stopOpacity="0.45" />
+            <stop offset="48%" stopColor="#475063" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#050608" stopOpacity="0.65" />
+          </linearGradient>
+        </defs>
+        <circle cx="80" cy="80" r="74" fill="none" stroke={`url(#${label}-chrome)`} strokeWidth="5" />
+        <path d="M 25 116 A 66 66 0 1 1 135 116" fill="none" stroke="#172339" strokeWidth="14" strokeLinecap="round" />
+        {redFrom != null && (
+          <path d="M 25 116 A 66 66 0 1 1 135 116" fill="none" stroke="#ef4444" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${Math.max(8, (1 - redFrom / max) * 176)} 210`} strokeDashoffset="-172" opacity="0.72" />
+        )}
+        {marks.map((mark) => {
+          const angle = gaugeNeedleRotation(mark, max);
+          return (
+            <g key={mark} transform={`rotate(${angle} 80 80)`}>
+              <line x1="80" y1="14" x2="80" y2="25" stroke="#f8fafc" strokeWidth={mark % (max / 2) === 0 ? 3 : 2} strokeLinecap="round" />
+              <text x="80" y="40" textAnchor="middle" fill="#d1d5db" fontSize="9" fontWeight="800" transform={`rotate(${-angle} 80 40)`}>{mark}</text>
+            </g>
+          );
+        })}
+        <g transform={`rotate(${rotation} 80 80)`}>
+          <path d="M 78 82 L 80 24 L 82 82 Z" fill="#f43f5e" />
+          <path d="M 79 82 L 80 30 L 81 82 Z" fill="#ffe4e6" opacity="0.75" />
+        </g>
+        <circle cx="80" cy="80" r="8" fill="#e5e7eb" />
+        <circle cx="80" cy="80" r="4" fill="#111827" />
+        <ellipse cx="60" cy="38" rx="42" ry="16" fill="#fff" opacity="0.08" />
+      </svg>
+      <div className="absolute inset-x-0 bottom-3 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-300">{label}</p>
+        <p className="font-mono text-sm font-black text-white">{Math.round(value).toLocaleString()} <span className="text-[10px] text-zinc-400">{unit}</span></p>
+      </div>
+    </div>
+  );
+}
+
 export default function DragRace() {
   const queryClient = useQueryClient();
-  const searchParams = new URLSearchParams(window.location.search);
+  const [location] = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(window.location.search), [location]);
   const requestedVehicle = searchParams.get("vehicle");
+  const requestedOpponent = searchParams.get("opponent");
+  const requestedMode = searchParams.get("mode");
 
   const garageQuery = useQuery({
     queryKey: GARAGE_QUERY_KEY,
     queryFn: garageApi.getGarage,
   });
+  const savesQuery = useListSaves({ query: { queryKey: getListSavesQueryKey() } });
 
   const garage = garageQuery.data;
+  const activeCareerSave = useMemo(() => latestActiveSeriesSave(savesQuery.data), [savesQuery.data]);
   const vehicle = selectVehicle(garage?.vehicles ?? [], requestedVehicle);
-  const opponents = useMemo(() => opponentsForVehicle(vehicle ? { ...vehicle, tuning: vehicle.tuning ?? defaultGarageTuning } : undefined), [vehicle]);
-  const [opponentKey, setOpponentKey] = useState(opponents[0]?.key ?? "service-road-sleeper");
+  const opponents = useMemo(() => opponentsForVehicle(vehicle ? { ...vehicle, tuning: { ...defaultGarageTuning, ...(vehicle.tuning ?? {}) } } : undefined), [vehicle]);
+  const [opponentKey, setOpponentKey] = useState(requestedOpponent ?? opponents[0]?.key ?? "service-road-sleeper");
   const opponent = opponents.find((item) => item.key === opponentKey) ?? opponents[0];
-  const [tuning, setTuning] = useState<GarageTuning>(vehicle?.tuning ?? defaultGarageTuning);
+  const entryFee = opponent ? Math.max(100, Math.round(opponent.rewardCredits / 2)) : 0;
+  const potCredits = entryFee * 2;
+  const [tuning, setTuning] = useState<GarageTuning>({ ...defaultGarageTuning, ...(vehicle?.tuning ?? {}) });
   const [phase, setPhase] = useState<RacePhase>("staging");
-  const [needle, setNeedle] = useState(0.35);
+  const [throttleHeld, setThrottleHeld] = useState(false);
+  const [nitrousHeld, setNitrousHeld] = useState(false);
   const [launchScore, setLaunchScore] = useState<number | null>(null);
   const [shiftScores, setShiftScores] = useState<number[]>([]);
   const [reactionMs, setReactionMs] = useState<number | null>(null);
@@ -140,6 +238,8 @@ export default function DragRace() {
   const [feedback, setFeedback] = useState<string>("Stage both cars and wait for green.");
   const [result, setResult] = useState<DragRaceResult | null>(null);
   const [countdownStep, setCountdownStep] = useState(0);
+  const [redLightStrikes, setRedLightStrikes] = useState(0);
+  const [entryPaid, setEntryPaid] = useState(false);
 
   const countdownStartedAt = useRef<number | null>(null);
   const greenAt = useRef<number | null>(null);
@@ -149,6 +249,10 @@ export default function DragRace() {
   const shiftScoresRef = useRef<number[]>([]);
   const runtimeRef = useRef<RaceRuntime>(initialRuntime);
   const savedResultRef = useRef(false);
+  const throttleHeldRef = useRef(false);
+  const nitrousHeldRef = useRef(false);
+  const vehicleConditionRef = useRef(vehicle?.condition ?? 100);
+  const redLightProcessingRef = useRef(false);
 
   const saveTuningMutation = useMutation({
     mutationFn: ({ selected, nextTuning }: { selected: OwnedVehicle; nextTuning: GarageTuning }) =>
@@ -173,14 +277,21 @@ export default function DragRace() {
   });
 
   useEffect(() => {
-    if (vehicle) setTuning(vehicle.tuning ?? defaultGarageTuning);
+    if (vehicle) {
+      setTuning({ ...defaultGarageTuning, ...(vehicle.tuning ?? {}) });
+      vehicleConditionRef.current = vehicle.condition;
+    }
   }, [vehicle?.canonicalVehicleKey]);
 
   useEffect(() => {
+    if (requestedOpponent && opponents.some((item) => item.key === requestedOpponent)) {
+      setOpponentKey(requestedOpponent);
+      return;
+    }
     if (!opponents.some((item) => item.key === opponentKey)) {
       setOpponentKey(opponents[0]?.key ?? "service-road-sleeper");
     }
-  }, [opponents, opponentKey]);
+  }, [opponents, opponentKey, requestedOpponent]);
 
   useEffect(() => {
     launchScoreRef.current = launchScore;
@@ -195,18 +306,28 @@ export default function DragRace() {
   }, [runtime]);
 
   useEffect(() => {
-    if (phase !== "launching" && phase !== "racing") return;
+    throttleHeldRef.current = throttleHeld;
+  }, [throttleHeld]);
+
+  useEffect(() => {
+    nitrousHeldRef.current = nitrousHeld;
+  }, [nitrousHeld]);
+
+  useEffect(() => {
+    if (phase !== "countdown" && phase !== "launching") return;
     let raf = 0;
-    const started = performance.now();
-    const seconds = phase === "launching" ? DRAG_DIFFICULTY.launchNeedleSeconds : DRAG_DIFFICULTY.shiftNeedleSeconds;
-    const target = phase === "launching" ? DRAG_DIFFICULTY.launchTarget : DRAG_DIFFICULTY.shiftTarget;
+    let last = performance.now();
     const tick = (now: number) => {
-      const progress = ((now - started) / (seconds * 1000)) % 1;
-      const triangle = progress < 0.5 ? progress * 2 : 2 - progress * 2;
-      setNeedle(triangle);
-      if (phase === "launching") {
-        setFeedback(`Launch: ${timingLabel(zoneForNeedle(triangle, target))}`);
-      }
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const next = { ...runtimeRef.current };
+      const throttleTarget = throttleHeldRef.current ? DRAG_DIFFICULTY.redlineRpm + 320 : DRAG_DIFFICULTY.idleRpm;
+      const response = throttleHeldRef.current ? 3600 : 2600;
+      const rpmDelta = Math.sign(throttleTarget - next.rpm) * Math.min(Math.abs(throttleTarget - next.rpm), response * dt);
+      next.rpm = Math.round(Math.max(DRAG_DIFFICULTY.idleRpm, Math.min(DRAG_DIFFICULTY.redlineRpm + 650, next.rpm + rpmDelta)));
+      if (next.rpm >= DRAG_DIFFICULTY.dangerRpm) next.overRevMs += dt * 1000;
+      runtimeRef.current = next;
+      setRuntime(next);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -238,10 +359,12 @@ export default function DragRace() {
     if (!vehicle || savedResultRef.current) return;
     savedResultRef.current = true;
     const finalLaunchScore = launchScoreRef.current ?? 0.45;
+    const finalShiftScores = shiftScoresRef.current;
     const finalShiftScore = shiftScoresRef.current.length > 0
       ? shiftScoresRef.current.reduce((total, score) => total + score, 0) / shiftScoresRef.current.length
       : 0.45;
     const finalReactionMs = reactionMs ?? DRAG_DIFFICULTY.beginnerReactionGraceMs;
+    const mechanicalDamage = mechanicalDamageFor(finalRuntime, finalLaunchScore, finalShiftScores);
     const simulated = simulateDragRace({
       vehicle: { ...vehicle, tuning },
       opponent,
@@ -258,15 +381,47 @@ export default function DragRace() {
       opponentElapsedMs: Math.round((visualOpponentMs + simulated.opponentElapsedMs) / 2),
       trapSpeed,
       won: visualElapsedMs <= visualOpponentMs,
-      rewardCredits: visualElapsedMs <= visualOpponentMs ? opponent.rewardCredits : 0,
+      rewardCredits: visualElapsedMs <= visualOpponentMs ? potCredits : 0,
+      breakdown: {
+        ...simulated.breakdown,
+        overRevMs: Math.round(finalRuntime.overRevMs),
+        mechanicalDamage,
+        nitrousUsed: Math.max(0, (tuning.nitrousShots ?? 0) - finalRuntime.nitrousShots),
+        entryFee,
+        potCredits,
+        redLightStrikes,
+        fault: mechanicalDamage >= 10
+          ? "engine-risk"
+          : finalRuntime.badShiftCount > 0 || finalShiftScores.some((score) => score < 0.3)
+            ? "missed-shifts"
+            : undefined,
+      },
     };
     setResult(final);
     setPhase("result");
-    setFeedback(final.won ? "Win light!" : "Opponent got there first.");
+    setFeedback(mechanicalDamage > 0
+      ? `${final.won ? "Win light" : "Loss"} - the car took ${mechanicalDamage}% damage.`
+      : final.won ? "Win light!" : "Opponent got there first.");
     await raceMutation.mutateAsync({ ...final, selected: vehicle, opponent }).catch(() => {
       toast({ title: "Race result not saved", variant: "destructive" });
     });
-  }, [opponent, raceMutation, reactionMs, tuning, vehicle]);
+    recordCareerDragRace(activeCareerSave, {
+      won: final.won,
+      rewardCredits: final.rewardCredits,
+      elapsedMs: final.elapsedMs,
+      opponentName: opponent.name,
+    });
+    if (mechanicalDamage > 0) {
+      vehicleConditionRef.current = Math.max(0, vehicleConditionRef.current - mechanicalDamage);
+      await garageApi.patchVehicle(vehicle.canonicalVehicleKey, {
+        condition: vehicleConditionRef.current,
+      }).catch(() => {
+        toast({ title: "Vehicle damage not saved", variant: "destructive" });
+      });
+      await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+    }
+    setEntryPaid(false);
+  }, [activeCareerSave, entryFee, opponent, potCredits, queryClient, raceMutation, reactionMs, redLightStrikes, tuning, vehicle]);
 
   useEffect(() => {
     if (phase !== "racing" || !vehicle || !opponent) return;
@@ -274,8 +429,13 @@ export default function DragRace() {
     lastFrameAt.current = performance.now();
     raceStartedAt.current = raceStartedAt.current ?? performance.now();
     const vehiclePerformance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+    const transmission = transmissionMode(vehicle.name);
+    const nitrousTier = vehicle.upgrades.nitrous ?? 0;
     const powerFactor = Math.min(2.2, Math.max(0.75, vehiclePerformance.horsepower / 360));
-    const gripFactor = Math.min(1.35, Math.max(0.65, vehiclePerformance.traction / 6.5));
+    const tirePressureGrip = 1 + Math.max(-0.12, Math.min(0.16, (34 - (tuning.tirePressure ?? 32)) / 50));
+    const suspensionGrip = 1 + Math.max(-0.1, Math.min(0.12, (55 - Math.abs((tuning.suspension ?? 50) - 42)) / 500));
+    const downforceDrag = 1 - Math.max(0, (tuning.downforce ?? 35) - 35) / 450;
+    const gripFactor = Math.min(1.5, Math.max(0.55, (vehiclePerformance.traction / 6.5) * tirePressureGrip * suspensionGrip));
     const conditionFactor = Math.max(0.65, vehicle.condition / 100);
     const launch = launchScoreRef.current ?? 0.5;
     const opponentPower = 0.8 + opponent.power / 10;
@@ -296,9 +456,12 @@ export default function DragRace() {
       const overRevFactor = next.shiftIndex < DRAG_DIFFICULTY.shiftGears.length && next.playerMeters > shiftZoneEnd ? 0.72 : 1;
       const playerLaunchBoost = 0.72 + launch * 0.56;
       const playerShiftBoost = 0.72 + shiftAverage * 0.36;
-      const gearRatio = 1.08 - Math.min(0.34, (next.gear - 1) * 0.1);
+      const gearRatio = (1.08 - Math.min(0.34, (next.gear - 1) * 0.1)) * (0.9 + (100 - tuning.gearing) / 500);
+      const throttleFactor = throttleHeldRef.current ? 1 : 0.18;
+      const nitrousActive = next.nitrousBoostMs > 0 && next.playerFinishedMs == null;
+      const nitrousBoost = nitrousActive ? 1 + nitrousTier * 0.22 : 1;
       const playerAccel = (8.6 * powerFactor * gripFactor * conditionFactor * playerLaunchBoost * playerShiftBoost * gearRatio)
-        * overRevFactor - next.playerSpeed * 0.045;
+        * throttleFactor * nitrousBoost * overRevFactor * downforceDrag - next.playerSpeed * (0.045 + (tuning.downforce ?? 35) / 4500);
       const opponentAccel = (8.25 * opponentPower * opponentGrip * (0.9 + opponent.consistency / 40))
         - next.opponentSpeed * 0.048;
 
@@ -307,15 +470,35 @@ export default function DragRace() {
         next.playerMeters = Math.min(DRAG_DIFFICULTY.raceDistanceMeters, next.playerMeters + next.playerSpeed * dt);
         if (next.playerMeters >= DRAG_DIFFICULTY.raceDistanceMeters) next.playerFinishedMs = elapsedMs;
       }
+      if (nitrousActive) {
+        next.nitrousBoostMs = Math.max(0, next.nitrousBoostMs - dt * 1000);
+        next.nitrousMs += dt * 1000;
+        if (next.nitrousBoostMs <= 0) setNitrousHeld(false);
+        if (next.rpm > DRAG_DIFFICULTY.dangerRpm - 250) next.overRevMs += dt * 650;
+      }
       if (next.opponentFinishedMs == null) {
         next.opponentSpeed = Math.max(0, next.opponentSpeed + opponentAccel * dt * DRAG_DIFFICULTY.speedScale);
         next.opponentMeters = Math.min(DRAG_DIFFICULTY.raceDistanceMeters, next.opponentMeters + next.opponentSpeed * dt);
         if (next.opponentMeters >= DRAG_DIFFICULTY.raceDistanceMeters) next.opponentFinishedMs = elapsedMs;
       }
 
-      const rpmBase = 3300 + next.playerSpeed * 35 + shiftZoneProgress * 4700;
-      const overrunPenalty = next.playerMeters > shiftZoneEnd && next.shiftIndex < DRAG_DIFFICULTY.shiftGears.length ? 700 : 0;
-      next.rpm = Math.round(Math.max(2600, Math.min(DRAG_DIFFICULTY.redlineRpm + 450, rpmBase - overrunPenalty)));
+      const rpmBase = 2500 + next.playerSpeed * (54 / Math.max(1, next.gear)) + shiftZoneProgress * 3800 + (nitrousActive ? 520 : 0);
+      const throttleRpm = throttleHeldRef.current ? rpmBase + 700 : rpmBase - 1800;
+      next.rpm = Math.round(Math.max(DRAG_DIFFICULTY.idleRpm, Math.min(DRAG_DIFFICULTY.redlineRpm + 650, throttleRpm)));
+      if (transmission === "automatic" && next.shiftIndex < DRAG_DIFFICULTY.shiftGears.length && next.rpm >= tuning.shiftRpm) {
+        const nextGear = DRAG_DIFFICULTY.shiftGears[next.shiftIndex] ?? next.gear + 1;
+        next.gear = nextGear;
+        next.shiftIndex += 1;
+        next.playerSpeed = Math.max(3, next.playerSpeed + 1.4);
+        next.rpm = 4700;
+        shiftScoresRef.current = [...shiftScoresRef.current, 0.78];
+      }
+      if (next.rpm >= DRAG_DIFFICULTY.dangerRpm || overRevFactor < 1) {
+        next.overRevMs += dt * 1000;
+        if (next.overRevMs > 900 && Math.floor(next.overRevMs / 300) % 2 === 0) {
+          setFeedback("Lift or shift. The engine is unhappy.");
+        }
+      }
       next.elapsedMs = elapsedMs;
       setRuntime(next);
       runtimeRef.current = next;
@@ -330,38 +513,132 @@ export default function DragRace() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [finishRace, opponent, phase, vehicle]);
+  }, [finishRace, opponent, phase, tuning, vehicle]);
 
   const startRace = async () => {
-    if (!vehicle) return;
-    setTuning(vehicle.tuning ?? defaultGarageTuning);
-    await saveTuningMutation.mutateAsync({ selected: vehicle, nextTuning: tuning }).catch(() => undefined);
+    if (!vehicle || !opponent) return;
+    if (!entryPaid) {
+      if ((garage?.profile.credits ?? 0) < entryFee) {
+        toast({ title: "Not enough Garage GBP", description: `You need GBP ${entryFee.toLocaleString()} to enter this race.`, variant: "destructive" });
+        return;
+      }
+      const paid = await garageApi.awardCredits(-entryFee, `Drag race entry vs ${opponent.name}`).then(() => true).catch(() => {
+        toast({ title: "Entry fee not paid", variant: "destructive" });
+        return false;
+      });
+      if (!paid) return;
+      await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+      setEntryPaid(true);
+    }
+    const nextTuning = { ...defaultGarageTuning, ...(vehicle.tuning ?? {}) };
+    setTuning(nextTuning);
+    await saveTuningMutation.mutateAsync({ selected: vehicle, nextTuning }).catch(() => undefined);
     savedResultRef.current = false;
     setResult(null);
     setLaunchScore(null);
     setShiftScores([]);
+    launchScoreRef.current = null;
+    shiftScoresRef.current = [];
+    setThrottleHeld(false);
+    throttleHeldRef.current = false;
+    setNitrousHeld(false);
+    nitrousHeldRef.current = false;
     setReactionMs(null);
-    setNeedle(0.35);
-    setRuntime(initialRuntime);
-    runtimeRef.current = initialRuntime;
+    const nextRuntime = { ...initialRuntime, nitrousShots: vehicle.tuning?.nitrousShots ?? 0 };
+    setRuntime(nextRuntime);
+    runtimeRef.current = nextRuntime;
     raceStartedAt.current = null;
     setCountdownStep(0);
     setFeedback("Watch the tree.");
     setPhase("countdown");
   };
 
+  const falseStart = async () => {
+    if (!vehicle || !opponent || savedResultRef.current || redLightProcessingRef.current) return;
+    redLightProcessingRef.current = true;
+    const nextStrikes = redLightStrikes + 1;
+    setRedLightStrikes(nextStrikes);
+    vehicleConditionRef.current = Math.max(0, vehicleConditionRef.current - RED_LIGHT_DAMAGE);
+    await garageApi.patchVehicle(vehicle.canonicalVehicleKey, {
+      condition: vehicleConditionRef.current,
+    }).catch(() => {
+      toast({ title: "Vehicle wear not saved", variant: "destructive" });
+    });
+    await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+    setThrottleHeld(false);
+    throttleHeldRef.current = false;
+    setNitrousHeld(false);
+    nitrousHeldRef.current = false;
+    setReactionMs(null);
+    setCountdownStep(0);
+    greenAt.current = null;
+    countdownStartedAt.current = null;
+    raceStartedAt.current = null;
+    const nextRuntime = { ...initialRuntime, nitrousShots: runtimeRef.current.nitrousShots, overRevMs: runtimeRef.current.overRevMs };
+    setRuntime(nextRuntime);
+    runtimeRef.current = nextRuntime;
+    if (nextStrikes < RED_LIGHT_LIMIT) {
+      setFeedback(`Red light strike ${nextStrikes}/${RED_LIGHT_LIMIT}. Tire and engine wear cost ${RED_LIGHT_DAMAGE}% condition. Stage again.`);
+      setPhase("staging");
+      redLightProcessingRef.current = false;
+      return;
+    }
+    savedResultRef.current = true;
+    const final: DragRaceResult = {
+      elapsedMs: DRAG_DIFFICULTY.maxRaceSeconds * 1000,
+      opponentElapsedMs: 1,
+      trapSpeed: 1,
+      won: false,
+      rewardCredits: 0,
+      breakdown: {
+        horsepower: vehiclePerformance.horsepower,
+        weight: vehiclePerformance.weight,
+        drivetrain: vehiclePerformance.drivetrain,
+        tier: vehiclePerformance.tier,
+        traction: vehiclePerformance.traction,
+        launchQuality: 0,
+        shiftQuality: 0,
+        reactionMs: -1,
+        conditionPenalty: Math.round(Math.max(0, (100 - vehicle.condition) / 100) * 100),
+        tuningBonus: 0,
+        mechanicalDamage: RED_LIGHT_DAMAGE,
+        nitrousUsed: 0,
+        entryFee,
+        potCredits,
+        redLightStrikes: nextStrikes,
+        fault: "false-start",
+      },
+    };
+    setResult(final);
+    setFeedback(`Third red light. You lose the pot and the car took ${RED_LIGHT_DAMAGE}% wear.`);
+    setPhase("result");
+    await raceMutation.mutateAsync({ ...final, selected: vehicle, opponent }).catch(() => {
+      toast({ title: "Race result not saved", variant: "destructive" });
+    });
+    recordCareerDragRace(activeCareerSave, {
+      won: final.won,
+      rewardCredits: final.rewardCredits,
+      elapsedMs: final.elapsedMs,
+      opponentName: opponent.name,
+    });
+    setEntryPaid(false);
+    redLightProcessingRef.current = false;
+  };
+
   const launch = () => {
     if (phase !== "launching") return;
-    const grade = zoneForNeedle(needle, DRAG_DIFFICULTY.launchTarget);
-    const score = timingScore(needle, DRAG_DIFFICULTY.launchTarget);
+    const launchRpm = runtimeRef.current.rpm;
+    const grade = gradeForRpm(launchRpm, tuning.launchRpm);
+    const score = scoreForRpm(launchRpm, tuning.launchRpm);
     const now = performance.now();
     const rawReaction = greenAt.current ? now - greenAt.current : DRAG_DIFFICULTY.beginnerReactionGraceMs;
     const reaction = Math.max(0, Math.round(rawReaction));
-    const speedPenalty = grade === "too-early" ? 0.45 : grade === "late" || grade === "missed" ? 0.25 : grade === "perfect" ? 1.8 : 1.1;
+    const speedPenalty = grade === "too-early" ? 0.35 : grade === "late" || grade === "missed" ? 0.45 : grade === "perfect" ? 2.2 : 1.35;
     setLaunchScore(score);
+    launchScoreRef.current = score;
     setReactionMs(reaction);
     setRuntime((current) => {
-      const next = { ...current, playerSpeed: speedPenalty, opponentSpeed: 0.95, rpm: 4200 };
+      const next = { ...current, playerSpeed: speedPenalty, opponentSpeed: 0.95, rpm: Math.max(2600, Math.round(launchRpm * 0.72)) };
       runtimeRef.current = next;
       return next;
     });
@@ -374,25 +651,46 @@ export default function DragRace() {
     if (phase !== "racing") return;
     const current = runtimeRef.current;
     if (current.shiftIndex >= DRAG_DIFFICULTY.shiftGears.length) return;
-    const targetMeter = DRAG_DIFFICULTY.shiftWindowMeters[current.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
-    const isReady = current.playerMeters >= targetMeter - DRAG_DIFFICULTY.shiftWindowPaddingMeters
-      || current.rpm >= DRAG_DIFFICULTY.shiftReadyRpm;
+    const isReady = current.rpm >= 3600;
     if (!isReady) {
-      setFeedback("Wait for the revs.");
+      setShiftScores((scores) => {
+        const nextScores = [...scores, 0];
+        shiftScoresRef.current = nextScores;
+        return nextScores;
+      });
+      setRuntime((prior) => {
+        const nextGear = DRAG_DIFFICULTY.shiftGears[prior.shiftIndex] ?? prior.gear + 1;
+        const next = {
+          ...prior,
+          gear: nextGear,
+          shiftIndex: prior.shiftIndex + 1,
+          badShiftCount: prior.badShiftCount + 1,
+          playerSpeed: Math.max(2, prior.playerSpeed - 5),
+          rpm: 3200,
+        };
+        runtimeRef.current = next;
+        return next;
+      });
+      setFeedback("Short shift. The car bogged.");
       return;
     }
-    const grade = zoneForNeedle(needle, DRAG_DIFFICULTY.shiftTarget);
-    const score = timingScore(needle, DRAG_DIFFICULTY.shiftTarget);
-    setShiftScores((scores) => [...scores, score]);
+    const grade = gradeForRpm(current.rpm, tuning.shiftRpm);
+    const score = scoreForRpm(current.rpm, tuning.shiftRpm);
+    setShiftScores((scores) => {
+      const nextScores = [...scores, score];
+      shiftScoresRef.current = nextScores;
+      return nextScores;
+    });
     setRuntime((prior) => {
       const nextGear = DRAG_DIFFICULTY.shiftGears[prior.shiftIndex] ?? prior.gear + 1;
-      const speedDelta = grade === "perfect" ? 4.8 : grade === "good" ? 2.6 : grade === "late" ? -1.4 : -4.2;
+      const speedDelta = grade === "perfect" ? 4.8 : grade === "good" ? 2.4 : grade === "late" ? -1.8 : -4.8;
       const next = {
         ...prior,
         gear: nextGear,
         shiftIndex: prior.shiftIndex + 1,
         playerSpeed: Math.max(3, prior.playerSpeed + speedDelta),
-        rpm: grade === "perfect" ? 6100 : grade === "good" ? 5600 : 3900,
+        rpm: grade === "perfect" ? 5100 : grade === "good" ? 4700 : 3400,
+        badShiftCount: grade === "late" || grade === "missed" ? prior.badShiftCount + 1 : prior.badShiftCount,
       };
       runtimeRef.current = next;
       return next;
@@ -403,19 +701,91 @@ export default function DragRace() {
   const resetRace = () => {
     setPhase("staging");
     setResult(null);
+    setRedLightStrikes(0);
+    setEntryPaid(false);
     setLaunchScore(null);
     setShiftScores([]);
+    launchScoreRef.current = null;
+    shiftScoresRef.current = [];
+    setThrottleHeld(false);
+    throttleHeldRef.current = false;
+    setNitrousHeld(false);
+    nitrousHeldRef.current = false;
     setReactionMs(null);
-    setNeedle(0.35);
-    setRuntime(initialRuntime);
-    runtimeRef.current = initialRuntime;
+    const nextRuntime = { ...initialRuntime, nitrousShots: vehicle?.tuning?.nitrousShots ?? 0 };
+    setRuntime(nextRuntime);
+    runtimeRef.current = nextRuntime;
     setFeedback("Stage both cars and wait for green.");
     savedResultRef.current = false;
+  };
+
+  const setThrottleActive = (active: boolean) => {
+    if (phase === "staging" || phase === "result") return;
+    if (active && phase === "countdown") {
+      throttleHeldRef.current = true;
+      setThrottleHeld(true);
+      void falseStart();
+      return;
+    }
+    throttleHeldRef.current = active;
+    setThrottleHeld(active);
+    if (active && phase === "launching") launch();
+  };
+
+  const setNitrousActive = (active: boolean) => {
+    if (!active) return;
+    const hasNitrous = (vehicle?.upgrades.nitrous ?? 0) > 0;
+    const current = runtimeRef.current;
+    const canUseNitrous = hasNitrous && phase === "racing" && current.nitrousShots > 0 && current.nitrousBoostMs <= 0;
+    if (!vehicle || !canUseNitrous) return;
+    const nextShots = current.nitrousShots - 1;
+    const nextRuntime = { ...current, nitrousShots: nextShots, nitrousBoostMs: 850 + (vehicle.upgrades.nitrous ?? 0) * 260 };
+    runtimeRef.current = nextRuntime;
+    setRuntime(nextRuntime);
+    nitrousHeldRef.current = true;
+    setNitrousHeld(true);
+    const nextTuning = { ...tuning, nitrousShots: nextShots };
+    setTuning(nextTuning);
+    void saveTuningMutation.mutateAsync({ selected: vehicle, nextTuning }).catch(() => {
+      toast({ title: "Nitrous shot not saved", variant: "destructive" });
+    });
   };
 
   const updateTuning = (key: keyof GarageTuning, value: number) => {
     setTuning((current) => ({ ...current, [key]: value }));
   };
+
+  useEffect(() => {
+    const isRangeInput = (event: KeyboardEvent) => (event.target as HTMLElement | null)?.tagName === "INPUT";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isRangeInput(event)) return;
+      if (event.code === "Space") {
+        event.preventDefault();
+        setThrottleActive(true);
+      }
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+        event.preventDefault();
+        shift();
+      }
+      if (event.code === "KeyN") {
+        event.preventDefault();
+        if (!event.repeat) setNitrousActive(true);
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        setThrottleActive(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [phase, runtime.shiftIndex, tuning.launchRpm, tuning.shiftRpm, vehicle?.upgrades.nitrous]);
+
 
   if (garageQuery.isLoading) {
     return <div className="flex-1 p-8 text-muted-foreground">Loading drag strip...</div>;
@@ -436,52 +806,178 @@ export default function DragRace() {
   }
 
   const vehiclePerformance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+  const transmission = transmissionMode(vehicle.name);
+  const nitrousTier = vehicle.upgrades.nitrous ?? 0;
+  const hasNitrous = nitrousTier > 0;
+  const projected = tuningProjection(vehiclePerformance, tuning, vehicle.condition);
+  const baselineProjection = tuningProjection(vehiclePerformance, { ...defaultGarageTuning, ...(vehicle.tuning ?? {}) }, vehicle.condition);
+  const tuningGrip = projected.gripPct;
+  const aeroDrag = projected.aeroPct;
+  const gearingBias = projected.gearingBias;
   const playerProgress = Math.min(1, runtime.playerMeters / DRAG_DIFFICULTY.raceDistanceMeters);
   const opponentProgress = Math.min(1, runtime.opponentMeters / DRAG_DIFFICULTY.raceDistanceMeters);
-  const currentGrade = zoneForNeedle(needle, phase === "launching" ? DRAG_DIFFICULTY.launchTarget : DRAG_DIFFICULTY.shiftTarget);
+  const targetRpm = phase === "countdown" || phase === "launching" ? tuning.launchRpm : tuning.shiftRpm;
+  const currentGrade = gradeForRpm(runtime.rpm, targetRpm);
   const playerSprite = vehicleTopDownSprite(vehicle.name, vehicle.power, vehicle.offRoad);
   const opponentName = opponentSpriteName(opponent);
   const opponentSprite = vehicleTopDownSprite(opponentName, opponent.power, opponent.traction);
   const nextShiftGear = DRAG_DIFFICULTY.shiftGears[runtime.shiftIndex];
   const nextShiftMeter = DRAG_DIFFICULTY.shiftWindowMeters[runtime.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
-  const shiftArmed = runtime.playerMeters >= nextShiftMeter - DRAG_DIFFICULTY.shiftWindowPaddingMeters
-    || runtime.rpm >= DRAG_DIFFICULTY.shiftReadyRpm;
-  const canShift = phase === "racing" && nextShiftGear != null && runtime.playerFinishedMs == null && shiftArmed;
+  const shiftArmed = runtime.rpm >= 3600;
+  const canShift = transmission === "manual" && phase === "racing" && nextShiftGear != null && runtime.playerFinishedMs == null && shiftArmed;
   const speedMph = Math.round(runtime.playerSpeed * 2.237);
-  const rewardLabel = `Reward CR ${opponent.rewardCredits}`;
+  const rewardLabel = `Entry GBP ${entryFee.toLocaleString()} - Pot GBP ${potCredits.toLocaleString()}`;
   const rpmPercent = Math.max(0, Math.min(100, (runtime.rpm / DRAG_DIFFICULTY.redlineRpm) * 100));
   const shiftDistanceLabel = Math.max(0, Math.round(nextShiftMeter - runtime.playerMeters));
+  const nitrousShots = runtime.nitrousShots;
+  const boardHref = `/drag-race?mode=board&vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`;
+  const showChallengeBoard = requestedMode === "board" || !requestedOpponent || !opponents.some((item) => item.key === requestedOpponent);
+  const presenterResultLine = result
+    ? result.won
+      ? opponent.loseLine
+      : opponent.winLine
+    : opponent.intro;
+
+  if (showChallengeBoard) {
+    return (
+      <div className="flex-1 overflow-y-auto bg-background p-3 md:p-6">
+        <div className="mx-auto max-w-7xl space-y-5">
+          <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-primary">Garage Drag Race</p>
+              <h1 className="text-3xl font-black uppercase tracking-tight md:text-4xl">Challenge Board</h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Pick an opponent for your active garage car. Entry is paid when you stage, and winner takes the pot.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/garage">
+                <Button variant="outline" className="uppercase font-bold">
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Garage
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button variant="outline" className="hidden uppercase font-bold md:inline-flex">Main Menu</Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <Card className="border-2 border-primary/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 uppercase">
+                  <Car className="h-5 w-5 text-primary" /> Your Garage Car
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-md border border-border bg-muted/20 p-3">
+                  <p className="text-xs font-black uppercase text-muted-foreground">Selected</p>
+                  <p className="text-xl font-black uppercase">{vehicle.year} {vehicle.name}</p>
+                  <p className="text-sm text-muted-foreground">HP {vehiclePerformance.horsepower.toLocaleString()} - {vehiclePerformance.drivetrain} - Grip {vehiclePerformance.traction.toFixed(1)}</p>
+                </div>
+                <img src={playerSprite} alt={vehicle.name} className="mx-auto h-24 w-full object-contain drop-shadow-[0_16px_24px_rgba(0,0,0,0.45)]" draggable={false} />
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {[
+                    ["Tier", vehiclePerformance.tier],
+                    ["Condition", `${vehicle.condition}%`],
+                    ["Top Speed", `${projected.topSpeedMph} mph`],
+                    ["1/4 Mile", `${projected.quarterMile.toFixed(1)}s`],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                      <p className="font-black uppercase text-muted-foreground">{label}</p>
+                      <p className="font-mono font-black">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {opponents.map((item) => {
+                const itemEntry = Math.max(100, Math.round(item.rewardCredits / 2));
+                const itemPot = itemEntry * 2;
+                const sprite = vehicleTopDownSprite(item.vehicleName, item.power, item.traction);
+                const raceHref = `/drag-race?vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}&opponent=${encodeURIComponent(item.key)}`;
+                return (
+                  <Card key={item.key} className="flex flex-col border-2 border-transparent transition-colors hover:border-primary/60">
+                    <CardHeader className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-widest text-primary">{item.tier}</p>
+                          <CardTitle className="uppercase">{item.name}</CardTitle>
+                        </div>
+                        <span className="rounded border border-border bg-muted/30 px-2 py-1 text-[11px] font-black uppercase text-muted-foreground">{item.presenter}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{item.episode}</p>
+                    </CardHeader>
+                    <CardContent className="flex flex-1 flex-col gap-3">
+                      <div className="rounded-md border border-border bg-zinc-950/70 p-2">
+                        <img src={sprite} alt={item.vehicleName} className="mx-auto h-24 w-full rotate-90 object-contain drop-shadow-[0_16px_20px_rgba(0,0,0,0.5)]" draggable={false} />
+                      </div>
+                      <div>
+                        <p className="font-black uppercase">{item.vehicleName}</p>
+                        <p className="text-xs text-muted-foreground">Power {item.power}/10 - Traction {item.traction}/10 - Consistency {item.consistency}/10</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-black uppercase text-muted-foreground">Entry</p>
+                          <p className="font-mono font-black">GBP {itemEntry.toLocaleString()}</p>
+                        </div>
+                        <div className="rounded-md border border-border bg-muted/20 p-2">
+                          <p className="font-black uppercase text-muted-foreground">Pot</p>
+                          <p className="font-mono font-black">GBP {itemPot.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                        <div className="mb-1 flex items-center gap-2 text-xs font-black uppercase text-amber-200">
+                          <MessageSquare className="h-4 w-4" /> {item.presenter}
+                        </div>
+                        <p className="text-muted-foreground">{item.intro}</p>
+                      </div>
+                      <Link href={raceHref} className="mt-auto">
+                        <Button className="w-full uppercase font-black">Accept Challenge</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 overflow-hidden bg-background p-2 md:p-3">
-      <div className="mx-auto flex h-[calc(100dvh-1rem)] max-w-7xl flex-col gap-3 overflow-hidden md:h-[calc(100dvh-1.5rem)]">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b pb-2">
+    <div className="flex-1 overflow-y-auto bg-background p-1 md:overflow-hidden md:p-2">
+      <div className="mx-auto flex min-h-[100dvh] max-w-7xl flex-col gap-1.5 overflow-visible md:h-[calc(100dvh-1rem)] md:min-h-0 md:gap-2 md:overflow-hidden">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 border-b pb-1 pl-36 md:justify-between md:gap-2 md:pl-0">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-primary">Race Night</p>
-            <h1 className="text-2xl font-black uppercase tracking-tight md:text-3xl">Drag Strip</h1>
+            <p className="hidden text-xs font-black uppercase tracking-widest text-primary md:block">Race Night</p>
+            <h1 className="sr-only text-xl font-black uppercase tracking-tight md:not-sr-only md:text-2xl">Drag Strip</h1>
           </div>
           <div className="flex gap-2">
             <Link href="/garage">
-              <Button variant="outline" className="uppercase font-bold">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Garage
+              <Button variant="outline" className="h-8 px-2 text-xs uppercase font-bold md:h-10 md:px-3 md:text-sm">
+                <ArrowLeft className="mr-1 h-4 w-4 md:mr-2" /> Garage
               </Button>
             </Link>
             <Link href="/">
-              <Button variant="outline" className="uppercase font-bold">Main Menu</Button>
+              <Button variant="outline" className="hidden h-10 px-3 text-sm uppercase font-bold md:inline-flex">Main Menu</Button>
             </Link>
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_290px] xl:grid-cols-[minmax(0,1fr)_320px]">
-          <Card className="flex min-h-0 flex-col overflow-hidden border-2 border-primary/30">
-            <CardHeader className="bg-black/40 p-3">
+        <div className="grid flex-none gap-2 md:min-h-0 md:flex-1 md:grid-cols-[minmax(0,1fr)_290px] md:gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <Card className="flex flex-col overflow-visible border-2 border-primary/30 md:min-h-0 md:overflow-hidden">
+            <CardHeader className="bg-black/40 p-1.5 md:p-2">
               <CardTitle className="flex flex-wrap items-center justify-between gap-2 uppercase">
-                <span className="flex items-center gap-2"><Flag className="h-5 w-5 text-primary" /> Quarter Mile</span>
+                <span className="flex items-center gap-1.5 text-lg md:gap-2 md:text-2xl"><Flag className="h-4 w-4 text-primary md:h-5 md:w-5" /> Quarter Mile</span>
                 <span className="font-mono text-sm text-primary">{Math.round(runtime.playerMeters)}m / {DRAG_DIFFICULTY.raceDistanceMeters}m</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid min-h-0 flex-1 grid-rows-[minmax(170px,1fr)_auto_auto_auto] gap-2 p-2 md:grid-rows-[minmax(210px,1fr)_auto_auto_auto] md:p-3">
-              <div className="relative min-h-[170px] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 md:min-h-[210px]">
+            <CardContent className="grid flex-none grid-rows-[auto_auto_auto] gap-1.5 p-1.5 md:min-h-0 md:flex-1 md:gap-2 md:p-2 md:grid-rows-[minmax(130px,1fr)_auto_auto]">
+              <div className="relative h-[112px] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 min-[420px]:h-[126px] md:h-auto md:min-h-[130px]">
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
                 <div className="absolute left-[8%] top-0 h-full w-1 bg-white/80" />
                 <div className="absolute right-[8%] top-0 h-full w-2 bg-[repeating-linear-gradient(0deg,#fff_0_10px,#111827_10px_20px)]" />
@@ -491,20 +987,20 @@ export default function DragRace() {
                 <div className="absolute left-[7%] top-2 text-[10px] font-black uppercase tracking-widest text-white/70">Start</div>
                 <div className="absolute right-[6%] top-2 text-[10px] font-black uppercase tracking-widest text-white/70">Finish</div>
 
-                <div className="absolute left-4 top-4 rounded-md border border-zinc-700 bg-black/70 p-2">
+                <div className="absolute left-7 top-7 rounded border border-zinc-700 bg-black/70 p-1.5 md:left-4 md:top-4 md:rounded-md md:p-2">
                   <div className="flex gap-1">
                     {[0, 1, 2].map((light) => (
                       <span
                         key={light}
                         className={cn(
-                          "h-5 w-5 rounded-full border border-zinc-600",
+                          "h-4 w-4 rounded-full border border-zinc-600 md:h-5 md:w-5",
                           phase === "countdown" && countdownStep > light ? "bg-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.8)]" : "bg-zinc-800",
                         )}
                       />
                     ))}
                     <span
                       className={cn(
-                        "h-5 w-5 rounded-full border border-zinc-600",
+                        "h-4 w-4 rounded-full border border-zinc-600 md:h-5 md:w-5",
                         (phase === "launching" || phase === "racing" || phase === "result") ? "bg-green-400 shadow-[0_0_18px_rgba(74,222,128,0.8)]" : "bg-zinc-800",
                       )}
                     />
@@ -521,108 +1017,170 @@ export default function DragRace() {
                 )}
 
                 <div
-                  className="absolute top-[23%] w-16 transition-transform duration-75 will-change-transform sm:w-20"
+                  className="absolute top-[24%] w-11 transition-transform duration-75 will-change-transform sm:w-14 md:w-20"
                   style={{ left: `calc(8% + ${playerProgress * 84}% - 32px)` }}
                 >
-                  <img src={playerSprite} alt={vehicle.name} className="h-24 w-16 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-28 sm:w-20" draggable={false} />
+                  <img src={playerSprite} alt={vehicle.name} className="h-14 w-11 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-16 sm:w-14 md:h-28 md:w-20" draggable={false} />
                   <p className="mt-1 hidden truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white sm:block">{vehicle.name}</p>
                 </div>
 
                 <div
-                  className="absolute top-[53%] w-16 transition-transform duration-75 will-change-transform sm:w-20"
+                  className="absolute top-[56%] w-11 transition-transform duration-75 will-change-transform sm:w-14 md:w-20"
                   style={{ left: `calc(8% + ${opponentProgress * 84}% - 32px)` }}
                 >
-                  <img src={opponentSprite} alt={opponent.name} className="h-24 w-16 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-28 sm:w-20" draggable={false} />
+                  <img src={opponentSprite} alt={opponent.name} className="h-14 w-11 rotate-90 object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)] sm:h-16 sm:w-14 md:h-28 md:w-20" draggable={false} />
                   <p className="mt-1 hidden truncate rounded bg-black/70 px-1 py-0.5 text-center text-[9px] font-black uppercase text-white sm:block">{opponent.name}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-1 text-center md:gap-2">
-                {[
-                  ["Speed", `${speedMph} mph`],
-                  ["Gear", runtime.gear.toString()],
-                  ["RPM", runtime.rpm.toLocaleString()],
-                  ["RT", reactionMs == null ? "--" : `${reactionMs}ms`],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-md border border-border bg-muted/20 p-1.5 md:p-2">
-                    <p className="text-[10px] font-black uppercase text-muted-foreground">{label}</p>
-                    <p className="font-mono text-sm font-black md:text-lg xl:text-xl">{value}</p>
-                  </div>
-                ))}
-              </div>
+              <div className="grid items-center gap-1.5 rounded-md border border-zinc-700 bg-[linear-gradient(180deg,#20242c_0%,#11141a_48%,#07080b_100%)] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_34px_rgba(0,0,0,0.35)] md:gap-2 md:rounded-lg md:p-2 md:grid-cols-[1fr_0.85fr_1fr]">
+                <div className="hidden md:block">
+                  <AnalogGauge label="Speedometer" value={speedMph} max={220} unit="mph" marks={[0, 40, 80, 120, 160, 200]} />
+                </div>
 
-              <div className="grid gap-2 md:grid-cols-[1fr_1fr]">
-                <div className="space-y-1.5 rounded-md border border-border bg-muted/20 p-2">
-                  <div className="flex items-center justify-between text-xs font-black uppercase">
-                    <span>Tachometer</span>
-                    <span className={cn("rounded border px-2 py-1", runtime.rpm >= DRAG_DIFFICULTY.shiftReadyRpm ? "border-green-400 bg-green-500/20 text-green-100" : "border-zinc-600 text-muted-foreground")}>
-                      {nextShiftGear ? (shiftArmed ? "Shift Ready" : `${shiftDistanceLabel}m`) : "Top Gear"}
+                <div className="flex min-h-0 flex-col justify-between gap-1.5 rounded-md border border-zinc-700 bg-black/45 p-1.5 text-center shadow-[inset_0_0_18px_rgba(0,0,0,0.55)] md:min-h-[clamp(104px,17dvh,185px)] md:rounded-lg md:p-2">
+                  <div className="grid grid-cols-3 gap-1">
+                    <span className="flex items-center justify-center gap-1 rounded bg-zinc-950/80 px-1 py-1 text-[9px] font-black uppercase text-zinc-500 md:px-2 md:text-[10px]">
+                      <span className={cn("h-1.5 w-1.5 rounded-full", throttleHeld ? "bg-green-300 shadow-[0_0_8px_rgba(134,239,172,0.85)]" : "bg-zinc-700")} />
+                      Throttle
+                    </span>
+                    <span className="flex items-center justify-center gap-1 rounded bg-zinc-950/80 px-1 py-1 text-[9px] font-black uppercase text-zinc-500 md:px-2 md:text-[10px]">
+                      <span className={cn("h-1.5 w-1.5 rounded-full", nitrousHeld ? "bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.85)]" : "bg-zinc-700")} />
+                      Nitrous
+                    </span>
+                    <span className="flex items-center justify-center gap-1 rounded bg-zinc-950/80 px-1 py-1 text-[9px] font-black uppercase text-zinc-500 md:px-2 md:text-[10px]">
+                      <span className={cn("h-1.5 w-1.5 rounded-full", runtime.rpm >= DRAG_DIFFICULTY.dangerRpm ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.85)]" : "bg-zinc-700")} />
+                      Redline
                     </span>
                   </div>
-                  <div className="relative h-9 overflow-hidden rounded-full bg-zinc-900 md:h-11">
-                    <div className="absolute inset-y-0 left-0 w-[62%] bg-blue-500/15" />
-                    <div className="absolute inset-y-0 left-[62%] w-[18%] bg-green-500/25" />
-                    <div className="absolute inset-y-0 left-[80%] w-[20%] bg-red-500/25" />
-                    <div className="absolute left-[62%] top-0 h-full w-px bg-green-300/80" />
-                    <div className="absolute left-[80%] top-0 h-full w-px bg-red-300/80" />
-                    <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] font-black uppercase text-white/60">
-                      <span>3k</span>
-                      <span>Shift</span>
-                      <span>Redline</span>
-                    </div>
-                    <div className="absolute top-0 h-full w-2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)]" style={{ left: `calc(${rpmPercent}% - 4px)` }} />
+                  <div className="grid grid-cols-4 gap-1 text-[10px] font-black uppercase md:hidden">
+                    {[
+                      ["MPH", speedMph.toLocaleString()],
+                      ["RPM", runtime.rpm.toLocaleString()],
+                      ["Gear", runtime.gear.toString()],
+                      ["RT", reactionMs == null ? "--" : `${reactionMs}ms`],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded border border-zinc-700 bg-zinc-950/80 p-1">
+                        <p className="text-zinc-500">{label}</p>
+                        <p className="font-mono text-zinc-100">{value}</p>
+                      </div>
+                    ))}
                   </div>
+                  <div>
+                    {phase === "staging" ? (
+                      <div className="space-y-1.5">
+                        <Button size="lg" className="h-11 w-full text-sm font-black uppercase md:h-14 md:text-base" onClick={startRace} data-testid="button-start-drag-race">
+                          <Zap className="mr-2 h-6 w-6" /> {entryPaid ? "Restage" : "Enter Race"}
+                        </Button>
+                        <p className="rounded border border-zinc-700 bg-zinc-950/80 p-2 text-[11px] font-black uppercase text-zinc-400">
+                          {entryPaid ? `Pot paid - strikes ${redLightStrikes}/${RED_LIGHT_LIMIT}` : `Entry GBP ${entryFee.toLocaleString()} - winner takes GBP ${potCredits.toLocaleString()}`}
+                        </p>
+                      </div>
+                    ) : phase === "result" && result ? (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Finish Line</p>
+                        <p className={cn("text-3xl font-black uppercase leading-none", result.won ? "text-green-300" : "text-red-300")}>
+                          {result.breakdown.fault === "false-start" ? "Red Light" : result.won ? "You Won" : "You Lost"}
+                        </p>
+                        <div className="grid grid-cols-3 gap-1 text-[10px] font-black uppercase">
+                          <div className="rounded border border-zinc-700 bg-zinc-950/80 p-2">
+                            <p className="text-zinc-500">ET</p>
+                            <p className="font-mono text-sm text-white">{formatTime(result.elapsedMs)}</p>
+                          </div>
+                          <div className="rounded border border-zinc-700 bg-zinc-950/80 p-2">
+                            <p className="text-zinc-500">Trap</p>
+                            <p className="font-mono text-sm text-white">{result.trapSpeed}</p>
+                          </div>
+                          <div className="rounded border border-zinc-700 bg-zinc-950/80 p-2">
+                            <p className="text-zinc-500">Pot</p>
+                            <p className="font-mono text-sm text-white">+{result.rewardCredits}</p>
+                          </div>
+                        </div>
+                        <div className="rounded border border-amber-500/30 bg-amber-500/10 p-2 text-left text-[11px] font-bold text-zinc-300">
+                          <p className="mb-1 font-black uppercase text-amber-200">{opponent.presenter}</p>
+                          <p>{presenterResultLine}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          <Button variant="outline" className="h-10 uppercase font-black" onClick={resetRace}>
+                            <RotateCcw className="mr-2 h-4 w-4" /> Again
+                          </Button>
+                          <Link href={boardHref}>
+                            <Button variant="outline" className="h-10 w-full uppercase font-black">Board</Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Gear</p>
+                        <p className="font-mono text-5xl font-black leading-none text-white drop-shadow-[0_0_12px_rgba(251,191,36,0.25)]">{runtime.gear}</p>
+                        <p className="mt-1 text-xs font-black uppercase text-amber-300">
+                          {phase === "launching" ? "Green - hit throttle" : transmission === "automatic" ? "Automatic shift" : nextShiftGear ? (canShift ? `Shift to ${nextShiftGear}` : "Hold gear") : "Top gear"}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="rounded-md border border-zinc-700 bg-zinc-950/80 p-1.5">
+                    <div className="mb-1 flex justify-between text-[10px] font-black uppercase text-cyan-200">
+                      <span>N2O</span>
+                      <span>{hasNitrous ? `${nitrousShots} shot${nitrousShots === 1 ? "" : "s"}` : "No Kit"}</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-zinc-800">
+                      <div className={cn("h-full rounded-full", hasNitrous ? "bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.8)]" : "bg-zinc-700")} style={{ width: `${hasNitrous ? Math.min(100, nitrousShots * 12.5) : 0}%` }} />
+                    </div>
+                  </div>
+                  <p className="min-h-6 text-[11px] font-black uppercase text-zinc-300">{feedback}</p>
                 </div>
 
-                {(phase === "launching" || phase === "racing") ? (
-                  <div className="space-y-1.5 rounded-md border border-border bg-muted/20 p-2">
-                  <div className="flex items-center justify-between text-xs font-black uppercase">
-                    <span>{phase === "launching" ? "Launch timing" : nextShiftGear ? `Shift to ${nextShiftGear}` : "Run it out"}</span>
-                    <span className={cn("rounded border px-2 py-1", gradeClass(currentGrade))}>{timingLabel(currentGrade)}</span>
-                  </div>
-                  <div className="relative h-9 overflow-hidden rounded-full bg-zinc-900">
-                    <div className="absolute left-0 top-0 flex h-full w-full text-[9px] font-black uppercase">
-                      <div className="flex flex-1 items-center justify-center bg-red-500/20 text-red-100">Too Early</div>
-                      <div className="flex flex-1 items-center justify-center bg-amber-500/20 text-amber-100">Good</div>
-                      <div className="flex flex-1 items-center justify-center bg-green-500/25 text-green-100">Perfect</div>
-                      <div className="flex flex-1 items-center justify-center bg-orange-500/20 text-orange-100">Late</div>
-                    </div>
-                    <div className="absolute top-0 h-full w-2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)]" style={{ left: `calc(${needle * 100}% - 4px)` }} />
-                  </div>
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-border bg-muted/20 p-2">
-                    <p className="text-xs font-black uppercase text-muted-foreground">Shift plan</p>
-                    <p className="text-sm font-bold">Launch on green, then shift around 52m, 145m, and 255m as the tach enters the green band.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid gap-2 md:grid-cols-[1fr_1.2fr]">
-                <div className="rounded-md border border-border bg-card p-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Feedback</p>
-                  <p className="text-sm font-black uppercase md:text-base">{feedback}</p>
+                <div className="hidden md:block">
+                  <AnalogGauge label="Tachometer" value={runtime.rpm / 1000} max={9} unit="x1000" marks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} redFrom={DRAG_DIFFICULTY.dangerRpm / 1000} />
                 </div>
 
-                {phase === "staging" && (
-                  <Button size="lg" className="h-14 w-full text-xl font-black uppercase md:h-16" onClick={startRace} data-testid="button-start-drag-race">
-                    <Zap className="mr-2 h-6 w-6" /> Stage Race
-                  </Button>
-                )}
-                {phase === "countdown" && (
-                  <Button size="lg" className="h-14 w-full text-xl font-black uppercase md:h-16" disabled>
-                    Watch The Tree
-                  </Button>
-                )}
-                {phase === "launching" && (
-                  <Button size="lg" className="h-14 w-full text-2xl font-black uppercase md:h-16" onClick={launch} data-testid="button-launch-drag-race">
-                    Launch
-                  </Button>
-                )}
-                {phase === "racing" && (
-                  <Button size="lg" className="h-14 w-full text-2xl font-black uppercase md:h-16" onClick={shift} disabled={!canShift} data-testid="button-shift-drag-race">
-                    {nextShiftGear ? (canShift ? `Shift To ${nextShiftGear}` : "Build Revs") : "Flat Out"}
-                  </Button>
+                {phase !== "staging" && phase !== "result" && (
+                  <div className="grid gap-1.5 md:col-span-3 md:grid-cols-[1.1fr_0.85fr_0.85fr_0.9fr]">
+                      <Button
+                        size="lg"
+                        variant={throttleHeld ? "default" : "outline"}
+                        className="h-10 w-full text-sm font-black uppercase md:h-11"
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          setThrottleActive(true);
+                        }}
+                        onPointerUp={(event) => {
+                          event.preventDefault();
+                          setThrottleActive(false);
+                        }}
+                        onPointerCancel={() => setThrottleActive(false)}
+                        onPointerLeave={() => setThrottleActive(false)}
+                        onContextMenu={(event) => event.preventDefault()}
+                        data-testid="button-throttle-drag-race"
+                      >
+                        {throttleHeld ? "Pedal Down" : "Throttle Pedal"}
+                      </Button>
+                    <Button size="lg" variant="outline" className="h-10 w-full text-sm font-black uppercase md:h-11" onClick={shift} disabled={!canShift} data-testid="button-shift-drag-race">
+                      {transmission === "automatic" ? "Auto Shift" : nextShiftGear ? "Shift Knob" : "Top Gear"}
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant={nitrousHeld ? "default" : "outline"}
+                      className="h-10 w-full text-sm font-black uppercase md:h-11"
+                      disabled={!hasNitrous || phase !== "racing" || runtime.nitrousShots <= 0 || runtime.nitrousBoostMs > 0}
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                        setNitrousActive(true);
+                      }}
+                      onPointerUp={(event) => event.preventDefault()}
+                      onPointerCancel={() => undefined}
+                      onPointerLeave={() => undefined}
+                      data-testid="button-nitrous-drag-race"
+                    >
+                      {hasNitrous ? "Nitrous" : "No Nitrous"}
+                    </Button>
+                    <div className="rounded-md border border-zinc-700 bg-black/50 p-2">
+                      <p className="text-[10px] font-black uppercase text-zinc-500">RT / Target</p>
+                      <p className="font-mono text-lg font-black">{reactionMs == null ? "--" : `${reactionMs}ms`}</p>
+                      <p className={cn("text-xs font-black uppercase", gradeClass(currentGrade))}>{timingLabel(currentGrade)} {targetRpm.toLocaleString()}</p>
+                    </div>
+                  </div>
                 )}
               </div>
               {phase === "result" && result && (
@@ -630,20 +1188,35 @@ export default function DragRace() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-black uppercase text-muted-foreground">Finish Line</p>
-                      <p className="text-3xl font-black uppercase">{result.won ? "You Won" : "You Lost"}</p>
+                      <p className="text-3xl font-black uppercase">{result.breakdown.fault === "false-start" ? "Red Light" : result.won ? "You Won" : "You Lost"}</p>
                     </div>
                     <Trophy className={cn("h-10 w-10", result.won ? "text-green-400" : "text-red-400")} />
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
+                  {faultFor(result) && (
+                    <p className="mt-3 rounded-md border border-border bg-background/60 p-3 text-sm font-bold uppercase text-muted-foreground">
+                      {faultFor(result)}
+                    </p>
+                  )}
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-6">
                     <div><p className="text-muted-foreground">Your ET</p><p className="font-mono text-xl font-black">{formatTime(result.elapsedMs)}</p></div>
                     <div><p className="text-muted-foreground">Opponent</p><p className="font-mono text-xl font-black">{formatTime(result.opponentElapsedMs)}</p></div>
                     <div><p className="text-muted-foreground">Trap Speed</p><p className="font-mono text-xl font-black">{result.trapSpeed} mph</p></div>
-                    <div><p className="text-muted-foreground">Reaction</p><p className="font-mono text-xl font-black">{result.breakdown.reactionMs}ms</p></div>
-                    <div><p className="text-muted-foreground">Payout</p><p className="font-mono text-xl font-black">+{result.rewardCredits}</p></div>
+                    <div><p className="text-muted-foreground">Reaction</p><p className="font-mono text-xl font-black">{result.breakdown.fault === "false-start" ? "Jump" : `${result.breakdown.reactionMs}ms`}</p></div>
+                    <div><p className="text-muted-foreground">Damage</p><p className="font-mono text-xl font-black">{result.breakdown.mechanicalDamage ?? 0}%</p></div>
+                    <div><p className="text-muted-foreground">Pot</p><p className="font-mono text-xl font-black">+{result.rewardCredits}</p></div>
                   </div>
-                  <Button variant="outline" className="mt-4 w-full uppercase font-bold" onClick={resetRace}>
-                    <RotateCcw className="mr-2 h-4 w-4" /> Race Again
-                  </Button>
+                  <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                    <p className="text-xs font-black uppercase text-amber-200">{opponent.presenter}</p>
+                    <p className="text-sm font-bold text-muted-foreground">{presenterResultLine}</p>
+                  </div>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <Button variant="outline" className="w-full uppercase font-bold" onClick={resetRace}>
+                      <RotateCcw className="mr-2 h-4 w-4" /> Race Again
+                    </Button>
+                    <Link href={boardHref}>
+                      <Button variant="outline" className="w-full uppercase font-bold">Choose Another Car</Button>
+                    </Link>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -663,9 +1236,19 @@ export default function DragRace() {
                   <p className="text-xs text-muted-foreground">HP {vehiclePerformance.horsepower.toLocaleString()} - {vehiclePerformance.drivetrain} - Grip {vehiclePerformance.traction.toFixed(1)}</p>
                 </div>
                 <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3">
-                  <p className="text-xs font-black uppercase text-red-300">Opponent</p>
+                  <p className="text-xs font-black uppercase text-red-300">Opponent - {opponent.presenter}</p>
                   <p className="font-black uppercase">{opponent.name}</p>
+                  <p className="text-xs text-muted-foreground">{opponent.vehicleName} - {opponent.episode}</p>
                   <p className="text-xs text-muted-foreground">Power {opponent.power}/10 - Traction {opponent.traction}/10 - {rewardLabel}</p>
+                </div>
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                  <div className="mb-1 flex items-center gap-2 text-xs font-black uppercase text-amber-200">
+                    <MessageSquare className="h-4 w-4" /> {opponent.presenter}
+                  </div>
+                  <p className="text-sm font-bold text-muted-foreground">{presenterResultLine}</p>
+                  <Link href={boardHref}>
+                    <Button variant="outline" size="sm" className="mt-3 w-full uppercase font-bold">Challenge Board</Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -677,11 +1260,49 @@ export default function DragRace() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 p-3 pt-0">
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  {[
+                    ["Grip", `${tuningGrip >= 0 ? "+" : ""}${tuningGrip}%`],
+                    ["Aero", `${aeroDrag}%`],
+                    ["Gearing", gearingBias],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                      <p className="font-black uppercase text-muted-foreground">{label}</p>
+                      <p className="font-mono font-black">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  {[
+                    ["Top Speed", `${projected.topSpeedMph} mph`, projected.topSpeedMph - baselineProjection.topSpeedMph, "mph"],
+                    ["Horsepower", `${projected.horsepower.toLocaleString()} hp`, projected.horsepower - baselineProjection.horsepower, "hp"],
+                    ["Wheel HP", `${projected.wheelHorsepower.toLocaleString()} whp`, projected.wheelHorsepower - baselineProjection.wheelHorsepower, "whp"],
+                    ["Torque", `${projected.torqueLbFt.toLocaleString()} lb-ft`, projected.torqueLbFt - baselineProjection.torqueLbFt, "lb-ft"],
+                    ["0-60", `${projected.zeroToSixty.toFixed(1)}s`, baselineProjection.zeroToSixty - projected.zeroToSixty, "s quicker"],
+                    ["1/4 Mile", `${projected.quarterMile.toFixed(1)}s`, baselineProjection.quarterMile - projected.quarterMile, "s quicker"],
+                    ["Launch Grip", `${projected.launchGrip}%`, projected.launchGrip - baselineProjection.launchGrip, "%"],
+                  ].map(([label, value, delta, unit]) => {
+                    const numericDelta = Number(delta);
+                    const neutral = Math.abs(numericDelta) < 0.05;
+                    const displayDelta = neutral
+                      ? "No change"
+                      : `${numericDelta > 0 ? "+" : ""}${Math.abs(numericDelta) < 1 ? numericDelta.toFixed(1) : Math.round(numericDelta).toLocaleString()} ${unit}`;
+                    return (
+                      <div key={label as string} className="rounded-md border border-border bg-muted/20 p-2">
+                        <p className="font-black uppercase text-muted-foreground">{label}</p>
+                        <p className="font-mono text-sm font-black">{value}</p>
+                        <p className={cn("text-[10px] font-black uppercase", neutral ? "text-muted-foreground" : numericDelta > 0 ? "text-green-300" : "text-red-300")}>{displayDelta}</p>
+                      </div>
+                    );
+                  })}
+                </div>
                 {[
                   ["launchRpm", "Launch RPM", 2500, 7200],
                   ["shiftRpm", "Shift RPM", 3500, 8500],
                   ["gearing", "Gearing", 0, 100],
-                  ["tireSetup", "Tire Setup", 0, 100],
+                  ["suspension", "Suspension", 0, 100],
+                  ["downforce", "Downforce", 0, 100],
+                  ["tirePressure", "Tire PSI", 18, 48],
                 ].map(([key, label, min, max]) => (
                   <label key={key as string} className="block space-y-1">
                     <div className="flex justify-between text-xs font-black uppercase">
@@ -702,33 +1323,6 @@ export default function DragRace() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="p-3">
-                <CardTitle className="flex items-center gap-2 uppercase">
-                  <Zap className="h-5 w-5 text-primary" /> Opponent
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 p-3 pt-0">
-                {opponents.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    disabled={phase !== "staging"}
-                    onClick={() => setOpponentKey(item.key)}
-                    className={cn(
-                      "w-full rounded-md border p-3 text-left transition-colors disabled:opacity-60",
-                      item.key === opponentKey ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/60",
-                    )}
-                  >
-                    <div className="flex justify-between gap-3">
-                      <span className="font-black uppercase">{item.name}</span>
-                      <span className="font-mono font-bold">CR {item.rewardCredits}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Power {item.power}/10 - Traction {item.traction}/10 - Consistency {item.consistency}/10</p>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

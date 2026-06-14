@@ -308,6 +308,8 @@ export const BADGE_DEFS: Badge[] = [
   { id: "trivia-five", name: "Pub Bore", category: "trivia", description: "Answer 5 trivia questions correctly.", progress: 0, target: 5 },
   { id: "trivia-vehicle", name: "Spec Sheet Scholar", category: "trivia", description: "Answer 10 vehicle-fact questions.", progress: 0, target: 10 },
   { id: "challenge-five", name: "Actually Driving", category: "driving", description: "Complete 5 driving challenges.", progress: 0, target: 5 },
+  { id: "drag-racer", name: "Run What You Brung", category: "driving", description: "Complete 5 garage drag races with an active career.", progress: 0, target: 5 },
+  { id: "drag-winner", name: "Quarter-Mile Argument", category: "driving", description: "Win 3 garage drag races with an active career.", progress: 0, target: 3 },
   { id: "collector-five", name: "Rust Collector", category: "garage", description: "Own 5 cars in a series garage.", progress: 0, target: 5 },
   { id: "rare-item", name: "Found Something Weird", category: "inventory", description: "Acquire a rare or legendary item.", progress: 0, target: 1 },
   { id: "survive-low-condition", name: "Held Together By Hope", category: "survival", description: "Finish a leg with a car below 20% condition.", progress: 0, target: 1 },

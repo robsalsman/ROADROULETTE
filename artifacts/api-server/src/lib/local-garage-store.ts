@@ -8,6 +8,10 @@ export type GarageTuning = {
   shiftRpm: number;
   gearing: number;
   tireSetup: number;
+  suspension: number;
+  downforce: number;
+  tirePressure: number;
+  nitrousShots: number;
 };
 
 export type GarageProfile = {
@@ -85,6 +89,10 @@ export const defaultGarageTuning: GarageTuning = {
   shiftRpm: 6400,
   gearing: 50,
   tireSetup: 50,
+  suspension: 50,
+  downforce: 35,
+  tirePressure: 32,
+  nitrousShots: 0,
 };
 
 function now(): string {

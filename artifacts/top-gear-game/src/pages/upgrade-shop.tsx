@@ -4,13 +4,14 @@ import { useGetSave, getGetSaveQueryKey, useGetMission, getGetMissionQueryKey, u
 import { upgradeCost } from "@workspace/economy";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Zap, Settings, Fuel, Shield, Circle, Megaphone, Clover } from "lucide-react";
+import { Zap, Settings, Fuel, Shield, Circle, Megaphone, Clover, Gauge } from "lucide-react";
 import VehicleSprite from "@/components/VehicleSprite";
 import {
   loadGarage,
   loadUpgradeSpend,
   loadUpgrades,
   saveUpgrades,
+  adjustedCarStats,
   type UpgradeCat,
   type Upgrades,
 } from "@/data/garage";
@@ -35,6 +36,28 @@ export const DEFS: UpgradeDef[] = [
       { name: "Carburettor Clean", cost: upgradeCost(60), desc: "Minor power improvement. Gets you there slightly faster and angrier." },
       { name: "Turbo Kit", cost: upgradeCost(120), desc: "Substantial boost. Jeremy will approve, at volume." },
       { name: "Racing Engine", cost: upgradeCost(220), desc: "Full engine rebuild. Probably inappropriate for this vehicle." },
+    ],
+  },
+  {
+    cat: "turbo",
+    label: "Turbo",
+    icon: <Zap className="w-5 h-5" />,
+    color: "border-sky-500/60 bg-sky-500/10 text-sky-300",
+    tiers: [
+      { name: "Junkyard Turbo", cost: upgradeCost(110), desc: "Cheap boost. Laggy, loud, and exactly the point." },
+      { name: "Ball Bearing Turbo", cost: upgradeCost(230), desc: "Fast spool and serious top-end pull." },
+      { name: "Twin Turbo Setup", cost: upgradeCost(420), desc: "Expensive forced induction for cars with something to prove." },
+    ],
+  },
+  {
+    cat: "supercharger",
+    label: "Supercharger",
+    icon: <Gauge className="w-5 h-5" />,
+    color: "border-violet-500/60 bg-violet-500/10 text-violet-300",
+    tiers: [
+      { name: "Roots Blower", cost: upgradeCost(125), desc: "Instant torque. Subtle as a brick through a window." },
+      { name: "Twin-Screw Charger", cost: upgradeCost(260), desc: "Hard launch power with less waiting around." },
+      { name: "Race Supercharger", cost: upgradeCost(460), desc: "Massive shove off the line, if the tyres agree." },
     ],
   },
   {
@@ -82,6 +105,17 @@ export const DEFS: UpgradeDef[] = [
     ],
   },
   {
+    cat: "nitrous",
+    label: "Nitrous",
+    icon: <Gauge className="w-5 h-5" />,
+    color: "border-cyan-500/60 bg-cyan-500/10 text-cyan-300",
+    tiers: [
+      { name: "Dry Shot", cost: upgradeCost(95), desc: "A small bottle and cautious jets. Enough to embarrass pricier cars." },
+      { name: "Wet Kit", cost: upgradeCost(180), desc: "More fuel, more oxygen, more trouble. Serious drag-race shove." },
+      { name: "Direct Port Nitrous", cost: upgradeCost(320), desc: "Cylinder-by-cylinder lunacy. Supercar bait if the tyres can take it." },
+    ],
+  },
+  {
     cat: "sponsor",
     label: "Sponsorship",
     icon: <Megaphone className="w-5 h-5" />,
@@ -107,10 +141,13 @@ export const DEFS: UpgradeDef[] = [
 
 export const EFFECTS: Record<UpgradeCat, string[]> = {
   engine:    ["Distance per second +15%", "Distance per second +30%", "Distance per second +50%"],
+  turbo:     ["High-rpm boost +18%", "High-rpm boost +34%", "High-rpm boost +55%"],
+  supercharger:["Launch torque +16%", "Launch torque +32%", "Launch torque +50%"],
   suspension:["Lane switch speed +2", "Lane switch speed +4", "Lane switch speed +6"],
   fuel:      ["Fuel drain −15%", "Fuel drain −30%", "Fuel drain −50%"],
   bodywork:  ["Collision damage −20%", "Collision damage −40%", "Collision damage −60%"],
   tyres:     ["Collectible radius +8px", "Collectible radius +16px", "Collectible radius +24px"],
+  nitrous:   ["Drag nitrous shot +35%", "Drag nitrous shot +55%", "Drag nitrous shot +75%"],
   sponsor:   ["Final score +15%", "Final score +30%", "Final score +50%"],
   charm:     ["Final score +£75 per drive", "Final score +£175 per drive", "Final score +£350 per drive"],
 };
@@ -216,6 +253,7 @@ export default function UpgradeShop() {
     ? loadGarage(saveId!).cars.find((garageCar) => garageCar.id === activeCarId)
       ?? mission.availableCars?.find((missionCar: { id: number }) => missionCar.id === activeCarId)
     : null;
+  const previewStats = activeCar ? adjustedCarStats(activeCar, upgrades) : null;
 
   return (
     <div className="flex-1 flex flex-col bg-background">
@@ -258,7 +296,21 @@ export default function UpgradeShop() {
           </p>
           <p className="text-xs text-muted-foreground">Car budget spent · {upgradeCount} upgrade{upgradeCount !== 1 ? "s" : ""} selected</p>
         </div>
-        <div className="ml-auto flex items-center gap-4">
+        {previewStats && (
+          <div className="ml-auto grid grid-cols-3 gap-2 text-xs">
+            {[
+              ["Power", previewStats.power],
+              ["Reliability", previewStats.reliability],
+              ["Off-road", previewStats.offRoad],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-md border border-border bg-muted/20 px-3 py-2">
+                <p className="font-black uppercase text-muted-foreground">{label}</p>
+                <p className="font-mono text-base font-black">{value}/10</p>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center gap-4">
           <Button
             onClick={handleStart}
             size="lg"

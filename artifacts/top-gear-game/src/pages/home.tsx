@@ -78,7 +78,7 @@ export default function Home() {
               <Wrench className="mr-2 h-5 w-5" /> Mini Games
             </Button>
           </Link>
-          <Link href="/drag-race" className="w-full">
+          <Link href="/garage" className="w-full">
             <Button size="lg" variant="secondary" className="w-full text-lg uppercase tracking-wide h-14" data-testid="button-drag-race-menu">
               <Gauge className="mr-2 h-5 w-5" /> Drag Race
             </Button>

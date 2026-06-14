@@ -21,8 +21,8 @@ const trials = [
   },
   {
     title: "Garage Drag Race",
-    description: "Stage your persistent garage car, tune it, launch it, shift it, and bank credits.",
-    href: "/drag-race",
+    description: "Choose a garage car, pick a presenter challenge from the board, and race for the pot.",
+    href: "/garage",
     icon: Gauge,
     status: "Playable",
   },

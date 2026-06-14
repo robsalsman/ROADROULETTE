@@ -24,12 +24,13 @@ import {
   type GarageResponse,
   type OwnedVehicle,
 } from "@/services/garageApi";
-import { deriveVehiclePerformance, repairCostForVehicle, saleValueForVehicle } from "@/data/vehiclePerformance";
+import { deriveVehiclePerformance, repairCostForVehicle, saleValueForVehicle, tuningProjection } from "@/data/vehiclePerformance";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 const GARAGE_QUERY_KEY = ["garage"];
 const MIGRATION_FLAG = "tgrr-persistent-garage-migrated-v1";
+const NITROUS_SHOT_COST = 500;
 
 const PAINT_SWATCHES = [
   "#ef4444",
@@ -145,6 +146,10 @@ export default function Garage() {
     await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
   };
 
+  const updateGarageCache = (garage: GarageResponse) => {
+    queryClient.setQueryData(GARAGE_QUERY_KEY, garage);
+  };
+
   useEffect(() => {
     if (localStorage.getItem(MIGRATION_FLAG)) return;
     const vehicles = localGarageMigrationPayload();
@@ -158,28 +163,52 @@ export default function Garage() {
 
   const patchMutation = useMutation({
     mutationFn: ({ key, paintColor }: { key: string; paintColor: string }) => garageApi.patchVehicle(key, { paintColor }),
-    onSuccess: refreshGarage,
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
   });
 
   const activeMutation = useMutation({
     mutationFn: (key: string) => garageApi.setActive(key),
-    onSuccess: refreshGarage,
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
   });
 
   const upgradeMutation = useMutation({
     mutationFn: ({ vehicle, upgrades, spent, creditsDelta }: { vehicle: OwnedVehicle; upgrades: Upgrades; spent: number; creditsDelta: number }) =>
       garageApi.saveUpgrades(vehicle.canonicalVehicleKey, upgrades, spent, creditsDelta),
-    onSuccess: refreshGarage,
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
+  });
+
+  const tuningMutation = useMutation({
+    mutationFn: ({ vehicle, tuning, creditsDelta }: { vehicle: OwnedVehicle; tuning: OwnedVehicle["tuning"]; creditsDelta: number }) =>
+      garageApi.saveTuning(vehicle.canonicalVehicleKey, tuning, creditsDelta),
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
   });
 
   const repairMutation = useMutation({
     mutationFn: (vehicle: OwnedVehicle) => garageApi.repairVehicle(vehicle.canonicalVehicleKey),
-    onSuccess: refreshGarage,
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
   });
 
   const sellMutation = useMutation({
     mutationFn: (vehicle: OwnedVehicle) => garageApi.sellVehicle(vehicle.canonicalVehicleKey),
-    onSuccess: refreshGarage,
+    onSuccess: (data) => {
+      updateGarageCache(data.garage);
+      void refreshGarage();
+    },
   });
 
   const buyMutation = useMutation({
@@ -207,12 +236,13 @@ export default function Garage() {
       const garageCar = ownedToGarageCar(vehicle);
       const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
       const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+      const projection = tuningProjection(performance, vehicle.tuning, vehicle.condition);
       const vehicleRaces = raceHistory.filter((race) => race.canonicalVehicleKey === vehicle.canonicalVehicleKey);
       const wins = vehicleRaces.filter((race) => race.won).length;
       const bestEt = vehicleRaces.length > 0 ? Math.min(...vehicleRaces.map((race) => race.elapsedMs)) : null;
       const saleValue = saleValueForVehicle(vehicle);
       const repairCost = repairCostForVehicle(vehicle);
-      return { vehicle, garageCar, adjusted, performance, races: vehicleRaces.length, wins, bestEt, saleValue, repairCost };
+      return { vehicle, garageCar, adjusted, performance, projection, races: vehicleRaces.length, wins, bestEt, saleValue, repairCost };
     });
   }, [raceHistory, vehicles]);
 
@@ -284,7 +314,7 @@ export default function Garage() {
         if (vehicle.sourceCarId != null) saveLocalUpgrades(vehicle.sourceMissionId ?? "garage", vehicle.sourceCarId, nextUpgrades, nextSpent);
       } else {
         if (diffCost > garage.profile.credits) {
-          toast({ title: "Not enough credits", variant: "destructive" });
+      toast({ title: "Not enough Garage GBP", variant: "destructive" });
           return;
         }
         const nextUpgrades = { ...vehicle.upgrades, [cat]: tier };
@@ -299,11 +329,56 @@ export default function Garage() {
     }
   };
 
+  const buyNitrousShot = async (vehicle: OwnedVehicle) => {
+    if (!garage) return;
+    if ((vehicle.upgrades.nitrous ?? 0) <= 0) {
+      toast({ title: "Nitrous kit required", description: "Install a nitrous kit before buying shots.", variant: "destructive" });
+      return;
+    }
+    if (garage.profile.credits < NITROUS_SHOT_COST) {
+      toast({ title: "Not enough Garage GBP", description: `A nitrous shot costs GBP ${NITROUS_SHOT_COST}.`, variant: "destructive" });
+      return;
+    }
+    if ((vehicle.tuning.nitrousShots ?? 0) >= 12) {
+      toast({ title: "Bottle full", description: "This car already has the maximum number of nitrous shots loaded." });
+      return;
+    }
+    setWorking(`${vehicle.canonicalVehicleKey}-nitrous-shot`);
+    try {
+      await tuningMutation.mutateAsync({
+        vehicle,
+        tuning: { ...vehicle.tuning, nitrousShots: (vehicle.tuning.nitrousShots ?? 0) + 1 },
+        creditsDelta: -NITROUS_SHOT_COST,
+      });
+      toast({ title: "Nitrous shot loaded", description: `${vehicle.name} now has ${(vehicle.tuning.nitrousShots ?? 0) + 1} shot(s).` });
+    } catch {
+      toast({ title: "Nitrous purchase failed", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  const saveGarageTuning = async (vehicle: OwnedVehicle, key: keyof OwnedVehicle["tuning"], value: number) => {
+    const token = `${vehicle.canonicalVehicleKey}-tuning-${key}`;
+    setWorking(token);
+    try {
+      await tuningMutation.mutateAsync({
+        vehicle,
+        tuning: { ...vehicle.tuning, [key]: value },
+        creditsDelta: 0,
+      });
+    } catch {
+      toast({ title: "Tuning not saved", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
   const repairCar = async (vehicle: OwnedVehicle) => {
     const cost = repairCostForVehicle(vehicle);
     if (!garage || cost <= 0) return;
     if (cost > garage.profile.credits) {
-      toast({ title: "Not enough credits", description: `Repair needs CR ${cost}.`, variant: "destructive" });
+      toast({ title: "Not enough Garage GBP", description: `Repair needs GBP ${cost}.`, variant: "destructive" });
       return;
     }
     setWorking(`${vehicle.canonicalVehicleKey}-repair`);
@@ -322,11 +397,11 @@ export default function Garage() {
       toast({ title: "Keep one vehicle", description: "The garage needs at least one car ready to go.", variant: "destructive" });
       return;
     }
-    if (!window.confirm(`Sell ${vehicle.year} ${vehicle.name} for CR ${saleValueForVehicle(vehicle)}?`)) return;
+    if (!window.confirm(`Sell ${vehicle.year} ${vehicle.name} for GBP ${saleValueForVehicle(vehicle)}?`)) return;
     setWorking(`${vehicle.canonicalVehicleKey}-sell`);
     try {
       await sellMutation.mutateAsync(vehicle);
-      toast({ title: "Vehicle sold", description: `CR ${saleValueForVehicle(vehicle)} added to your profile.` });
+      toast({ title: "Vehicle sold", description: `GBP ${saleValueForVehicle(vehicle)} added to your garage balance.` });
     } catch {
       toast({ title: "Sale failed", variant: "destructive" });
     } finally {
@@ -351,7 +426,7 @@ export default function Garage() {
   };
 
   return (
-    <div className="flex-1 p-6 md:p-12">
+    <div className="flex-1 px-4 pb-6 pt-24 md:p-12">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
           <div className="space-y-1">
@@ -360,12 +435,12 @@ export default function Garage() {
               <h2 className="text-3xl font-bold uppercase tracking-wide">Garage</h2>
             </div>
             <p className="text-muted-foreground">
-              Persistent profile garage, credits, upgrades, tuning, and race history.
+              Persistent profile garage, Garage GBP, upgrades, tuning, and race history.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {activeVehicle && (
-              <Link href={`/drag-race?vehicle=${encodeURIComponent(activeVehicle.canonicalVehicleKey)}`}>
+              <Link href={`/drag-race?mode=board&vehicle=${encodeURIComponent(activeVehicle.canonicalVehicleKey)}`}>
                 <Button className="uppercase font-bold" data-testid="button-drag-race">
                   <Zap className="mr-2 h-4 w-4" /> Drag Race
                 </Button>
@@ -395,11 +470,11 @@ export default function Garage() {
           <div className="space-y-8">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
               {[
-                ["Credits", `CR ${garage.profile.credits.toLocaleString()}`],
+                ["Garage GBP", `GBP ${garage.profile.credits.toLocaleString()}`],
                 ["Cars", vehicles.length.toLocaleString()],
                 ["Upgraded", stats.upgradedCars.toLocaleString()],
                 ["Wins", stats.raceWins.toLocaleString()],
-                ["Garage Value", `CR ${stats.totalValue.toLocaleString()}`],
+                ["Garage Value", `GBP ${stats.totalValue.toLocaleString()}`],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-border bg-card p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</p>
@@ -482,7 +557,9 @@ export default function Garage() {
                         <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono">
                           <span>HP {row.performance.horsepower}</span>
                           <span>{row.performance.drivetrain}</span>
-                          <span>CR {row.saleValue}</span>
+                          <span>{row.projection.topSpeedMph} mph</span>
+                          <span>{row.projection.zeroToSixty.toFixed(1)}s 0-60</span>
+                          <span>GBP {row.saleValue}</span>
                           <span>{row.vehicle.condition}%</span>
                           <span>{row.wins}/{row.races} wins</span>
                           <span>{row.bestEt ? formatTime(row.bestEt) : "no ET"}</span>
@@ -495,7 +572,7 @@ export default function Garage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {visibleRows.map(({ vehicle, garageCar, adjusted, performance, races, wins, bestEt, saleValue, repairCost }) => {
+              {visibleRows.map(({ vehicle, garageCar, adjusted, performance, projection, races, wins, bestEt, saleValue, repairCost }) => {
                 const key = vehicle.canonicalVehicleKey;
                 const isExpanded = expanded === key;
 
@@ -533,7 +610,7 @@ export default function Garage() {
                         </div>
                         <div className="rounded-md border border-border bg-muted/20 p-2">
                           <p className="font-bold uppercase text-muted-foreground">Upgrade Spend</p>
-                          <p className="font-mono text-lg font-black">CR {vehicle.upgradeSpend}</p>
+                          <p className="font-mono text-lg font-black">GBP {vehicle.upgradeSpend}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-xs">
@@ -557,7 +634,22 @@ export default function Garage() {
                           ["Drive", performance.drivetrain],
                           ["Tier", performance.tier],
                           ["Traction", performance.traction.toFixed(1)],
-                          ["Resale", `CR ${saleValue}`],
+                          ["Resale", `GBP ${saleValue}`],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                            <p className="font-bold uppercase text-muted-foreground">{label}</p>
+                            <p className="font-mono text-sm font-black">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
+                        {[
+                          ["Top Speed", `${projection.topSpeedMph} mph`],
+                          ["Wheel HP", `${projection.wheelHorsepower.toLocaleString()} whp`],
+                          ["Torque", `${projection.torqueLbFt.toLocaleString()} lb-ft`],
+                          ["0-60", `${projection.zeroToSixty.toFixed(1)}s`],
+                          ["1/4 Mile", `${projection.quarterMile.toFixed(1)}s`],
+                          ["Launch Grip", `${projection.launchGrip}%`],
                         ].map(([label, value]) => (
                           <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
                             <p className="font-bold uppercase text-muted-foreground">{label}</p>
@@ -587,6 +679,78 @@ export default function Garage() {
 
                       {isExpanded && (
                         <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+                          <div className="rounded-md border border-cyan-500/30 bg-cyan-500/10 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-xs font-black uppercase text-cyan-200">Nitrous Bottle</p>
+                                <p className="text-sm font-bold">{vehicle.tuning.nitrousShots ?? 0}/12 shots loaded</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="uppercase font-bold"
+                                disabled={(vehicle.upgrades.nitrous ?? 0) <= 0 || (vehicle.tuning.nitrousShots ?? 0) >= 12 || garage.profile.credits < NITROUS_SHOT_COST || working === `${vehicle.canonicalVehicleKey}-nitrous-shot`}
+                                onClick={() => buyNitrousShot(vehicle)}
+                              >
+                                Buy Shot GBP {NITROUS_SHOT_COST}
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-3 rounded-md border border-border bg-background/40 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-xs font-black uppercase text-primary">Garage Tuning</p>
+                                <p className="text-xs text-muted-foreground">Saved to this car and used on the drag strip.</p>
+                              </div>
+                              <span className="rounded border border-border bg-muted/30 px-2 py-1 text-[11px] font-black uppercase text-muted-foreground">
+                                {projection.gearingBias}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-3">
+                              {[
+                                ["Top Speed", `${projection.topSpeedMph} mph`],
+                                ["Wheel HP", `${projection.wheelHorsepower.toLocaleString()} whp`],
+                                ["Torque", `${projection.torqueLbFt.toLocaleString()} lb-ft`],
+                                ["0-60", `${projection.zeroToSixty.toFixed(1)}s`],
+                                ["1/4 Mile", `${projection.quarterMile.toFixed(1)}s`],
+                                ["Launch Grip", `${projection.launchGrip}%`],
+                              ].map(([label, value]) => (
+                                <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
+                                  <p className="font-black uppercase text-muted-foreground">{label}</p>
+                                  <p className="font-mono text-sm font-black">{value}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {[
+                              ["launchRpm", "Launch RPM", 2500, 7200],
+                              ["shiftRpm", "Shift RPM", 3500, 8500],
+                              ["gearing", "Gearing", 0, 100],
+                              ["suspension", "Suspension", 0, 100],
+                              ["downforce", "Downforce", 0, 100],
+                              ["tirePressure", "Tire PSI", 18, 48],
+                            ].map(([tuningKey, label, min, max]) => {
+                              const keyName = tuningKey as keyof OwnedVehicle["tuning"];
+                              const currentValue = vehicle.tuning[keyName];
+                              const token = `${vehicle.canonicalVehicleKey}-tuning-${keyName}`;
+                              return (
+                                <label key={keyName} className="block space-y-1">
+                                  <div className="flex justify-between text-xs font-black uppercase">
+                                    <span>{label}</span>
+                                    <span>{currentValue}</span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min={min as number}
+                                    max={max as number}
+                                    value={currentValue}
+                                    className="w-full accent-amber-500"
+                                    disabled={working === token}
+                                    onChange={(event) => saveGarageTuning(vehicle, keyName, Number(event.target.value))}
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
                           {DEFS.map((def) => {
                             const currentTier = vehicle.upgrades[def.cat] ?? 0;
                             return (
@@ -604,6 +768,8 @@ export default function Garage() {
                                     const owned = currentTier === tierNum;
                                     const locked = tierNum < currentTier;
                                     const affordable = owned || diffCost <= garage.profile.credits;
+                                    const previewUpgrades = owned ? vehicle.upgrades : { ...vehicle.upgrades, [def.cat]: tierNum };
+                                    const previewPerformance = deriveVehiclePerformance(vehicle, previewUpgrades);
                                     return (
                                       <button
                                         key={tier.name}
@@ -621,8 +787,9 @@ export default function Garage() {
                                       >
                                         <span className="block font-black uppercase">{tier.name}</span>
                                         <span className="block text-muted-foreground">{EFFECTS[def.cat][idx]}</span>
+                                        <span className="block text-muted-foreground">HP {previewPerformance.horsepower} / Grip {previewPerformance.traction.toFixed(1)}</span>
                                         <span className="block font-mono font-bold">
-                                          {owned ? "Sell" : `CR ${currentTier > 0 ? diffCost : tier.cost}`}
+                                          {owned ? "Sell" : `GBP ${currentTier > 0 ? diffCost : tier.cost}`}
                                         </span>
                                       </button>
                                     );
@@ -656,7 +823,7 @@ export default function Garage() {
                         onClick={() => repairCar(vehicle)}
                         data-testid={`button-repair-${key}`}
                       >
-                        <Wrench className="mr-2 h-4 w-4" /> {repairCost > 0 ? `Repair CR ${repairCost}` : "Repaired"}
+                        <Wrench className="mr-2 h-4 w-4" /> {repairCost > 0 ? `Repair GBP ${repairCost}` : "Repaired"}
                       </Button>
                       <Button
                         variant="outline"
@@ -665,11 +832,11 @@ export default function Garage() {
                         onClick={() => sellCar(vehicle)}
                         data-testid={`button-sell-${key}`}
                       >
-                        <BadgeDollarSign className="mr-2 h-4 w-4" /> Sell CR {saleValue}
+                        <BadgeDollarSign className="mr-2 h-4 w-4" /> Sell GBP {saleValue}
                       </Button>
-                      <Link href={`/drag-race?vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`}>
-                        <Button variant="outline" size="icon" aria-label={`Drag race ${vehicle.name}`}>
-                          <Gauge className="h-4 w-4" />
+                      <Link href={`/drag-race?mode=board&vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`}>
+                        <Button variant="outline" className="flex-1 uppercase font-bold" aria-label={`Drag race ${vehicle.name}`}>
+                          <Gauge className="mr-2 h-4 w-4" /> Drag Race
                         </Button>
                       </Link>
                     </CardFooter>
@@ -738,7 +905,7 @@ export default function Garage() {
                           </div>
                           <div className="rounded-md border border-border bg-muted/20 p-3">
                             <p className="text-xs font-black uppercase text-muted-foreground">Price</p>
-                            <p className="font-mono text-xl font-black">CR {car.price.toLocaleString()}</p>
+                            <p className="font-mono text-xl font-black">GBP {car.price.toLocaleString()}</p>
                           </div>
                         </CardContent>
                         <CardFooter>
@@ -748,7 +915,7 @@ export default function Garage() {
                             onClick={() => buyShowroomCar(car)}
                             data-testid={`button-showroom-buy-${canonicalKey}`}
                           >
-                            {owned ? "Owned" : locked ? `Unlock Episode ${car.missionId}` : !affordable ? "Not Enough Credits" : "Buy Car"}
+                            {owned ? "Owned" : locked ? `Unlock Episode ${car.missionId}` : !affordable ? "Not Enough Garage GBP" : "Buy Car"}
                           </Button>
                         </CardFooter>
                       </Card>
@@ -772,7 +939,7 @@ export default function Garage() {
                         <span className={race.won ? "text-green-400" : "text-red-400"}>{race.won ? "Won" : "Lost"}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        ET {formatTime(race.elapsedMs)} vs {formatTime(race.opponentElapsedMs)} · {race.trapSpeed} mph · CR +{race.rewardCredits}
+                        ET {formatTime(race.elapsedMs)} vs {formatTime(race.opponentElapsedMs)} · {race.trapSpeed} mph · GBP +{race.rewardCredits}
                       </p>
                     </div>
                   ))}

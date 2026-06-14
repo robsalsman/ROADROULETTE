@@ -24,6 +24,10 @@ const tuningSchema = z.object({
   shiftRpm: z.number().int().min(3500).max(8500).default(defaultGarageTuning.shiftRpm),
   gearing: z.number().int().min(0).max(100).default(defaultGarageTuning.gearing),
   tireSetup: z.number().int().min(0).max(100).default(defaultGarageTuning.tireSetup),
+  suspension: z.number().int().min(0).max(100).default(defaultGarageTuning.suspension),
+  downforce: z.number().int().min(0).max(100).default(defaultGarageTuning.downforce),
+  tirePressure: z.number().int().min(18).max(48).default(defaultGarageTuning.tirePressure),
+  nitrousShots: z.number().int().min(0).max(12).default(defaultGarageTuning.nitrousShots),
 });
 
 const buyVehicleSchema = z.object({

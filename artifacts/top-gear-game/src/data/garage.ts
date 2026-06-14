@@ -1,6 +1,6 @@
 import { recordGarageCount } from "@/data/campaign";
 
-export type UpgradeCat = "engine" | "suspension" | "fuel" | "bodywork" | "tyres" | "sponsor" | "charm";
+export type UpgradeCat = "engine" | "turbo" | "supercharger" | "suspension" | "fuel" | "bodywork" | "tyres" | "nitrous" | "sponsor" | "charm";
 export type UpgradeTier = 1 | 2 | 3;
 export type Upgrades = Partial<Record<UpgradeCat, UpgradeTier>>;
 
@@ -106,7 +106,7 @@ export function adjustedCarStats(car: Pick<GarageCar, "reliability" | "power" | 
   const offRoad = Number.isFinite(car.offRoad) ? car.offRoad : 5;
   return {
     reliability: Math.min(10, reliability + (upgrades.bodywork ?? 0) + Math.floor((upgrades.fuel ?? 0) / 2)),
-    power: Math.min(10, power + (upgrades.engine ?? 0) * 2),
+    power: Math.min(10, power + (upgrades.engine ?? 0) * 2 + (upgrades.turbo ?? 0) + (upgrades.supercharger ?? 0) + (upgrades.nitrous ?? 0)),
     offRoad: Math.min(10, offRoad + (upgrades.suspension ?? 0) + (upgrades.tyres ?? 0)),
   };
 }
