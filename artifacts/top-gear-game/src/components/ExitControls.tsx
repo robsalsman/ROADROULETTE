@@ -20,12 +20,13 @@ export default function ExitControls() {
   const fullLocation = `${window.location.pathname}${window.location.search}`;
   const saveId = getSaveId(fullLocation);
   const isHome = fullLocation === "/";
+  const hasLocalNavigation = location === "/garage" || location === "/drag-race";
 
   const { data: save } = useGetSave(Number(saveId), {
     query: { enabled: !!saveId, queryKey: getGetSaveQueryKey(Number(saveId)) },
   });
 
-  if (isHome) return null;
+  if (isHome || hasLocalNavigation) return null;
 
   const isFinished = save?.status === "completed" || save?.status === "failed";
   const label = saveId && !isFinished ? "Save & Exit" : "Main Menu";

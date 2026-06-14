@@ -1,13 +1,12 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Car, Gauge, Paintbrush, Settings2, Trophy, Wrench, Zap, BadgeDollarSign, GitCompare, ListFilter, LockKeyhole, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Car, Gauge, MessageSquare, Paintbrush, RotateCcw, Settings2, Trophy, Wrench, Zap, BadgeDollarSign, GitCompare, ListFilter, LockKeyhole, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import VehicleSprite from "@/components/VehicleSprite";
 import {
-  adjustedCarStats,
   loadGarage,
   loadUpgradeSpend,
   loadUpgrades,
@@ -20,11 +19,23 @@ import { DEFS, EFFECTS } from "@/pages/upgrade-shop";
 import {
   garageApi,
   carToBuyInput,
+  factoryGarageTuning,
   ownedToGarageCar,
   type GarageResponse,
   type OwnedVehicle,
 } from "@/services/garageApi";
 import { deriveVehiclePerformance, repairCostForVehicle, saleValueForVehicle, tuningProjection } from "@/data/vehiclePerformance";
+import { finalDriveForGearing } from "@/data/gearing";
+import {
+  appendPresenterMessage,
+  presenterTuningAdvice,
+  recordVehicleService,
+  saveTuningPreset,
+  summarizeVehicleFile,
+  tuningSlotIds,
+  type PresenterName,
+  type TuningSlotId,
+} from "@/data/vehicleFiles";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -131,6 +142,7 @@ export default function Garage() {
   const [sortMode, setSortMode] = useState<GarageSort>("active");
   const [filterMode, setFilterMode] = useState<GarageFilter>("all");
   const [compareKeys, setCompareKeys] = useState<[string | null, string | null]>([null, null]);
+  const [vehicleFileVersion, setVehicleFileVersion] = useState(0);
 
   const garageQuery = useQuery({
     queryKey: GARAGE_QUERY_KEY,
@@ -234,7 +246,6 @@ export default function Garage() {
   const vehicleRows = useMemo(() => {
     return vehicles.map((vehicle) => {
       const garageCar = ownedToGarageCar(vehicle);
-      const adjusted = adjustedCarStats(garageCar, vehicle.upgrades);
       const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
       const projection = tuningProjection(performance, vehicle.tuning, vehicle.condition);
       const vehicleRaces = raceHistory.filter((race) => race.canonicalVehicleKey === vehicle.canonicalVehicleKey);
@@ -242,9 +253,10 @@ export default function Garage() {
       const bestEt = vehicleRaces.length > 0 ? Math.min(...vehicleRaces.map((race) => race.elapsedMs)) : null;
       const saleValue = saleValueForVehicle(vehicle);
       const repairCost = repairCostForVehicle(vehicle);
-      return { vehicle, garageCar, adjusted, performance, projection, races: vehicleRaces.length, wins, bestEt, saleValue, repairCost };
+      const vehicleFileSummary = summarizeVehicleFile(vehicle, raceHistory);
+      return { vehicle, garageCar, performance, projection, vehicleFileSummary, races: vehicleRaces.length, wins, bestEt, saleValue, repairCost };
     });
-  }, [raceHistory, vehicles]);
+  }, [raceHistory, vehicleFileVersion, vehicles]);
 
   const visibleRows = useMemo(() => {
     const filtered = vehicleRows.filter(({ vehicle }) => {
@@ -312,6 +324,8 @@ export default function Garage() {
         const nextSpent = Math.max(0, vehicle.upgradeSpend - targetCost);
         await upgradeMutation.mutateAsync({ vehicle, upgrades: nextUpgrades, spent: nextSpent, creditsDelta: targetCost });
         if (vehicle.sourceCarId != null) saveLocalUpgrades(vehicle.sourceMissionId ?? "garage", vehicle.sourceCarId, nextUpgrades, nextSpent);
+        recordVehicleService(vehicle.canonicalVehicleKey, { type: "upgrade", summary: `Removed ${def.label} tier ${tier}; GBP ${targetCost.toLocaleString()} returned.` });
+        setVehicleFileVersion((version) => version + 1);
       } else {
         if (diffCost > garage.profile.credits) {
       toast({ title: "Not enough Garage GBP", variant: "destructive" });
@@ -321,6 +335,8 @@ export default function Garage() {
         const nextSpent = vehicle.upgradeSpend + diffCost;
         await upgradeMutation.mutateAsync({ vehicle, upgrades: nextUpgrades, spent: nextSpent, creditsDelta: -diffCost });
         if (vehicle.sourceCarId != null) saveLocalUpgrades(vehicle.sourceMissionId ?? "garage", vehicle.sourceCarId, nextUpgrades, nextSpent);
+        recordVehicleService(vehicle.canonicalVehicleKey, { type: "upgrade", summary: `Installed ${def.label} ${def.tiers[tier - 1].name} for GBP ${diffCost.toLocaleString()}.` });
+        setVehicleFileVersion((version) => version + 1);
       }
     } catch {
       toast({ title: "Upgrade failed", variant: "destructive" });
@@ -350,6 +366,8 @@ export default function Garage() {
         tuning: { ...vehicle.tuning, nitrousShots: (vehicle.tuning.nitrousShots ?? 0) + 1 },
         creditsDelta: -NITROUS_SHOT_COST,
       });
+      recordVehicleService(vehicle.canonicalVehicleKey, { type: "nitrous", summary: `Loaded one nitrous shot for GBP ${NITROUS_SHOT_COST.toLocaleString()}.` });
+      setVehicleFileVersion((version) => version + 1);
       toast({ title: "Nitrous shot loaded", description: `${vehicle.name} now has ${(vehicle.tuning.nitrousShots ?? 0) + 1} shot(s).` });
     } catch {
       toast({ title: "Nitrous purchase failed", variant: "destructive" });
@@ -374,6 +392,51 @@ export default function Garage() {
     }
   };
 
+  const applyGarageTuning = async (vehicle: OwnedVehicle, tuning: OwnedVehicle["tuning"], summary: string) => {
+    setWorking(`${vehicle.canonicalVehicleKey}-tuning-file`);
+    try {
+      await tuningMutation.mutateAsync({ vehicle, tuning, creditsDelta: 0 });
+      recordVehicleService(vehicle.canonicalVehicleKey, { type: "tuning", summary });
+      setVehicleFileVersion((version) => version + 1);
+      toast({ title: "Tuning saved", description: summary });
+    } catch {
+      toast({ title: "Tuning not saved", variant: "destructive" });
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  const resetGarageTuning = async (vehicle: OwnedVehicle) => {
+    await applyGarageTuning(vehicle, factoryGarageTuning(vehicle.tuning), "Reset garage tuning to factory settings.");
+  };
+
+  const saveGarageTuningSlot = (vehicle: OwnedVehicle, slot: TuningSlotId) => {
+    saveTuningPreset(vehicle.canonicalVehicleKey, slot, vehicle.tuning);
+    recordVehicleService(vehicle.canonicalVehicleKey, { type: "tuning", summary: `Saved garage tuning to ${slot.replace("-", " ")}.` });
+    setVehicleFileVersion((version) => version + 1);
+    toast({ title: "Tuning preset saved", description: `${vehicle.name} ${slot.replace("-", " ")} updated.` });
+  };
+
+  const loadGarageTuningSlot = async (vehicle: OwnedVehicle, slot: TuningSlotId) => {
+    const preset = summarizeVehicleFile(vehicle, raceHistory).file.tuningPresets[slot];
+    if (!preset) {
+      toast({ title: "Empty tuning slot", description: `${slot.replace("-", " ")} has not been saved yet.` });
+      return;
+    }
+    await applyGarageTuning(vehicle, { ...preset.tuning, nitrousShots: vehicle.tuning.nitrousShots }, `Loaded ${preset.name}; nitrous load preserved.`);
+  };
+
+  const askPresenterForAdvice = (vehicle: OwnedVehicle, presenter: PresenterName) => {
+    const performance = deriveVehiclePerformance(vehicle, vehicle.upgrades);
+    const projection = tuningProjection(performance, vehicle.tuning, vehicle.condition);
+    const prompt = `Tuning advice for ${vehicle.year} ${vehicle.name}`;
+    const response = presenterTuningAdvice(presenter, vehicle, projection);
+    appendPresenterMessage(vehicle.canonicalVehicleKey, { presenter, prompt, response });
+    recordVehicleService(vehicle.canonicalVehicleKey, { type: "tuning", summary: `Texted ${presenter} for tuning advice.` });
+    setVehicleFileVersion((version) => version + 1);
+    toast({ title: `${presenter} replied`, description: response });
+  };
+
   const repairCar = async (vehicle: OwnedVehicle) => {
     const cost = repairCostForVehicle(vehicle);
     if (!garage || cost <= 0) return;
@@ -384,6 +447,8 @@ export default function Garage() {
     setWorking(`${vehicle.canonicalVehicleKey}-repair`);
     try {
       await repairMutation.mutateAsync(vehicle);
+      recordVehicleService(vehicle.canonicalVehicleKey, { type: "repair", summary: `Repaired vehicle to 100% condition for GBP ${cost.toLocaleString()}.` });
+      setVehicleFileVersion((version) => version + 1);
       toast({ title: "Vehicle repaired", description: `${vehicle.year} ${vehicle.name} is back at 100% condition.` });
     } catch {
       toast({ title: "Repair failed", variant: "destructive" });
@@ -416,6 +481,8 @@ export default function Garage() {
     setWorking(`buy-${canonicalKey}`);
     try {
       await buyMutation.mutateAsync(vehicle);
+      recordVehicleService(canonicalKey, { type: "acquired", summary: `Purchased ${vehicle.year} ${vehicle.name} for GBP ${vehicle.price.toLocaleString()}.` });
+      setVehicleFileVersion((version) => version + 1);
       toast({ title: "Vehicle purchased", description: `${vehicle.year} ${vehicle.name} added to your garage.` });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Purchase failed";
@@ -572,9 +639,10 @@ export default function Garage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {visibleRows.map(({ vehicle, garageCar, adjusted, performance, projection, races, wins, bestEt, saleValue, repairCost }) => {
+              {visibleRows.map(({ vehicle, garageCar, performance, projection, vehicleFileSummary, races, wins, bestEt, saleValue, repairCost }) => {
                 const key = vehicle.canonicalVehicleKey;
                 const isExpanded = expanded === key;
+                const finalDrive = finalDriveForGearing(vehicle.tuning.gearing);
 
                 return (
                   <Card key={key} className={cn("flex flex-col border-2", vehicle.isActive ? "border-primary" : "border-transparent")}>
@@ -591,14 +659,14 @@ export default function Garage() {
                       <VehicleSprite vehicle={garageCar} className="h-32 w-full" />
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         {[
-                          ["Reliability", adjusted.reliability],
-                          ["Power", adjusted.power],
-                          ["Off-road", adjusted.offRoad],
+                          ["Reliability", performance.reliabilityRating],
+                          ["Power", performance.powerRating],
+                          ["Handling", performance.handlingRating],
                         ].map(([label, value]) => (
                           <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
                             <p className="font-bold uppercase text-muted-foreground">{label}</p>
-                            <p className="font-mono text-lg font-black">{value}/10</p>
-                            <Progress value={Number(value) * 10} className="h-1.5" />
+                            <p className="font-mono text-lg font-black">{value}/100</p>
+                            <Progress value={Number(value)} className="h-1.5" />
                           </div>
                         ))}
                       </div>
@@ -633,7 +701,7 @@ export default function Garage() {
                           ["Weight", `${performance.weight.toLocaleString()} lb`],
                           ["Drive", performance.drivetrain],
                           ["Tier", performance.tier],
-                          ["Traction", performance.traction.toFixed(1)],
+                          ["Grip", performance.handlingRating.toString()],
                           ["Resale", `GBP ${saleValue}`],
                         ].map(([label, value]) => (
                           <div key={label} className="rounded-md border border-border bg-muted/20 p-2">
@@ -706,6 +774,40 @@ export default function Garage() {
                                 {projection.gearingBias}
                               </span>
                             </div>
+                            <div className="grid gap-2 rounded-md border border-border bg-muted/20 p-2 text-xs md:grid-cols-[1fr_auto]">
+                              <div>
+                                <p className="font-black uppercase text-muted-foreground">Final Drive</p>
+                                <p className="font-mono font-black">{finalDrive.label}</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="uppercase font-black"
+                                disabled={working === `${vehicle.canonicalVehicleKey}-tuning-file`}
+                                onClick={() => resetGarageTuning(vehicle)}
+                              >
+                                <RotateCcw className="mr-2 h-3.5 w-3.5" /> Factory
+                              </Button>
+                            </div>
+                            <div className="space-y-2 rounded-md border border-border bg-muted/20 p-2">
+                              <p className="text-[11px] font-black uppercase text-muted-foreground">Tuning Slots</p>
+                              {tuningSlotIds().map((slot) => {
+                                const preset = vehicleFileSummary.file.tuningPresets[slot];
+                                return (
+                                  <div key={slot} className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+                                    <span className="min-w-0 truncate text-xs font-black uppercase text-muted-foreground">
+                                      {preset ? `${preset.name} - ${finalDriveForGearing(preset.tuning.gearing).label}` : `${slot.replace("-", " ")} - Empty`}
+                                    </span>
+                                    <Button size="sm" variant="outline" className="h-8 px-2 text-[10px] uppercase" onClick={() => saveGarageTuningSlot(vehicle, slot)}>
+                                      Save
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-8 px-2 text-[10px] uppercase" disabled={!preset} onClick={() => loadGarageTuningSlot(vehicle, slot)}>
+                                      Load
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
                             <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-3">
                               {[
                                 ["Top Speed", `${projection.topSpeedMph} mph`],
@@ -750,6 +852,47 @@ export default function Garage() {
                                 </label>
                               );
                             })}
+                            <div className="space-y-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                              <div className="flex items-center gap-2 text-xs font-black uppercase text-amber-200">
+                                <MessageSquare className="h-4 w-4" /> Presenter Advice
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                {(["Jeremy", "Richard", "James"] as PresenterName[]).map((presenter) => (
+                                  <Button key={presenter} size="sm" variant="outline" className="uppercase" onClick={() => askPresenterForAdvice(vehicle, presenter)}>
+                                    {presenter}
+                                  </Button>
+                                ))}
+                              </div>
+                              {vehicleFileSummary.file.presenterMessages[0] && (
+                                <div className="rounded border border-amber-500/30 bg-background/50 p-2 text-sm">
+                                  <p className="mb-1 text-xs font-black uppercase text-amber-200">{vehicleFileSummary.file.presenterMessages[0].presenter}</p>
+                                  <p className="text-muted-foreground">{vehicleFileSummary.file.presenterMessages[0].response}</p>
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+                              <p className="text-xs font-black uppercase text-primary">Vehicle File</p>
+                              <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-4">
+                                {[
+                                  ["Record", `${vehicleFileSummary.wins}/${vehicleFileSummary.races}`],
+                                  ["Best Trap", vehicleFileSummary.bestTrapMph == null ? "--" : `${vehicleFileSummary.bestTrapMph} mph`],
+                                  ["Winnings", `GBP ${vehicleFileSummary.winnings.toLocaleString()}`],
+                                  ["Services", vehicleFileSummary.file.serviceRecords.length.toString()],
+                                ].map(([label, value]) => (
+                                  <div key={label} className="rounded border border-border bg-background/40 p-2">
+                                    <p className="font-black uppercase text-muted-foreground">{label}</p>
+                                    <p className="font-mono font-black">{value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="space-y-1">
+                                {vehicleFileSummary.file.serviceRecords.slice(0, 4).map((record) => (
+                                  <p key={record.id} className="rounded border border-border bg-background/30 p-2 text-xs text-muted-foreground">
+                                    <span className="font-black uppercase text-foreground">{record.type}</span> - {record.summary}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                           {DEFS.map((def) => {
                             const currentTier = vehicle.upgrades[def.cat] ?? 0;
@@ -899,7 +1042,7 @@ export default function Garage() {
                             ].map(([label, value]) => (
                               <div key={label} className="rounded-md border border-border bg-muted/30 p-2">
                                 <p className="font-bold uppercase text-muted-foreground">{label}</p>
-                                <p className="font-mono text-lg font-black">{value}/10</p>
+                                <p className="font-mono text-lg font-black">{Number(value) * 10}/100</p>
                               </div>
                             ))}
                           </div>

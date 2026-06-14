@@ -1,6 +1,7 @@
 import type { GarageTuning, OwnedVehicle } from "@/services/garageApi";
 import type { Upgrades } from "@/data/garage";
 import { deriveVehiclePerformance, type VehiclePerformance } from "@/data/vehiclePerformance";
+import { finalDriveForGearing } from "@/data/gearing";
 import { dragReward } from "@workspace/economy";
 
 type DragVehicle = Pick<OwnedVehicle, "canonicalVehicleKey" | "name" | "reliability" | "power" | "offRoad" | "condition" | "purchasePrice" | "upgrades" | "tuning">;
@@ -51,6 +52,9 @@ export type DragRaceResult = {
     nitrousUsed?: number;
     entryFee?: number;
     potCredits?: number;
+    transmissionMode?: "automatic" | "manual";
+    manualBonusCredits?: number;
+    xpBonus?: number;
     redLightStrikes?: number;
     fault?: "false-start" | "engine-risk" | "missed-shifts";
   };
@@ -164,7 +168,8 @@ export function opponentsForVehicle(vehicle?: DragVehicle): DragOpponent[] {
 function tuningBonus(tuning: GarageTuning): number {
   const launchFit = 1 - Math.min(1, Math.abs(tuning.launchRpm - 4300) / 2500);
   const shiftFit = 1 - Math.min(1, Math.abs(tuning.shiftRpm - 6500) / 3000);
-  const gearingFit = 1 - Math.min(1, Math.abs(tuning.gearing - 58) / 58);
+  const finalDrive = finalDriveForGearing(tuning.gearing);
+  const gearingFit = 1 - Math.min(1, Math.abs(finalDrive.ratio - 3.73) / 1.2);
   const tireFit = 1 - Math.min(1, Math.abs((tuning.tirePressure ?? 32) - 28) / 18);
   const suspensionFit = 1 - Math.min(1, Math.abs((tuning.suspension ?? 50) - 42) / 58);
   const downforceFit = 1 - Math.min(1, Math.abs((tuning.downforce ?? 35) - 25) / 75);
@@ -197,7 +202,7 @@ export function simulateDragRace(input: DragRaceInput): DragRaceResult {
 
   const elapsedMs = Math.round(elapsed * 1000);
   const opponentElapsedMs = Math.round(opponentElapsed * 1000);
-  const trapSpeed = Math.round(76 + powerToWeight * 455 + shiftQuality * 10 - conditionPenalty * 11);
+  const trapSpeed = Math.round(Math.max(58, Math.min(225, 250 * Math.cbrt(hp / Math.max(1, weight)) + shiftQuality * 5 - conditionPenalty * 10)));
   const won = elapsedMs < opponentElapsedMs;
 
   return {

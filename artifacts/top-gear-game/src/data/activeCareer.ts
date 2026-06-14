@@ -100,7 +100,7 @@ export function resolveActiveCareer(saves: CareerSaveLike[] | undefined, garage?
   };
 }
 
-export function recordCareerDragRace(save: CareerSaveLike | undefined, race: Pick<GarageRaceHistory, "won" | "rewardCredits" | "elapsedMs" | "opponentName">): CareerDragStats | null {
+export function recordCareerDragRace(save: CareerSaveLike | undefined, race: Pick<GarageRaceHistory, "won" | "rewardCredits" | "elapsedMs" | "opponentName"> & { xpBonus?: number }): CareerDragStats | null {
   if (!save) return null;
   const current = loadCareerDragStats(save.id);
   const next: CareerDragStats = {
@@ -113,7 +113,7 @@ export function recordCareerDragRace(save: CareerSaveLike | undefined, race: Pic
   };
   localStorage.setItem(careerDragStatsKey(save.id), JSON.stringify(next));
 
-  addPlayerXp(save.id, race.won ? 35 : 15, save.playerName ?? undefined);
+  addPlayerXp(save.id, (race.won ? 35 : 15) + (race.xpBonus ?? 0), save.playerName ?? undefined);
   updateBadgeProgress(save.id, "drag-racer", next.races);
   updateBadgeProgress(save.id, "drag-winner", next.wins);
 

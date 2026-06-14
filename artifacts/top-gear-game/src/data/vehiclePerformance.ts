@@ -2,6 +2,7 @@ import { canonicalVehicleKey } from "@/data/vehicles";
 import { repairCost, saleValue } from "@workspace/economy";
 import type { GarageTuning, OwnedVehicle } from "@/services/garageApi";
 import type { Upgrades } from "@/data/garage";
+import { finalDriveForGearing } from "@/data/gearing";
 
 export type Drivetrain = "FWD" | "RWD" | "AWD" | "4x4" | "Boat" | "Other";
 
@@ -11,6 +12,9 @@ export type VehiclePerformance = {
   weight: number;
   drivetrain: Drivetrain;
   traction: number;
+  powerRating: number;
+  handlingRating: number;
+  reliabilityRating: number;
   tier: "Local" | "Club" | "Pro" | "Supercar" | "Chaos";
   valueCredits: number;
 };
@@ -27,6 +31,22 @@ export type TuningProjection = {
   quarterMile: number;
   launchGrip: number;
 };
+
+export function suspensionTuningProfile(suspension = 50): {
+  gripBonus: number;
+  accelerationFactor: number;
+  topSpeedFactor: number;
+  launchFit: number;
+} {
+  const launchFit = 1 - Math.min(1, Math.abs(suspension - 42) / 58);
+  const stabilityFit = 1 - Math.min(1, Math.abs(suspension - 58) / 58);
+  return {
+    gripBonus: Math.max(-0.16, Math.min(0.18, 0.18 - (1 - launchFit) * 0.34)),
+    accelerationFactor: 0.94 + launchFit * 0.11,
+    topSpeedFactor: 0.97 + stabilityFit * 0.06,
+    launchFit,
+  };
+}
 
 function nameDrivenOverrides(name: string): Partial<VehiclePerformance> {
   const n = name.toLowerCase();
@@ -62,9 +82,12 @@ export function deriveVehiclePerformance(
   const drivetrainBonus = drivetrain === "AWD" || drivetrain === "4x4" ? 1.1 : drivetrain === "FWD" ? 0.35 : drivetrain === "Boat" ? -1.4 : 0;
   const traction = Math.max(1, Math.min(10, tractionBase + drivetrainBonus - Math.max(0, 100 - vehicle.condition) / 35));
   const powerToWeight = hp / weight;
+  const powerRating = Math.round(Math.max(1, Math.min(100, 18 + Math.sqrt(hp / 80) * 21 + powerToWeight * 55)));
+  const handlingRating = Math.round(Math.max(1, Math.min(100, traction * 8.5 + (drivetrain === "AWD" || drivetrain === "4x4" ? 5 : drivetrain === "FWD" ? 2 : 0) - Math.max(0, weight - 3200) / 190)));
+  const reliabilityRating = Math.round(Math.max(1, Math.min(100, vehicle.condition * 0.66 + vehicle.reliability * 3.4 - (upgrades.turbo ?? 0) * 1.8 - (upgrades.supercharger ?? 0) * 1.4 + (upgrades.fuel ?? 0) * 1.2)));
   const tier = override.tier ?? (powerToWeight > 0.18 ? "Supercar" : powerToWeight > 0.13 ? "Pro" : powerToWeight > 0.09 ? "Club" : "Local");
   const valueCredits = Math.max(100, Math.round(vehicle.purchasePrice * 1.15 + hp * 0.9 + traction * 22));
-  return { canonicalVehicleKey: key, horsepower: hp, weight, drivetrain, traction: Math.round(traction * 10) / 10, tier, valueCredits };
+  return { canonicalVehicleKey: key, horsepower: hp, weight, drivetrain, traction: Math.round(traction * 10) / 10, powerRating, handlingRating, reliabilityRating, tier, valueCredits };
 }
 
 export function tuningProjection(
@@ -73,30 +96,36 @@ export function tuningProjection(
   condition: number,
 ): TuningProjection {
   const tirePressureGrip = Math.max(-0.12, Math.min(0.16, (34 - (tuning.tirePressure ?? 32)) / 50));
-  const suspensionGrip = Math.max(-0.1, Math.min(0.12, (55 - Math.abs((tuning.suspension ?? 50) - 42)) / 500));
+  const suspensionProfile = suspensionTuningProfile(tuning.suspension ?? 50);
+  const suspensionGrip = suspensionProfile.gripBonus;
   const downforce = tuning.downforce ?? 35;
   const gearing = tuning.gearing ?? 50;
+  const finalDrive = finalDriveForGearing(gearing);
+  const loadedNitrousShots = Math.max(0, tuning.nitrousShots ?? 0);
   const gripPct = Math.round((tirePressureGrip + suspensionGrip) * 100);
   const aeroPct = Math.round(downforce);
-  const gearingBias = gearing < 45 ? "Acceleration" : gearing > 65 ? "Top Speed" : "Balanced";
+  const gearingBias = finalDrive.label;
   const hp = performance.horsepower;
   const conditionFactor = Math.max(0.65, condition / 100);
-  const gearingAccel = 0.9 + (100 - gearing) / 500;
+  const gearingAccel = finalDrive.launchFactor;
   const aeroDrag = 1 - Math.max(0, downforce - 35) / 450;
   const lowDownforceSpeed = 1 + Math.max(0, 35 - downforce) / 240;
   const tractionFactor = Math.max(0.7, Math.min(1.35, performance.traction / 8.4 + gripPct / 420));
   const launchRpmFit = 1 - Math.min(0.22, Math.abs((tuning.launchRpm ?? 4200) - 4300) / 11500);
   const shiftRpmFit = 1 - Math.min(0.18, Math.abs((tuning.shiftRpm ?? 6400) - 6500) / 13500);
-  const wheelHorsepower = Math.round(hp * conditionFactor * shiftRpmFit * (0.96 + (gearingAccel - 1) * 0.2));
+  const nitrousReserveFactor = 1 + Math.min(0.1, loadedNitrousShots * 0.007);
+  const suspensionWheelFactor = 0.98 + (suspensionProfile.accelerationFactor - 1) * 0.22;
+  const finalDriveWheelFactor = 0.98 + (finalDrive.wheelTorqueFactor - 1) * 0.24;
+  const wheelHorsepower = Math.round(hp * conditionFactor * shiftRpmFit * suspensionWheelFactor * finalDriveWheelFactor * nitrousReserveFactor);
   const torquePeakRpm = Math.max(3200, Math.min(7800, (tuning.shiftRpm ?? 6400) * 0.78));
   const torqueLbFt = Math.round((hp * 5252) / torquePeakRpm);
   const powerToWeight = hp / Math.max(1, performance.weight);
   const baseTopSpeed = 72 + Math.sqrt(powerToWeight) * 220;
-  const topSpeedMph = Math.round(baseTopSpeed * (0.82 + gearing / 250) * aeroDrag * lowDownforceSpeed * Math.max(0.82, conditionFactor));
-  const accelScore = Math.max(0.55, powerToWeight * 9.5 * tractionFactor * gearingAccel * conditionFactor * launchRpmFit);
+  const topSpeedMph = Math.round(baseTopSpeed * 1.18 * finalDrive.topSpeedFactor * aeroDrag * lowDownforceSpeed * Math.max(0.82, conditionFactor) * nitrousReserveFactor * suspensionProfile.topSpeedFactor);
+  const accelScore = Math.max(0.55, powerToWeight * 9.5 * tractionFactor * gearingAccel * conditionFactor * launchRpmFit * suspensionProfile.accelerationFactor);
   const zeroToSixty = Math.max(2.2, Math.min(14.5, 6.9 / accelScore));
-  const quarterMile = Math.max(6.5, Math.min(20, 13.6 - powerToWeight * 19 - tractionFactor * 0.7 - (gearingAccel - 1) * 1.6 + (1 - conditionFactor) * 1.4));
-  const launchGrip = Math.round(Math.max(0, Math.min(100, tractionFactor * launchRpmFit * 72 + Math.max(0, downforce - 20) * 0.18)));
+  const quarterMile = Math.max(6.5, Math.min(20, 13.6 - powerToWeight * 19 - tractionFactor * 0.7 - (gearingAccel - 1) * 1.6 - (suspensionProfile.accelerationFactor - 1) * 2.4 + (1 - conditionFactor) * 1.4));
+  const launchGrip = Math.round(Math.max(0, Math.min(100, tractionFactor * launchRpmFit * 72 + suspensionProfile.launchFit * 8 + Math.max(0, downforce - 20) * 0.18)));
   return {
     gripPct,
     aeroPct,

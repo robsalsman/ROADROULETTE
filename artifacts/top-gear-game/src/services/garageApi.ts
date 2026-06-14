@@ -89,6 +89,13 @@ export const defaultGarageTuning: GarageTuning = {
   nitrousShots: 0,
 };
 
+export function factoryGarageTuning(current?: Partial<GarageTuning>): GarageTuning {
+  return {
+    ...defaultGarageTuning,
+    nitrousShots: current?.nitrousShots ?? defaultGarageTuning.nitrousShots,
+  };
+}
+
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
