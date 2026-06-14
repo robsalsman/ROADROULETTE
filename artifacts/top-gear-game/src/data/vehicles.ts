@@ -387,5 +387,5 @@ export function vehicleTopDownSprite(name: string, power = 5, offRoad = 5): stri
 }
 
 export function vehicleTrackTopDownSprite(name: string, power = 5, offRoad = 5): string {
-  return svgUrl(vehicleTopDownSvg(name, power, offRoad));
+  return vehicleTopDownSprite(name, power, offRoad);
 }
