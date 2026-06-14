@@ -10,7 +10,7 @@ import { opponentsForVehicle, simulateDragRace, type DragOpponent, type DragRace
 import { deriveVehiclePerformance, suspensionTuningProfile, tuningProjection, type VehiclePerformance } from "@/data/vehiclePerformance";
 import { finalDriveForGearing } from "@/data/gearing";
 import { recordVehicleService, saveTuningPreset, summarizeVehicleFile, tuningSlotIds, type TuningSlotId } from "@/data/vehicleFiles";
-import { vehicleTopDownSprite } from "@/data/vehicles";
+import { vehicleTopDownSprite, vehicleTrackTopDownSprite } from "@/data/vehicles";
 import { latestActiveSeriesSave, recordCareerDragRace } from "@/data/activeCareer";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -1018,9 +1018,9 @@ export default function DragRace() {
   const opponentProgress = Math.min(1, runtime.opponentMeters / DRAG_DIFFICULTY.raceDistanceMeters);
   const targetRpm = phase === "countdown" || phase === "launching" ? tuning.launchRpm : tuning.shiftRpm;
   const currentGrade = gradeForRpm(runtime.rpm, targetRpm);
-  const playerSprite = vehicleTopDownSprite(vehicle.name, vehicle.power, vehicle.offRoad);
+  const playerSprite = vehicleTrackTopDownSprite(vehicle.name, vehicle.power, vehicle.offRoad);
   const opponentName = opponentSpriteName(opponent);
-  const opponentSprite = vehicleTopDownSprite(opponentName, opponent.power, opponent.traction);
+  const opponentSprite = vehicleTrackTopDownSprite(opponentName, opponent.power, opponent.traction);
   const nextShiftGear = DRAG_DIFFICULTY.shiftGears[runtime.shiftIndex];
   const nextShiftMeter = DRAG_DIFFICULTY.shiftWindowMeters[runtime.shiftIndex] ?? DRAG_DIFFICULTY.raceDistanceMeters;
   const shiftArmed = runtime.rpm >= 3600;
