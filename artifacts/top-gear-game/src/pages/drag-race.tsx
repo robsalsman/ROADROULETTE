@@ -276,7 +276,8 @@ function AnalogGauge({ label, value, max, unit, marks, redFrom, targetValue, tar
 export default function DragRace() {
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
+  const [, queryString = ""] = location.split("?");
+  const searchParams = new URLSearchParams(queryString || window.location.search);
   const requestedVehicle = searchParams.get("vehicle");
   const requestedOpponent = searchParams.get("opponent");
   const requestedMode = searchParams.get("mode");
@@ -309,6 +310,7 @@ export default function DragRace() {
   const [redLightStrikes, setRedLightStrikes] = useState(0);
   const [entryPaid, setEntryPaid] = useState(false);
   const [selectedTransmission, setSelectedTransmission] = useState<RaceTransmission | null>(null);
+  const [forceChallengeBoard, setForceChallengeBoard] = useState(false);
   const [vehicleFileVersion, setVehicleFileVersion] = useState(0);
 
   const countdownStartedAt = useRef<number | null>(null);
@@ -1031,8 +1033,16 @@ export default function DragRace() {
   const shiftDistanceLabel = Math.max(0, Math.round(nextShiftMeter - runtime.playerMeters));
   const nitrousShots = runtime.nitrousShots;
   const boardHref = `/drag-race?mode=board&vehicle=${encodeURIComponent(vehicle.canonicalVehicleKey)}`;
+  const goToChallengeBoard = () => {
+    setSelectedTransmission(null);
+    setOpponentKey(opponents[0]?.key ?? "service-road-sleeper");
+    resetRace();
+    setForceChallengeBoard(true);
+    window.history.pushState(null, "", boardHref);
+    setLocation(boardHref);
+  };
   const hasRequestedOpponent = Boolean(requestedOpponent && opponents.some((item) => item.key === requestedOpponent));
-  const showChallengeBoard = requestedMode === "board" && !hasRequestedOpponent;
+  const showChallengeBoard = forceChallengeBoard || (requestedMode === "board" && !hasRequestedOpponent);
   const presenterResultLine = result
     ? result.won
       ? opponent.loseLine
@@ -1138,6 +1148,7 @@ export default function DragRace() {
                       <Button
                         className="mt-auto w-full uppercase font-black"
                         onClick={() => {
+                          setForceChallengeBoard(false);
                           setSelectedTransmission(null);
                           setOpponentKey(item.key);
                           resetRace();
@@ -1349,9 +1360,9 @@ export default function DragRace() {
                           <Button variant="outline" className="h-10 uppercase font-black" onClick={resetRace}>
                             <RotateCcw className="mr-2 h-4 w-4" /> Again
                           </Button>
-                          <Link href={boardHref}>
-                            <Button variant="outline" className="h-10 w-full uppercase font-black">Board</Button>
-                          </Link>
+                          <Button variant="outline" className="h-10 w-full uppercase font-black" onClick={goToChallengeBoard} data-testid="button-result-board">
+                            Board
+                          </Button>
                         </div>
                       </div>
                     ) : (
@@ -1472,9 +1483,9 @@ export default function DragRace() {
                     <MessageSquare className="h-4 w-4" /> {opponent.presenter}
                   </div>
                   <p className="text-sm font-bold text-muted-foreground">{presenterResultLine}</p>
-                  <Link href={boardHref}>
-                    <Button variant="outline" size="sm" className="mt-3 w-full uppercase font-bold">Challenge Board</Button>
-                  </Link>
+                  <Button variant="outline" size="sm" className="mt-3 w-full uppercase font-bold" onClick={goToChallengeBoard} data-testid="button-sidebar-board">
+                    Challenge Board
+                  </Button>
                 </div>
               </CardContent>
             </Card>
