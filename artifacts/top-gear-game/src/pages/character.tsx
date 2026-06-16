@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { garageApi } from "@/services/garageApi";
+import DriverLoginPanel from "@/components/DriverLoginPanel";
+import { driverScopedQueryKey } from "@/data/driverIdentity";
 import { saleValueForVehicle } from "@/data/vehiclePerformance";
 import { GRAND_TOUR_EPISODE_COUNT, GRAND_TOUR_EPISODE_STAGES } from "@/data/grand-tour-episode-stages";
 import {
@@ -44,7 +46,7 @@ function recentUnlocks(badges: Badge[]): Badge[] {
 
 export default function Character() {
   const { data: saves, isLoading } = useListSaves({ query: { queryKey: getListSavesQueryKey() } });
-  const { data: garage } = useQuery({ queryKey: ["garage"], queryFn: garageApi.getGarage });
+  const { data: garage } = useQuery({ queryKey: driverScopedQueryKey("garage"), queryFn: garageApi.getGarage });
   const [version, setVersion] = useState(0);
   const activeCareer = resolveActiveCareer(saves, garage);
   const save = activeCareer?.save;
@@ -117,6 +119,8 @@ export default function Character() {
             </Link>
           </div>
         </div>
+
+        <DriverLoginPanel />
 
         {isLoading ? (
           <div className="rounded-md border border-border bg-card p-8 text-muted-foreground">Loading career...</div>

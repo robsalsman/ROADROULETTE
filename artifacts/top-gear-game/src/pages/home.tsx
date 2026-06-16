@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Backpack, Car, Gamepad2, Gauge, Globe2, Medal, MessageCircle, Save, Trophy, UserRound, Wrench } from "lucide-react";
+import DriverLoginPanel from "@/components/DriverLoginPanel";
 
 export default function Home() {
   return (
@@ -11,7 +12,7 @@ export default function Home() {
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none"></div>
 
       <div className="relative z-10 max-w-2xl w-full space-y-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -24,6 +25,8 @@ export default function Home() {
             How hard can it be?
           </p>
         </motion.div>
+
+        <DriverLoginPanel />
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

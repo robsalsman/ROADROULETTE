@@ -25,6 +25,7 @@ import {
 import { canonicalVehicleKey } from "@/data/vehicles";
 import { carToBuyInput, garageApi, type OwnedVehicle } from "@/services/garageApi";
 import { deriveVehiclePerformance, saleValueForVehicle } from "@/data/vehiclePerformance";
+import { driverScopedQueryKey } from "@/data/driverIdentity";
 
 type MissionCar = {
   id: number;
@@ -86,7 +87,7 @@ export default function MissionDetail() {
   const updateSave = useUpdateSave();
   const allowSeriesSkip = import.meta.env.VITE_ALLOW_SERIES_SKIP === "1";
   const { data: persistentGarage, refetch: refetchPersistentGarage } = useQuery({
-    queryKey: ["garage"],
+    queryKey: driverScopedQueryKey("garage"),
     queryFn: garageApi.getGarage,
   });
 

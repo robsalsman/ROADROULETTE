@@ -14,8 +14,7 @@ import { vehicleTopDownSprite, vehicleTrackTopDownSprite } from "@/data/vehicles
 import { latestActiveSeriesSave, recordCareerDragRace } from "@/data/activeCareer";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-
-const GARAGE_QUERY_KEY = ["garage"];
+import { driverScopedQueryKey } from "@/data/driverIdentity";
 
 const DRAG_DIFFICULTY = {
   countdownMs: 2600,
@@ -275,6 +274,7 @@ function AnalogGauge({ label, value, max, unit, marks, redFrom, targetValue, tar
 
 export default function DragRace() {
   const queryClient = useQueryClient();
+  const garageQueryKey = driverScopedQueryKey("garage");
   const [location, setLocation] = useLocation();
   const [, queryString = ""] = location.split("?");
   const searchParams = new URLSearchParams(queryString || window.location.search);
@@ -283,7 +283,7 @@ export default function DragRace() {
   const requestedMode = searchParams.get("mode");
 
   const garageQuery = useQuery({
-    queryKey: GARAGE_QUERY_KEY,
+    queryKey: garageQueryKey,
     queryFn: garageApi.getGarage,
   });
   const savesQuery = useListSaves({ query: { queryKey: getListSavesQueryKey() } });
@@ -330,7 +330,7 @@ export default function DragRace() {
   const saveTuningMutation = useMutation({
     mutationFn: ({ selected, nextTuning }: { selected: OwnedVehicle; nextTuning: GarageTuning }) =>
       garageApi.saveTuning(selected.canonicalVehicleKey, nextTuning, 0),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: garageQueryKey }),
   });
 
   const raceMutation = useMutation({
@@ -346,7 +346,7 @@ export default function DragRace() {
         rewardCredits: payload.rewardCredits,
         breakdown: payload.breakdown,
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: garageQueryKey }),
   });
 
   useEffect(() => {
@@ -510,7 +510,7 @@ export default function DragRace() {
       }).catch(() => {
         toast({ title: "Vehicle damage not saved", variant: "destructive" });
       });
-      await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: garageQueryKey });
     }
     setEntryPaid(false);
   }, [activeCareerSave, entryFee, opponent, potCredits, queryClient, raceMutation, reactionMs, redLightStrikes, selectedTransmission, tuning, vehicle]);
@@ -630,7 +630,7 @@ export default function DragRace() {
         return false;
       });
       if (!paid) return;
-      await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: garageQueryKey });
       setEntryPaid(true);
     }
     const nextTuning = { ...defaultGarageTuning, ...tuning };
@@ -672,7 +672,7 @@ export default function DragRace() {
     }).catch(() => {
       toast({ title: "Vehicle wear not saved", variant: "destructive" });
     });
-    await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+    await queryClient.invalidateQueries({ queryKey: garageQueryKey });
     setThrottleHeld(false);
     throttleHeldRef.current = false;
     setNitrousHeld(false);

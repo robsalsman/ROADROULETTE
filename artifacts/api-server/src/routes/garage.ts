@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { Router, type IRouter, type Request } from "express";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
@@ -13,12 +13,13 @@ import {
   saleValue as economySaleValue,
   vehiclePrice,
 } from "@workspace/economy";
-import { localGarageStore, defaultGarageTuning, type GarageTuning } from "../lib/local-garage-store";
+import { localGarageStoreFor, defaultGarageTuning, type GarageTuning } from "../lib/local-garage-store";
 
 const router: IRouter = Router();
 const DEFAULT_PROFILE_ID = 1;
+const DRIVER_HEADER = "x-road-driver";
 
-const upgradesSchema = z.record(z.string(), z.number().int().min(0).max(3));
+const upgradesSchema = z.record(z.string(), z.number().int().min(0).max(6));
 const tuningSchema = z.object({
   launchRpm: z.number().int().min(2500).max(7200).default(defaultGarageTuning.launchRpm),
   shiftRpm: z.number().int().min(3500).max(8500).default(defaultGarageTuning.shiftRpm),
@@ -86,6 +87,32 @@ function repairCost(vehicle: typeof ownedVehiclesTable.$inferSelect): number {
 
 function toBool(value: number | boolean): boolean {
   return value === true || value === 1;
+}
+
+function driverNameFromRequest(req: Request): string | null {
+  let rawUrl: string | null = null;
+  try {
+    rawUrl = new URL(req.originalUrl ?? req.url, "http://road-roulette.local").searchParams.get("driver");
+  } catch {
+    rawUrl = null;
+  }
+  const rawQuery = rawUrl ?? (Array.isArray(req.query.driver) ? req.query.driver[0] : req.query.driver);
+  const raw = typeof rawQuery === "string"
+    ? rawQuery
+    : Array.isArray(req.headers[DRIVER_HEADER])
+    ? req.headers[DRIVER_HEADER][0]
+    : req.headers[DRIVER_HEADER];
+  if (typeof raw !== "string") return null;
+  const cleaned = raw
+    .replace(/[^a-zA-Z0-9 _-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+  return cleaned.length >= 2 ? cleaned : null;
+}
+
+function localStore(req?: Request) {
+  return localGarageStoreFor(req ? driverNameFromRequest(req) : null);
 }
 
 function formatProfile(profile: typeof playerProfilesTable.$inferSelect) {
@@ -165,7 +192,38 @@ function formatRace(race: typeof garageRaceHistoryTable.$inferSelect) {
   };
 }
 
-async function ensureProfile() {
+function formatDragLeaderboardEntry(
+  race: typeof garageRaceHistoryTable.$inferSelect,
+  profile?: typeof playerProfilesTable.$inferSelect | null,
+) {
+  return {
+    id: race.id,
+    profileId: race.profileId,
+    driverName: profile?.name ?? "Road Roulette Driver",
+    canonicalVehicleKey: race.canonicalVehicleKey,
+    opponentKey: race.opponentKey,
+    opponentName: race.opponentName,
+    elapsedMs: race.elapsedMs,
+    opponentElapsedMs: race.opponentElapsedMs,
+    trapSpeed: race.trapSpeed,
+    won: toBool(race.won),
+    rewardCredits: race.rewardCredits,
+    createdAt: race.createdAt.toISOString(),
+  };
+}
+
+async function ensureProfile(req?: Request) {
+  const driverName = req ? driverNameFromRequest(req) : null;
+  if (driverName) {
+    const [existing] = await db.select().from(playerProfilesTable).where(eq(playerProfilesTable.name, driverName));
+    if (existing) return existing;
+    const [created] = await db
+      .insert(playerProfilesTable)
+      .values({ name: driverName, credits: ECONOMY.defaultProfileCredits })
+      .returning();
+    return created;
+  }
+
   const [existing] = await db.select().from(playerProfilesTable).where(eq(playerProfilesTable.id, DEFAULT_PROFILE_ID));
   if (existing) {
     if (existing.credits > 0 && existing.credits < 10_000) {
@@ -185,8 +243,8 @@ async function ensureProfile() {
   return created;
 }
 
-async function garageResponse() {
-  const profile = await ensureProfile();
+async function garageResponse(req?: Request) {
+  const profile = await ensureProfile(req);
   const vehicles = await db
     .select()
     .from(ownedVehiclesTable)
@@ -204,19 +262,19 @@ async function garageResponse() {
   };
 }
 
-router.get("/garage/profile", async (_req, res): Promise<void> => {
+router.get("/garage/profile", async (req, res): Promise<void> => {
   try {
-    res.json(formatProfile(await ensureProfile()));
+    res.json(formatProfile(await ensureProfile(req)));
   } catch {
-    res.json(localGarageStore.profile());
+    res.json(localStore(req).profile());
   }
 });
 
-router.get("/garage", async (_req, res): Promise<void> => {
+router.get("/garage", async (req, res): Promise<void> => {
   try {
-    res.json(await garageResponse());
+    res.json(await garageResponse(req));
   } catch {
-    res.json(localGarageStore.garage());
+    res.json(localStore(req).garage());
   }
 });
 
@@ -228,7 +286,7 @@ router.post("/garage/migrate", async (req, res): Promise<void> => {
   }
 
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     for (const vehicle of parsed.data.vehicles) {
       const existing = await db
         .select()
@@ -256,10 +314,11 @@ router.post("/garage/migrate", async (req, res): Promise<void> => {
         tuningJson: defaultGarageTuning,
       });
     }
-    res.json(await garageResponse());
+    res.json(await garageResponse(req));
   } catch {
-    for (const vehicle of parsed.data.vehicles) localGarageStore.upsertVehicle(vehicle);
-    res.json(localGarageStore.garage());
+    const store = localStore(req);
+    for (const vehicle of parsed.data.vehicles) store.upsertVehicle(vehicle);
+    res.json(store.garage());
   }
 });
 
@@ -271,7 +330,7 @@ router.post("/garage/vehicles/buy", async (req, res): Promise<void> => {
   }
 
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [existing] = await db
       .select()
       .from(ownedVehiclesTable)
@@ -320,7 +379,7 @@ router.post("/garage/vehicles/buy", async (req, res): Promise<void> => {
       .returning();
     res.status(201).json({ alreadyOwned: false, vehicle: formatVehicle(vehicle), profile: formatProfile(updatedProfile) });
   } catch {
-    const result = localGarageStore.buyVehicle(parsed.data);
+    const result = localStore(req).buyVehicle(parsed.data);
     if ("error" in result) {
       res.status(400).json(result);
       return;
@@ -340,7 +399,7 @@ router.post("/garage/credits", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [updatedProfile] = await db
       .update(playerProfilesTable)
       .set({ credits: Math.max(0, profile.credits + parsed.data.amount) })
@@ -348,7 +407,7 @@ router.post("/garage/credits", async (req, res): Promise<void> => {
       .returning();
     res.json({ profile: formatProfile(updatedProfile), reason: parsed.data.reason });
   } catch {
-    const profile = localGarageStore.changeCredits(parsed.data.amount);
+    const profile = localStore(req).changeCredits(parsed.data.amount);
     res.json({ profile, reason: parsed.data.reason });
   }
 });
@@ -356,7 +415,7 @@ router.post("/garage/credits", async (req, res): Promise<void> => {
 router.patch("/garage/vehicles/:canonicalVehicleKey/active", async (req, res): Promise<void> => {
   const canonicalVehicleKey = req.params.canonicalVehicleKey;
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [vehicle] = await db
       .select()
       .from(ownedVehiclesTable)
@@ -367,14 +426,15 @@ router.patch("/garage/vehicles/:canonicalVehicleKey/active", async (req, res): P
     }
     await db.update(ownedVehiclesTable).set({ isActive: 0 }).where(eq(ownedVehiclesTable.profileId, profile.id));
     const [updated] = await db.update(ownedVehiclesTable).set({ isActive: 1 }).where(eq(ownedVehiclesTable.id, vehicle.id)).returning();
-    res.json({ vehicle: formatVehicle(updated), garage: await garageResponse() });
+    res.json({ vehicle: formatVehicle(updated), garage: await garageResponse(req) });
   } catch {
-    const vehicle = localGarageStore.setActive(canonicalVehicleKey);
+    const store = localStore(req);
+    const vehicle = store.setActive(canonicalVehicleKey);
     if (!vehicle) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ vehicle, garage: localGarageStore.garage() });
+    res.json({ vehicle, garage: store.garage() });
   }
 });
 
@@ -386,7 +446,7 @@ router.patch("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise<
     return;
   }
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [updated] = await db
       .update(ownedVehiclesTable)
       .set(parsed.data)
@@ -396,21 +456,22 @@ router.patch("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise<
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ vehicle: formatVehicle(updated), garage: await garageResponse() });
+    res.json({ vehicle: formatVehicle(updated), garage: await garageResponse(req) });
   } catch {
-    const updated = localGarageStore.patchVehicle(canonicalVehicleKey, parsed.data);
+    const store = localStore(req);
+    const updated = store.patchVehicle(canonicalVehicleKey, parsed.data);
     if (!updated) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ vehicle: updated, garage: localGarageStore.garage() });
+    res.json({ vehicle: updated, garage: store.garage() });
   }
 });
 
 router.delete("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise<void> => {
   const canonicalVehicleKey = req.params.canonicalVehicleKey;
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [vehicle] = await db
       .select()
       .from(ownedVehiclesTable)
@@ -430,24 +491,25 @@ router.delete("/garage/vehicles/:canonicalVehicleKey", async (req, res): Promise
     if (vehicle.isActive && remaining[0]) {
       await db.update(ownedVehiclesTable).set({ isActive: 1 }).where(eq(ownedVehiclesTable.id, remaining[0].id));
     }
-    res.json({ sold: formatVehicle(vehicle), saleCredits: creditGain, profile: formatProfile(updatedProfile), garage: await garageResponse() });
+    res.json({ sold: formatVehicle(vehicle), saleCredits: creditGain, profile: formatProfile(updatedProfile), garage: await garageResponse(req) });
   } catch {
-    const garage = localGarageStore.garage();
+    const store = localStore(req);
+    const garage = store.garage();
     const vehicle = garage.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
     if (!vehicle) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
     const creditGain = economySaleValue(vehicle.purchasePrice, vehicle.upgradeSpend, vehicle.condition);
-    const result = localGarageStore.sellVehicle(canonicalVehicleKey, creditGain);
-    res.json({ sold: vehicle, saleCredits: creditGain, profile: result?.profile, garage: localGarageStore.garage() });
+    const result = store.sellVehicle(canonicalVehicleKey, creditGain);
+    res.json({ sold: vehicle, saleCredits: creditGain, profile: result?.profile, garage: store.garage() });
   }
 });
 
 router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Promise<void> => {
   const canonicalVehicleKey = req.params.canonicalVehicleKey;
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [vehicle] = await db
       .select()
       .from(ownedVehiclesTable)
@@ -458,7 +520,7 @@ router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Pr
     }
     const cost = repairCost(vehicle);
     if (cost <= 0) {
-      res.json({ profile: formatProfile(profile), vehicle: formatVehicle(vehicle), repairCost: 0, garage: await garageResponse() });
+      res.json({ profile: formatProfile(profile), vehicle: formatVehicle(vehicle), repairCost: 0, garage: await garageResponse(req) });
       return;
     }
     if (profile.credits < cost) {
@@ -475,16 +537,17 @@ router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Pr
       .set({ condition: 100 })
       .where(eq(ownedVehiclesTable.id, vehicle.id))
       .returning();
-    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), repairCost: cost, garage: await garageResponse() });
+    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), repairCost: cost, garage: await garageResponse(req) });
   } catch {
-    const garage = localGarageStore.garage();
+    const store = localStore(req);
+    const garage = store.garage();
     const vehicle = garage.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
     if (!vehicle) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
     const cost = economyRepairCost(vehicle.condition, vehicle.power);
-    const result = localGarageStore.repairVehicle(canonicalVehicleKey, cost);
+    const result = store.repairVehicle(canonicalVehicleKey, cost);
     if (!result) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
@@ -493,7 +556,7 @@ router.post("/garage/vehicles/:canonicalVehicleKey/repair", async (req, res): Pr
       res.status(400).json({ ...result, repairCost: cost });
       return;
     }
-    res.json({ ...result, repairCost: cost, garage: localGarageStore.garage() });
+    res.json({ ...result, repairCost: cost, garage: store.garage() });
   }
 });
 
@@ -505,7 +568,7 @@ router.patch("/garage/vehicles/:canonicalVehicleKey/upgrades", async (req, res):
     return;
   }
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     if (profile.credits + parsed.data.creditsDelta < 0) {
       res.status(400).json({ error: "Not enough credits" });
       return;
@@ -524,15 +587,16 @@ router.patch("/garage/vehicles/:canonicalVehicleKey/upgrades", async (req, res):
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), garage: await garageResponse() });
+    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), garage: await garageResponse(req) });
   } catch {
-    const profile = localGarageStore.changeCredits(parsed.data.creditsDelta);
-    const updated = localGarageStore.patchVehicle(canonicalVehicleKey, { upgrades: parsed.data.upgrades, upgradeSpend: parsed.data.spent });
+    const store = localStore(req);
+    const profile = store.changeCredits(parsed.data.creditsDelta);
+    const updated = store.patchVehicle(canonicalVehicleKey, { upgrades: parsed.data.upgrades, upgradeSpend: parsed.data.spent });
     if (!updated) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ profile, vehicle: updated, garage: localGarageStore.garage() });
+    res.json({ profile, vehicle: updated, garage: store.garage() });
   }
 });
 
@@ -544,7 +608,7 @@ router.patch("/garage/vehicles/:canonicalVehicleKey/tuning", async (req, res): P
     return;
   }
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     if (profile.credits + parsed.data.creditsDelta < 0) {
       res.status(400).json({ error: "Not enough credits" });
       return;
@@ -563,15 +627,16 @@ router.patch("/garage/vehicles/:canonicalVehicleKey/tuning", async (req, res): P
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), garage: await garageResponse() });
+    res.json({ profile: formatProfile(updatedProfile), vehicle: formatVehicle(updated), garage: await garageResponse(req) });
   } catch {
-    const profile = localGarageStore.changeCredits(parsed.data.creditsDelta);
-    const updated = localGarageStore.patchVehicle(canonicalVehicleKey, { tuning: parsed.data.tuning });
+    const store = localStore(req);
+    const profile = store.changeCredits(parsed.data.creditsDelta);
+    const updated = store.patchVehicle(canonicalVehicleKey, { tuning: parsed.data.tuning });
     if (!updated) {
       res.status(404).json({ error: "Vehicle not found" });
       return;
     }
-    res.json({ profile, vehicle: updated, garage: localGarageStore.garage() });
+    res.json({ profile, vehicle: updated, garage: store.garage() });
   }
 });
 
@@ -582,7 +647,7 @@ router.post("/garage/drag-race/complete", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const profile = await ensureProfile();
+    const profile = await ensureProfile(req);
     const [vehicle] = await db
       .select()
       .from(ownedVehiclesTable)
@@ -613,10 +678,11 @@ router.post("/garage/drag-race/complete", async (req, res): Promise<void> => {
         breakdownJson: parsed.data.breakdown ?? {},
       })
       .returning();
-    res.status(201).json({ profile: formatProfile(updatedProfile), race: formatRace(race), garage: await garageResponse() });
+    res.status(201).json({ profile: formatProfile(updatedProfile), race: formatRace(race), garage: await garageResponse(req) });
   } catch {
     const rewardCredits = parsed.data.won ? parsed.data.rewardCredits : 0;
-    const result = localGarageStore.recordRace({
+    const store = localStore(req);
+    const result = store.recordRace({
       ownedVehicleId: null,
       canonicalVehicleKey: parsed.data.canonicalVehicleKey,
       opponentKey: parsed.data.opponentKey,
@@ -628,7 +694,38 @@ router.post("/garage/drag-race/complete", async (req, res): Promise<void> => {
       rewardCredits,
       breakdown: parsed.data.breakdown ?? {},
     });
-    res.status(201).json({ ...result, garage: localGarageStore.garage() });
+    res.status(201).json({ ...result, garage: store.garage() });
+  }
+});
+
+router.get("/garage/drag-race/leaderboard", async (req, res): Promise<void> => {
+  const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
+  const parsedLimit = parseInt(typeof rawLimit === "string" ? rawLimit : "", 10);
+  const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 25;
+  const mineOnly = req.query.scope === "mine";
+
+  try {
+    const profile = mineOnly ? await ensureProfile(req) : null;
+    const rows = await db
+      .select({ race: garageRaceHistoryTable, profile: playerProfilesTable })
+      .from(garageRaceHistoryTable)
+      .leftJoin(playerProfilesTable, eq(garageRaceHistoryTable.profileId, playerProfilesTable.id))
+      .where(mineOnly && profile ? and(eq(garageRaceHistoryTable.profileId, profile.id), eq(garageRaceHistoryTable.won, 1)) : eq(garageRaceHistoryTable.won, 1))
+      .orderBy(asc(garageRaceHistoryTable.elapsedMs), desc(garageRaceHistoryTable.createdAt))
+      .limit(limit);
+
+    res.json(rows.map((row) => formatDragLeaderboardEntry(row.race, row.profile)));
+  } catch {
+    const garage = localStore(req).garage();
+    const rows = garage.raceHistory
+      .filter((race) => race.won)
+      .sort((a, b) => a.elapsedMs - b.elapsedMs || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit)
+      .map((race) => ({
+        ...race,
+        driverName: garage.profile.name,
+      }));
+    res.json(rows);
   }
 });
 

@@ -1,5 +1,6 @@
 import { canonicalVehicleKey } from "@/data/vehicles";
 import type { GarageCar, Upgrades } from "@/data/garage";
+import { getDriverCode } from "@/data/driverIdentity";
 
 export type GarageTuning = {
   launchRpm: number;
@@ -59,6 +60,21 @@ export type GarageRaceHistory = {
   createdAt: string;
 };
 
+export type DragLeaderboardEntry = {
+  id: number;
+  profileId: number;
+  driverName: string;
+  canonicalVehicleKey: string;
+  opponentKey: string;
+  opponentName: string;
+  elapsedMs: number;
+  opponentElapsedMs: number;
+  trapSpeed: number;
+  won: boolean;
+  rewardCredits: number;
+  createdAt: string;
+};
+
 export type GarageResponse = {
   profile: GarageProfile;
   vehicles: OwnedVehicle[];
@@ -97,10 +113,15 @@ export function factoryGarageTuning(current?: Partial<GarageTuning>): GarageTuni
 }
 
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
+  const driverCode = getDriverCode();
+  const driverUrl = driverCode
+    ? `${url}${url.includes("?") ? "&" : "?"}driver=${encodeURIComponent(driverCode)}`
+    : url;
+  const response = await fetch(driverUrl, {
     ...init,
     headers: {
       "content-type": "application/json",
+      ...(driverCode ? { "x-road-driver": driverCode } : {}),
       ...(init?.headers ?? {}),
     },
   });
@@ -147,7 +168,15 @@ export function ownedToGarageCar(vehicle: OwnedVehicle): GarageCar {
 }
 
 export const garageApi = {
+  profile: () => jsonFetch<GarageProfile>("/api/garage/profile"),
   getGarage: () => jsonFetch<GarageResponse>("/api/garage"),
+  dragLeaderboard: (params?: { limit?: number; scope?: "global" | "mine" }) => {
+    const search = new URLSearchParams();
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.scope === "mine") search.set("scope", "mine");
+    const suffix = search.toString() ? `?${search.toString()}` : "";
+    return jsonFetch<DragLeaderboardEntry[]>(`/api/garage/drag-race/leaderboard${suffix}`);
+  },
   migrateGarage: (vehicles: BuyVehicleInput[]) => jsonFetch<GarageResponse>("/api/garage/migrate", {
     method: "POST",
     body: JSON.stringify({ vehicles }),

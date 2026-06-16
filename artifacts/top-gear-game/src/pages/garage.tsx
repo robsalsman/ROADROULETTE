@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import VehicleSprite from "@/components/VehicleSprite";
+import DriverLoginPanel from "@/components/DriverLoginPanel";
 import {
   loadGarage,
   loadUpgradeSpend,
@@ -40,8 +41,8 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { economyTierForVehicle, type EconomyTier } from "@workspace/economy";
+import { driverScopedQueryKey } from "@/data/driverIdentity";
 
-const GARAGE_QUERY_KEY = ["garage"];
 const MIGRATION_FLAG = "tgrr-persistent-garage-migrated-v1";
 const NITROUS_SHOT_COST = 500;
 
@@ -153,6 +154,7 @@ async function fetchShowroomCars(): Promise<ShowroomCar[]> {
 
 export default function Garage() {
   const queryClient = useQueryClient();
+  const garageQueryKey = driverScopedQueryKey("garage");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [working, setWorking] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<GarageSort>("active");
@@ -161,7 +163,7 @@ export default function Garage() {
   const [vehicleFileVersion, setVehicleFileVersion] = useState(0);
 
   const garageQuery = useQuery({
-    queryKey: GARAGE_QUERY_KEY,
+    queryKey: garageQueryKey,
     queryFn: garageApi.getGarage,
   });
 
@@ -171,11 +173,11 @@ export default function Garage() {
   });
 
   const refreshGarage = async () => {
-    await queryClient.invalidateQueries({ queryKey: GARAGE_QUERY_KEY });
+    await queryClient.invalidateQueries({ queryKey: garageQueryKey });
   };
 
   const updateGarageCache = (garage: GarageResponse) => {
-    queryClient.setQueryData(GARAGE_QUERY_KEY, garage);
+    queryClient.setQueryData(garageQueryKey, garage);
   };
 
   useEffect(() => {
@@ -536,6 +538,8 @@ export default function Garage() {
             </Link>
           </div>
         </div>
+
+        <DriverLoginPanel />
 
         {garageQuery.isLoading ? (
           <div className="rounded-md border border-border bg-card p-8 text-muted-foreground">Loading garage...</div>

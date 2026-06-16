@@ -82,7 +82,17 @@ type Store = {
   raceHistory: GarageRaceHistory[];
 };
 
-const storePath = path.resolve(process.cwd(), "..", "..", ".local", "road-roulette-garage-store.json");
+function storePathForDriver(driverName?: string | null): string {
+  const basePath = path.resolve(process.cwd(), "..", "..", ".local");
+  if (!driverName) return path.join(basePath, "road-roulette-garage-store.json");
+  const key = driverName
+    .replace(/[^a-zA-Z0-9 _-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .toLowerCase()
+    .slice(0, 40);
+  return path.join(basePath, `road-roulette-garage-store-${key || "driver"}.json`);
+}
 
 export const defaultGarageTuning: GarageTuning = {
   launchRpm: 4200,
@@ -99,14 +109,14 @@ function now(): string {
   return new Date().toISOString();
 }
 
-function emptyStore(): Store {
+function emptyStore(driverName?: string | null): Store {
   const createdAt = now();
   return {
     nextVehicleId: 1,
     nextRaceId: 1,
     profile: {
       id: 1,
-      name: "Road Roulette Driver",
+      name: driverName ?? "Road Roulette Driver",
       credits: ECONOMY.defaultProfileCredits,
       createdAt,
       updatedAt: createdAt,
@@ -116,20 +126,25 @@ function emptyStore(): Store {
   };
 }
 
-function loadStore(): Store {
+function loadStore(driverName?: string | null): Store {
   try {
-    if (!existsSync(storePath)) return emptyStore();
-    const store = { ...emptyStore(), ...JSON.parse(readFileSync(storePath, "utf8")) } as Store;
+    const storePath = storePathForDriver(driverName);
+    if (!existsSync(storePath)) return emptyStore(driverName);
+    const store = { ...emptyStore(driverName), ...JSON.parse(readFileSync(storePath, "utf8")) } as Store;
     if (store.profile.credits > 0 && store.profile.credits < 10_000) {
       store.profile = { ...store.profile, credits: store.profile.credits * ECONOMY.dragRewardMultiplier };
     }
+    if (driverName && store.profile.name !== driverName) {
+      store.profile = { ...store.profile, name: driverName, updatedAt: now() };
+    }
     return store;
   } catch {
-    return emptyStore();
+    return emptyStore(driverName);
   }
 }
 
-function saveStore(store: Store): void {
+function saveStore(store: Store, driverName?: string | null): void {
+  const storePath = storePathForDriver(driverName);
   mkdirSync(path.dirname(storePath), { recursive: true });
   writeFileSync(storePath, JSON.stringify(store, null, 2));
 }
@@ -153,10 +168,11 @@ function normalizeVehicle(vehicle: GarageVehicle): GarageVehicle {
   };
 }
 
-export const localGarageStore = {
-  profile: () => loadStore().profile,
+export function localGarageStoreFor(driverName?: string | null) {
+  return {
+  profile: () => loadStore(driverName).profile,
   garage: () => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     return {
       profile: store.profile,
       vehicles: store.vehicles.map(normalizeVehicle),
@@ -164,7 +180,7 @@ export const localGarageStore = {
     };
   },
   buyVehicle: (input: BuyVehicleInput) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     const existing = store.vehicles.find((vehicle) => vehicle.canonicalVehicleKey === input.canonicalVehicleKey);
     if (existing) return { alreadyOwned: true, vehicle: normalizeVehicle(existing), profile: store.profile };
 
@@ -198,11 +214,11 @@ export const localGarageStore = {
       updatedAt: timestamp,
     };
     store.vehicles.push(vehicle);
-    saveStore(store);
+    saveStore(store, driverName);
     return { alreadyOwned: false, vehicle, profile: store.profile };
   },
   upsertVehicle: (input: BuyVehicleInput) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     const existing = store.vehicles.find((vehicle) => vehicle.canonicalVehicleKey === input.canonicalVehicleKey);
     if (existing) return normalizeVehicle(existing);
     const timestamp = now();
@@ -229,44 +245,44 @@ export const localGarageStore = {
       updatedAt: timestamp,
     };
     store.vehicles.push(vehicle);
-    saveStore(store);
+    saveStore(store, driverName);
     return vehicle;
   },
   setActive: (canonicalVehicleKey: string) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     store.vehicles = store.vehicles.map((vehicle) => ({ ...vehicle, isActive: vehicle.canonicalVehicleKey === canonicalVehicleKey }));
-    saveStore(store);
+    saveStore(store, driverName);
     return store.vehicles.find((vehicle) => vehicle.canonicalVehicleKey === canonicalVehicleKey);
   },
   patchVehicle: (canonicalVehicleKey: string, patch: Partial<Pick<GarageVehicle, "paintColor" | "condition" | "upgrades" | "upgradeSpend" | "tuning">>) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     let updated: GarageVehicle | undefined;
     store.vehicles = store.vehicles.map((vehicle) => {
       if (vehicle.canonicalVehicleKey !== canonicalVehicleKey) return vehicle;
       updated = normalizeVehicle({ ...vehicle, ...patch, updatedAt: now() });
       return updated;
     });
-    saveStore(store);
+    saveStore(store, driverName);
     return updated;
   },
   changeCredits: (delta: number) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     store.profile = { ...store.profile, credits: Math.max(0, store.profile.credits + delta), updatedAt: now() };
-    saveStore(store);
+    saveStore(store, driverName);
     return store.profile;
   },
   sellVehicle: (canonicalVehicleKey: string, saleCredits: number) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     const vehicle = store.vehicles.find((item) => item.canonicalVehicleKey === canonicalVehicleKey);
     if (!vehicle) return undefined;
     store.vehicles = store.vehicles.filter((item) => item.canonicalVehicleKey !== canonicalVehicleKey);
     if (vehicle.isActive && store.vehicles[0]) store.vehicles[0].isActive = true;
     store.profile = { ...store.profile, credits: store.profile.credits + saleCredits, updatedAt: now() };
-    saveStore(store);
+    saveStore(store, driverName);
     return { vehicle, profile: store.profile };
   },
   repairVehicle: (canonicalVehicleKey: string, cost: number) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     if (store.profile.credits < cost) return { error: "Not enough credits" as const, profile: store.profile };
     let updated: GarageVehicle | undefined;
     store.vehicles = store.vehicles.map((vehicle) => {
@@ -276,11 +292,11 @@ export const localGarageStore = {
     });
     if (!updated) return undefined;
     store.profile = { ...store.profile, credits: store.profile.credits - cost, updatedAt: now() };
-    saveStore(store);
+    saveStore(store, driverName);
     return { vehicle: updated, profile: store.profile };
   },
   recordRace: (entry: Omit<GarageRaceHistory, "id" | "profileId" | "createdAt">) => {
-    const store = loadStore();
+    const store = loadStore(driverName);
     const timestamp = now();
     const race: GarageRaceHistory = {
       ...entry,
@@ -291,7 +307,10 @@ export const localGarageStore = {
     store.profile = { ...store.profile, credits: Math.max(0, store.profile.credits + entry.rewardCredits), updatedAt: timestamp };
     store.raceHistory.unshift(race);
     store.raceHistory = store.raceHistory.slice(0, 50);
-    saveStore(store);
+    saveStore(store, driverName);
     return { race, profile: store.profile };
   },
-};
+  };
+}
+
+export const localGarageStore = localGarageStoreFor();
